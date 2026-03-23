@@ -1,38 +1,27 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
   <title>My Arduino Dashboard</title>
 </head>
 <body style="font-family: Arial; text-align:center; margin-top:50px;">
+  
   <h1>🚀 My Arduino Data</h1>
+  
   <h2 id="data">Loading...</h2>
-  <pre id="debug" style="max-width:700px; margin:20px auto; text-align:left; white-space:pre-wrap;"></pre>
 
   <script>
     async function getData() {
-      const url = "https://api.thingspeak.com/channels/3309546/fields/1/last.json";
-
       try {
-        const res = await fetch(url);
+        const res = await fetch("https://api.thingspeak.com/channels/3309546/fields/1/last.json");
         const json = await res.json();
-
-        document.getElementById("debug").innerText =
-          "Fetched JSON:\n" + JSON.stringify(json, null, 2);
-
-        if (json.field1 !== undefined && json.field1 !== null) {
-          document.getElementById("data").innerText = "Value: " + json.field1;
-        } else {
-          document.getElementById("data").innerText = "Value not found";
-        }
+        document.getElementById("data").innerText = "Value: " + json.field1;
       } catch (err) {
         document.getElementById("data").innerText = "Error loading data";
-        document.getElementById("debug").innerText = err.toString();
       }
     }
 
-    getData();
-    setInterval(getData, 5000);
+    setInterval(getData, 2000);
   </script>
+
 </body>
 </html>
