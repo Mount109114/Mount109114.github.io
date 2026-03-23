@@ -12,7 +12,7 @@
   <script>
     async function getData() {
       try {
-        const res = await fetch("https://api.thingspeak.com/channels/65SH7GX3VOSRDDF5/fields/1/last.json");
+        const res = await fetch("https://api.thingspeak.com/channels/3309546/fields/1/last.json");
         const json = await res.json();
         document.getElementById("data").innerText = "Value: " + json.field1;
       } catch (err) {
