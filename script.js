@@ -1,37 +1,37 @@
-const text = [
-  "Researcher",
-  "Mechanical Engineer",
-  "Experimental Systems Builder"
+const words = [
+  "research",
+  "engineering",
+  "experimental systems"
 ];
 
-let i = 0;
-let j = 0;
-let current = "";
-let isDeleting = false;
+let wordIndex = 0;
+let charIndex = 0;
+let deleting = false;
+const typingEl = document.getElementById("typing");
 
-function type() {
-  current = text[i];
+function typeLoop() {
+  const currentWord = words[wordIndex];
 
-  if (isDeleting) {
-    j--;
+  if (!deleting) {
+    charIndex++;
+    typingEl.textContent = currentWord.slice(0, charIndex);
+
+    if (charIndex === currentWord.length) {
+      deleting = true;
+      setTimeout(typeLoop, 1200);
+      return;
+    }
   } else {
-    j++;
+    charIndex--;
+    typingEl.textContent = currentWord.slice(0, charIndex);
+
+    if (charIndex === 0) {
+      deleting = false;
+      wordIndex = (wordIndex + 1) % words.length;
+    }
   }
 
-  document.getElementById("typing").textContent = current.substring(0, j);
-
-  if (!isDeleting && j === current.length) {
-    isDeleting = true;
-    setTimeout(type, 1000);
-    return;
-  }
-
-  if (isDeleting && j === 0) {
-    isDeleting = false;
-    i = (i + 1) % text.length;
-  }
-
-  setTimeout(type, isDeleting ? 50 : 100);
+  setTimeout(typeLoop, deleting ? 55 : 95);
 }
 
-type();
+typeLoop();
