@@ -1,37 +1,23 @@
-const words = [
-  "research",
-  "engineering",
-  "experimental systems"
+const roles = [
+  "Researcher",
+  "Experimental Systems Builder",
+  "Mechanical Engineer"
 ];
 
-let wordIndex = 0;
-let charIndex = 0;
-let deleting = false;
-const typingEl = document.getElementById("typing");
+const roleEl = document.getElementById("rotating-role");
+let roleIndex = 0;
 
-function typeLoop() {
-  const currentWord = words[wordIndex];
+function rotateRole() {
+  roleEl.classList.remove("show");
 
-  if (!deleting) {
-    charIndex++;
-    typingEl.textContent = currentWord.slice(0, charIndex);
-
-    if (charIndex === currentWord.length) {
-      deleting = true;
-      setTimeout(typeLoop, 1200);
-      return;
-    }
-  } else {
-    charIndex--;
-    typingEl.textContent = currentWord.slice(0, charIndex);
-
-    if (charIndex === 0) {
-      deleting = false;
-      wordIndex = (wordIndex + 1) % words.length;
-    }
-  }
-
-  setTimeout(typeLoop, deleting ? 55 : 95);
+  setTimeout(() => {
+    roleIndex = (roleIndex + 1) % roles.length;
+    roleEl.textContent = roles[roleIndex];
+    roleEl.classList.add("show");
+  }, 300);
 }
 
-typeLoop();
+roleEl.textContent = roles[0];
+roleEl.classList.add("show");
+
+setInterval(rotateRole, 2600);
