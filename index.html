@@ -7,67 +7,70 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="page-glow glow-1"></div>
-  <div class="page-glow glow-2"></div>
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
 
-  <nav class="nav">
-    <div class="container nav-inner">
-      <div class="brand">S. H. M. Muntasir Rahi</div>
-      <div class="nav-links">
+  <header class="site-header">
+    <div class="container nav-wrap">
+      <a class="brand" href="#">S. H. M. Muntasir Rahi</a>
+      <nav class="nav">
         <a href="#about">About</a>
         <a href="#projects">Projects</a>
         <a href="#contact">Contact</a>
-      </div>
+      </nav>
     </div>
-  </nav>
+  </header>
 
   <main>
     <section class="hero">
       <div class="container hero-grid">
-        <div class="hero-card glass-card">
+        <div class="hero-text card">
           <div class="eyebrow">Mechanical Engineering • Research • Experimental Systems</div>
-          <h1 class="hero-title">
-            <span class="hero-static">Building ideas through</span><br>
-            <span id="typing"></span>
+
+          <h1>
+            Building ideas through
+            <span id="typing" class="typing"></span><span class="cursor">|</span>
           </h1>
+
           <p class="subtitle">
             Master's student in Mechanical Engineering at Clarkson University and Graduate Teaching Assistant in the Department of Mechanical and Aerospace Engineering.
           </p>
+
           <p class="hero-copy">
             I work at the intersection of experimental engineering, ultrasonic characterization, applied computation, and hands-on system development. My goal is to build meaningful research-driven solutions with strong technical depth and practical impact.
           </p>
 
-          <div class="hero-meta">
-            <div class="meta-pill">Potsdam, New York</div>
-            <div class="meta-pill">BUET → Clarkson University</div>
-            <div class="meta-pill">Research • Design • Prototyping</div>
+          <div class="pill-row">
+            <span class="pill">Potsdam, New York</span>
+            <span class="pill">BUET → Clarkson</span>
+            <span class="pill">Research • Design • Prototyping</span>
           </div>
 
-          <div class="buttons">
-            <a href="assets/resume.pdf" target="_blank" class="btn primary">Download CV</a>
-            <a href="https://www.linkedin.com/in/s-h-m-muntasir-rahi-41336323b/" target="_blank" class="btn">LinkedIn</a>
-            <a href="https://github.com/Mount109114/" target="_blank" class="btn">GitHub</a>
+          <div class="button-row">
+            <a class="btn btn-primary" href="assets/resume.pdf" target="_blank">Download CV</a>
+            <a class="btn" href="https://www.linkedin.com/in/s-h-m-muntasir-rahi-41336323b/" target="_blank">LinkedIn</a>
+            <a class="btn" href="https://github.com/Mount109114/" target="_blank">GitHub</a>
           </div>
         </div>
 
-        <aside class="profile-panel glass-card">
-          <div class="profile-frame">
-            <img src="assets/profile.jpg" alt="S. H. M. Muntasir Rahi profile photo" />
+        <aside class="hero-side card">
+          <div class="profile-photo-wrap">
+            <img src="assets/profile.jpg" alt="S. H. M. Muntasir Rahi profile photo" class="profile-photo" />
           </div>
-          <div class="profile-info">
-            <h2>S. H. M. Muntasir Rahi</h2>
-            <p>MS Mechanical Engineering @ Clarkson University</p>
-          </div>
-          <div class="stat-list">
-            <div class="stat-item">
+
+          <h2>S. H. M. Muntasir Rahi</h2>
+          <p class="side-subtitle">MS Mechanical Engineering @ Clarkson University</p>
+
+          <div class="info-list">
+            <div class="info-item">
               <strong>Current Focus</strong>
-              <span>Ultrasonics, PIML, advanced materials, experimental systems</span>
+              <span>Ultrasonics, PIML, advanced materials, and experimental systems</span>
             </div>
-            <div class="stat-item">
+            <div class="info-item">
               <strong>Background</strong>
               <span>Mechanical Engineering, BUET</span>
             </div>
-            <div class="stat-item">
+            <div class="info-item">
               <strong>Direction</strong>
               <span>Research, development, and engineering innovation</span>
             </div>
@@ -78,23 +81,24 @@
 
     <section id="about" class="section">
       <div class="container">
-        <div class="section-card glass-card">
+        <div class="card section-card">
           <h2>About</h2>
           <p class="section-lead">
             I am deeply interested in experimental engineering research that blends theory, testing, and practical implementation. My academic journey began in Bangladesh and continues at Clarkson University, where I am building expertise in materials, ultrasonics, inverse modeling, and research-oriented system development.
           </p>
-          <div class="info-grid">
-            <div class="info-tile">
+
+          <div class="three-grid">
+            <div class="mini-card">
               <h3>Research Mindset</h3>
               <p>Curiosity-driven, experimentally grounded, and focused on extracting meaningful insight from real physical systems.</p>
             </div>
-            <div class="info-tile">
+            <div class="mini-card">
               <h3>Engineering Practice</h3>
               <p>Comfortable with design iteration, instrumentation, embedded experimentation, coding, and lab-based problem solving.</p>
             </div>
-            <div class="info-tile">
+            <div class="mini-card">
               <h3>Long-Term Goal</h3>
-              <p>To contribute to impactful R&D environments through rigorous engineering, creativity, and collaborative scientific work.</p>
+              <p>To contribute to impactful R&amp;D environments through rigorous engineering, creativity, and collaborative scientific work.</p>
             </div>
           </div>
         </div>
@@ -103,27 +107,25 @@
 
     <section id="projects" class="section">
       <div class="container">
-        <div class="section-card glass-card">
+        <div class="card section-card">
           <h2>Featured Projects</h2>
           <p class="section-lead">
             A few selected directions from my current research and engineering work, with more project pages to be added later.
           </p>
 
-          <div class="cards cards-rich">
-            <div class="card project-card">
-              <div class="card-tag">Research</div>
+          <div class="three-grid">
+            <div class="mini-card project-card">
+              <div class="tag">Research</div>
               <h3>PIML Ultrasonic Framework</h3>
               <p>Developing a physics-informed machine learning framework for ultrasonic inverse characterization of granular and viscoelastic material systems.</p>
             </div>
-
-            <div class="card project-card">
-              <div class="card-tag">Pharmaceutical Engineering</div>
+            <div class="mini-card project-card">
+              <div class="tag">Pharmaceutical Engineering</div>
               <h3>Moisture Tablet Study</h3>
               <p>Using ultrasound to track moisture-driven changes in tablet microstructure, stiffness, and viscoelastic response through non-destructive evaluation.</p>
             </div>
-
-            <div class="card project-card">
-              <div class="card-tag">NDT</div>
+            <div class="mini-card project-card">
+              <div class="tag">NDT</div>
               <h3>Ultrasonic Defect Detection</h3>
               <p>Experimental investigation of embedded crack detection in metals using ultrasonic methods and calibration-based analysis.</p>
             </div>
@@ -132,21 +134,22 @@
       </div>
     </section>
 
-    <section id="contact" class="section">
+    <section id="contact" class="section last-section">
       <div class="container">
-        <div class="section-card glass-card contact-card">
+        <div class="card section-card">
           <h2>Contact</h2>
           <p class="section-lead">Feel free to connect for academic, research, or professional opportunities.</p>
+
           <div class="contact-grid">
-            <a class="contact-item" href="mailto:rahi1162094@gmail.com">
+            <a class="contact-box" href="mailto:rahi1162094@gmail.com">
               <strong>Email</strong>
               <span>rahi1162094@gmail.com</span>
             </a>
-            <a class="contact-item" href="tel:+16465484835">
+            <a class="contact-box" href="tel:+16465484835">
               <strong>Phone</strong>
               <span>+1 646 548 4835</span>
             </a>
-            <a class="contact-item" href="https://www.linkedin.com/in/s-h-m-muntasir-rahi-41336323b/" target="_blank">
+            <a class="contact-box" href="https://www.linkedin.com/in/s-h-m-muntasir-rahi-41336323b/" target="_blank">
               <strong>LinkedIn</strong>
               <span>View profile</span>
             </a>
@@ -155,7 +158,6 @@
       </div>
     </section>
   </main>
-
-  <script src="script.js"></script>
 </body>
+<script src="script.js"></script>
 </html>
