@@ -4,401 +4,96 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>S. H. M. Muntasir Rahi</title>
-  <style>
-    :root {
-      --bg: #0b1020;
-      --bg-soft: #121a33;
-      --card: rgba(255,255,255,0.08);
-      --text: #eef2ff;
-      --muted: #b8c1e0;
-      --line: rgba(255,255,255,0.12);
-      --accent: #8fb4ff;
-      --accent-2: #d7e4ff;
-      --shadow: 0 20px 50px rgba(0,0,0,0.28);
-    }
 
-    * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body {
-      margin: 0;
-      font-family: Inter, Arial, Helvetica, sans-serif;
-      color: var(--text);
-      background:
-        radial-gradient(circle at top left, rgba(143,180,255,0.18), transparent 32%),
-        radial-gradient(circle at bottom right, rgba(215,228,255,0.10), transparent 28%),
-        linear-gradient(135deg, #0b1020 0%, #10182f 45%, #0c1326 100%);
-      min-height: 100vh;
-    }
-
-    .container {
-      width: min(1120px, calc(100% - 32px));
-      margin: 0 auto;
-    }
-
-    .nav {
-      position: sticky;
-      top: 0;
-      z-index: 20;
-      backdrop-filter: blur(12px);
-      background: rgba(11,16,32,0.55);
-      border-bottom: 1px solid var(--line);
-    }
-
-    .nav-inner {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px 0;
-    }
-
-    .brand {
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      font-size: 0.98rem;
-    }
-
-    .nav-links {
-      display: flex;
-      gap: 18px;
-      flex-wrap: wrap;
-    }
-
-    .nav a {
-      color: var(--muted);
-      text-decoration: none;
-      font-size: 0.95rem;
-    }
-
-    .nav a:hover,
-    .nav a.active {
-      color: var(--text);
-    }
-
-    .hero {
-      padding: 72px 0 48px;
-    }
-
-    .hero-grid {
-      display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
-      gap: 28px;
-      align-items: stretch;
-    }
-
-    .hero-card,
-    .info-card,
-    .section-card {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 24px;
-      box-shadow: var(--shadow);
-    }
-
-    .hero-card {
-      padding: 42px;
-    }
-
-    .eyebrow {
-      display: inline-block;
-      padding: 8px 14px;
-      border-radius: 999px;
-      font-size: 0.86rem;
-      color: var(--accent-2);
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.1);
-      margin-bottom: 18px;
-    }
-
-    h1 {
-      margin: 0 0 14px;
-      font-size: clamp(2.2rem, 5vw, 4.3rem);
-      line-height: 1.05;
-      letter-spacing: -0.03em;
-    }
-
-    .subtitle {
-      margin: 0 0 22px;
-      color: var(--accent-2);
-      font-size: clamp(1rem, 2vw, 1.2rem);
-      line-height: 1.7;
-      max-width: 62ch;
-    }
-
-    .hero-copy {
-      margin: 0 0 28px;
-      color: var(--muted);
-      font-size: 1rem;
-      line-height: 1.8;
-      max-width: 68ch;
-    }
-
-    .actions {
-      display: flex;
-      gap: 14px;
-      flex-wrap: wrap;
-    }
-
-    .btn {
-      padding: 13px 18px;
-      border-radius: 14px;
-      text-decoration: none;
-      font-weight: 600;
-      border: 1px solid var(--line);
-      transition: transform 0.18s ease, background 0.18s ease;
-    }
-
-    .btn:hover { transform: translateY(-1px); }
-
-    .btn-primary {
-      background: linear-gradient(135deg, var(--accent), #c9d9ff);
-      color: #0b1020;
-      border-color: transparent;
-    }
-
-    .btn-secondary {
-      color: var(--text);
-      background: rgba(255,255,255,0.04);
-    }
-
-    .info-card {
-      padding: 28px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      min-height: 100%;
-    }
-
-    .avatar {
-      width: 112px;
-      height: 112px;
-      border-radius: 50%;
-      display: grid;
-      place-items: center;
-      background: linear-gradient(135deg, rgba(143,180,255,0.25), rgba(255,255,255,0.07));
-      border: 1px solid var(--line);
-      font-size: 2rem;
-      margin-bottom: 22px;
-    }
-
-    .mini-title {
-      margin: 0 0 8px;
-      font-size: 1.25rem;
-    }
-
-    .mini-copy {
-      margin: 0 0 18px;
-      color: var(--muted);
-      line-height: 1.7;
-    }
-
-    .stat-list {
-      display: grid;
-      gap: 12px;
-      margin-top: 16px;
-    }
-
-    .stat {
-      padding: 14px 16px;
-      border-radius: 16px;
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,0.04);
-    }
-
-    .stat strong {
-      display: block;
-      margin-bottom: 5px;
-      font-size: 0.95rem;
-    }
-
-    section {
-      padding: 8px 0 42px;
-    }
-
-    .section-card {
-      padding: 28px;
-    }
-
-    .section-title {
-      margin: 0 0 8px;
-      font-size: 1.5rem;
-    }
-
-    .section-lead {
-      margin: 0 0 22px;
-      color: var(--muted);
-      line-height: 1.75;
-      max-width: 72ch;
-    }
-
-    .grid-3 {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-    }
-
-    .tile {
-      padding: 20px;
-      border-radius: 18px;
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,0.04);
-    }
-
-    .tile h3 {
-      margin: 0 0 10px;
-      font-size: 1.05rem;
-    }
-
-    .tile p {
-      margin: 0;
-      color: var(--muted);
-      line-height: 1.7;
-    }
-
-    .contact {
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-      margin-top: 18px;
-    }
-
-    .contact a {
-      color: var(--accent-2);
-      text-decoration: none;
-    }
-
-    footer {
-      padding: 20px 0 50px;
-      color: var(--muted);
-      font-size: 0.95rem;
-      text-align: center;
-    }
-
-    @media (max-width: 900px) {
-      .hero-grid,
-      .grid-3 {
-        grid-template-columns: 1fr;
-      }
-
-      .hero-card { padding: 30px; }
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+
   <nav class="nav">
     <div class="container nav-inner">
       <div class="brand">S. H. M. Muntasir Rahi</div>
       <div class="nav-links">
         <a href="#about">About</a>
-        <a href="#focus">Focus</a>
-        <a href="#journey">Journey</a>
+        <a href="#projects">Projects</a>
         <a href="#contact">Contact</a>
       </div>
     </div>
   </nav>
 
   <main>
+
     <section class="hero">
       <div class="container hero-grid">
+
         <div class="hero-card">
-          <div class="eyebrow">Mechanical Engineering • Research • Experimental Systems</div>
-          <h1>Building ideas through research, design, and hands-on engineering.</h1>
-          <p class="subtitle">I am S. H. M. Muntasir Rahi, a master's student in Mechanical Engineering at Clarkson University and a Graduate Teaching Assistant in the Department of Mechanical and Aerospace Engineering.</p>
-          <p class="hero-copy">Originally from Pabna, Bangladesh, I completed my undergraduate degree in Mechanical Engineering at BUET. My interests center on experimental research, rigorous laboratory work, and creating practical solutions through careful analysis, testing, and innovation.</p>
-          <div class="actions">
-            <a class="btn btn-primary" href="#about">Explore Profile</a>
-            <a class="btn btn-secondary" href="#contact">Get in Touch</a>
+          <h1>
+            <span id="typing"></span>
+          </h1>
+
+          <p class="subtitle">
+            MS Mechanical Engineering @ Clarkson University | Graduate Teaching Assistant
+          </p>
+
+          <div class="buttons">
+            <a href="assets/resume.pdf" target="_blank" class="btn primary">Download CV</a>
+            <a href="https://www.linkedin.com/in/s-h-m-muntasir-rahi-41336323b/" target="_blank" class="btn">LinkedIn</a>
+            <a href="https://github.com/Mount109114/" target="_blank" class="btn">GitHub</a>
           </div>
         </div>
 
-        <aside class="info-card">
-          <div>
-            <div class="avatar">MR</div>
-            <h2 class="mini-title">Current Role</h2>
-            <p class="mini-copy">Master's student and Graduate Teaching Assistant, working toward a career in research and development with a strong experimental foundation.</p>
-          </div>
+        <div class="profile">
+          <img src="assets/profile.jpg" alt="Profile">
+        </div>
 
-          <div class="stat-list">
-            <div class="stat">
-              <strong>Based at</strong>
-              Clarkson University, Potsdam, New York
-            </div>
-            <div class="stat">
-              <strong>Academic Background</strong>
-              Mechanical Engineering, BUET
-            </div>
-            <div class="stat">
-              <strong>Core Direction</strong>
-              Experimental research, laboratory systems, and applied engineering
-            </div>
-          </div>
-        </aside>
       </div>
     </section>
 
-    <section id="about">
-      <div class="container section-card">
-        <h2 class="section-title">About</h2>
-        <p class="section-lead">I aim to grow as a professional research scientist by contributing to innovative and demanding research environments. I value experimental work that calls for both creative thinking and disciplined execution. I also care deeply about academic spaces that welcome different perspectives and reflect the diversity of the global research community.</p>
+    <section id="about" class="section">
+      <div class="container">
+        <h2>About</h2>
+        <p>
+          I am an experimental engineering researcher focused on ultrasonic characterization,
+          physics-informed machine learning, and advanced materials.
+          My work bridges theory and hands-on experimentation to build meaningful engineering systems.
+        </p>
       </div>
     </section>
 
-    <section id="focus">
-      <div class="container section-card">
-        <h2 class="section-title">Focus Areas</h2>
-        <p class="section-lead">A simple snapshot of the themes that currently define my academic and professional path.</p>
-        <div class="grid-3">
-          <div class="tile">
-            <h3>Research Mindset</h3>
-            <p>Driven by curiosity, structured experimentation, and the goal of transforming ideas into measurable outcomes.</p>
+    <section id="projects" class="section">
+      <div class="container">
+        <h2>Featured Projects</h2>
+
+        <div class="cards">
+
+          <div class="card">
+            <h3>PIML Ultrasonic Framework</h3>
+            <p>Physics-informed machine learning for ultrasonic material characterization.</p>
           </div>
-          <div class="tile">
-            <h3>Engineering Practice</h3>
-            <p>Interested in hands-on systems, testing environments, and technically grounded problem solving.</p>
+
+          <div class="card">
+            <h3>Moisture Tablet Study</h3>
+            <p>Ultrasonic analysis of viscoelastic and microstructural changes.</p>
           </div>
-          <div class="tile">
-            <h3>Long-Term Goal</h3>
-            <p>To contribute meaningfully to research and development while continuing to learn, teach, and collaborate across cultures.</p>
+
+          <div class="card">
+            <h3>Ultrasonic NDT</h3>
+            <p>Detection and characterization of embedded defects in metals.</p>
           </div>
+
         </div>
       </div>
     </section>
 
-    <section id="journey">
-      <div class="container section-card">
-        <h2 class="section-title">Journey</h2>
-        <p class="section-lead">From Bangladesh to the United States, my academic journey has been shaped by strong fundamentals, persistence, and a growing commitment to experimental engineering research.</p>
-        <div class="grid-3">
-          <div class="tile">
-            <h3>Origins</h3>
-            <p>Born in Pabna, Bangladesh, with formative education in Dhaka before pursuing engineering at BUET.</p>
-          </div>
-          <div class="tile">
-            <h3>Graduate Study</h3>
-            <p>Currently pursuing an MS in Mechanical Engineering at Clarkson University while serving as a GTA.</p>
-          </div>
-          <div class="tile">
-            <h3>Purpose</h3>
-            <p>Eager to add meaningful ideas to the research environment and contribute to the broader pool of knowledge.</p>
-          </div>
-        </div>
+    <section id="contact" class="section">
+      <div class="container">
+        <h2>Contact</h2>
+        <p>Email: rahi1162094@gmail.com</p>
+        <p>Phone: +1 646 548 4835</p>
       </div>
     </section>
 
-    <section id="contact">
-      <div class="container section-card">
-        <h2 class="section-title">Contact</h2>
-        <p class="section-lead">Feel free to connect for academic, research, or professional opportunities.</p>
-        <div class="contact">
-          <span>Email: <a href="mailto:rahi1162094@gmail.com">rahi1162094@gmail.com</a></span>
-          <span>Phone: <a href="tel:+8801689434484">+8801689434484</a></span>
-          <span>Current site: <a href="https://sites.google.com/view/shm-muntasir-rahi/home" target="_blank" rel="noopener">Google Sites profile</a></span>
-        </div>
-      </div>
-    </section>
   </main>
 
-  <footer>
-    © 2026 S. H. M. Muntasir Rahi. Crafted for a clean and simple personal web presence.
-  </footer>
+  <script src="script.js"></script>
 </body>
 </html>
