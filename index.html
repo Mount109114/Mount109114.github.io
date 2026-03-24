@@ -4,10 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>S. H. M. Muntasir Rahi</title>
-
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <div class="page-glow glow-1"></div>
+  <div class="page-glow glow-2"></div>
 
   <nav class="nav">
     <div class="container nav-inner">
@@ -21,18 +22,26 @@
   </nav>
 
   <main>
-
     <section class="hero">
       <div class="container hero-grid">
-
-        <div class="hero-card">
-          <h1>
+        <div class="hero-card glass-card">
+          <div class="eyebrow">Mechanical Engineering • Research • Experimental Systems</div>
+          <h1 class="hero-title">
+            <span class="hero-static">Building ideas through</span><br>
             <span id="typing"></span>
           </h1>
-
           <p class="subtitle">
-            MS Mechanical Engineering @ Clarkson University | Graduate Teaching Assistant
+            Master's student in Mechanical Engineering at Clarkson University and Graduate Teaching Assistant in the Department of Mechanical and Aerospace Engineering.
           </p>
+          <p class="hero-copy">
+            I work at the intersection of experimental engineering, ultrasonic characterization, applied computation, and hands-on system development. My goal is to build meaningful research-driven solutions with strong technical depth and practical impact.
+          </p>
+
+          <div class="hero-meta">
+            <div class="meta-pill">Potsdam, New York</div>
+            <div class="meta-pill">BUET → Clarkson University</div>
+            <div class="meta-pill">Research • Design • Prototyping</div>
+          </div>
 
           <div class="buttons">
             <a href="assets/resume.pdf" target="_blank" class="btn primary">Download CV</a>
@@ -41,57 +50,110 @@
           </div>
         </div>
 
-        <div class="profile">
-          <img src="assets/profile.jpg" alt="Profile">
-        </div>
-
+        <aside class="profile-panel glass-card">
+          <div class="profile-frame">
+            <img src="assets/profile.jpg" alt="S. H. M. Muntasir Rahi profile photo" />
+          </div>
+          <div class="profile-info">
+            <h2>S. H. M. Muntasir Rahi</h2>
+            <p>MS Mechanical Engineering @ Clarkson University</p>
+          </div>
+          <div class="stat-list">
+            <div class="stat-item">
+              <strong>Current Focus</strong>
+              <span>Ultrasonics, PIML, advanced materials, experimental systems</span>
+            </div>
+            <div class="stat-item">
+              <strong>Background</strong>
+              <span>Mechanical Engineering, BUET</span>
+            </div>
+            <div class="stat-item">
+              <strong>Direction</strong>
+              <span>Research, development, and engineering innovation</span>
+            </div>
+          </div>
+        </aside>
       </div>
     </section>
 
     <section id="about" class="section">
       <div class="container">
-        <h2>About</h2>
-        <p>
-          I am an experimental engineering researcher focused on ultrasonic characterization,
-          physics-informed machine learning, and advanced materials.
-          My work bridges theory and hands-on experimentation to build meaningful engineering systems.
-        </p>
+        <div class="section-card glass-card">
+          <h2>About</h2>
+          <p class="section-lead">
+            I am deeply interested in experimental engineering research that blends theory, testing, and practical implementation. My academic journey began in Bangladesh and continues at Clarkson University, where I am building expertise in materials, ultrasonics, inverse modeling, and research-oriented system development.
+          </p>
+          <div class="info-grid">
+            <div class="info-tile">
+              <h3>Research Mindset</h3>
+              <p>Curiosity-driven, experimentally grounded, and focused on extracting meaningful insight from real physical systems.</p>
+            </div>
+            <div class="info-tile">
+              <h3>Engineering Practice</h3>
+              <p>Comfortable with design iteration, instrumentation, embedded experimentation, coding, and lab-based problem solving.</p>
+            </div>
+            <div class="info-tile">
+              <h3>Long-Term Goal</h3>
+              <p>To contribute to impactful R&D environments through rigorous engineering, creativity, and collaborative scientific work.</p>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
     <section id="projects" class="section">
       <div class="container">
-        <h2>Featured Projects</h2>
+        <div class="section-card glass-card">
+          <h2>Featured Projects</h2>
+          <p class="section-lead">
+            A few selected directions from my current research and engineering work, with more project pages to be added later.
+          </p>
 
-        <div class="cards">
+          <div class="cards cards-rich">
+            <div class="card project-card">
+              <div class="card-tag">Research</div>
+              <h3>PIML Ultrasonic Framework</h3>
+              <p>Developing a physics-informed machine learning framework for ultrasonic inverse characterization of granular and viscoelastic material systems.</p>
+            </div>
 
-          <div class="card">
-            <h3>PIML Ultrasonic Framework</h3>
-            <p>Physics-informed machine learning for ultrasonic material characterization.</p>
+            <div class="card project-card">
+              <div class="card-tag">Pharmaceutical Engineering</div>
+              <h3>Moisture Tablet Study</h3>
+              <p>Using ultrasound to track moisture-driven changes in tablet microstructure, stiffness, and viscoelastic response through non-destructive evaluation.</p>
+            </div>
+
+            <div class="card project-card">
+              <div class="card-tag">NDT</div>
+              <h3>Ultrasonic Defect Detection</h3>
+              <p>Experimental investigation of embedded crack detection in metals using ultrasonic methods and calibration-based analysis.</p>
+            </div>
           </div>
-
-          <div class="card">
-            <h3>Moisture Tablet Study</h3>
-            <p>Ultrasonic analysis of viscoelastic and microstructural changes.</p>
-          </div>
-
-          <div class="card">
-            <h3>Ultrasonic NDT</h3>
-            <p>Detection and characterization of embedded defects in metals.</p>
-          </div>
-
         </div>
       </div>
     </section>
 
     <section id="contact" class="section">
       <div class="container">
-        <h2>Contact</h2>
-        <p>Email: rahi1162094@gmail.com</p>
-        <p>Phone: +1 646 548 4835</p>
+        <div class="section-card glass-card contact-card">
+          <h2>Contact</h2>
+          <p class="section-lead">Feel free to connect for academic, research, or professional opportunities.</p>
+          <div class="contact-grid">
+            <a class="contact-item" href="mailto:rahi1162094@gmail.com">
+              <strong>Email</strong>
+              <span>rahi1162094@gmail.com</span>
+            </a>
+            <a class="contact-item" href="tel:+16465484835">
+              <strong>Phone</strong>
+              <span>+1 646 548 4835</span>
+            </a>
+            <a class="contact-item" href="https://www.linkedin.com/in/s-h-m-muntasir-rahi-41336323b/" target="_blank">
+              <strong>LinkedIn</strong>
+              <span>View profile</span>
+            </a>
+          </div>
+        </div>
       </div>
     </section>
-
   </main>
 
   <script src="script.js"></script>
