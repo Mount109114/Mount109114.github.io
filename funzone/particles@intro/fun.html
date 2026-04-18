@@ -301,8 +301,8 @@
       distance: 150,
       color: "#ffffff",
       lines: true,
-      hover: true
-      hoverMode: "grab",
+      hover: true,
+      hoverMode: "grab"
     };
 
     function particleConfig(settings) {
@@ -388,8 +388,8 @@
       distance: document.getElementById("distanceControl"),
       color: document.getElementById("colorControl"),
       lines: document.getElementById("linesToggle"),
-      hover: document.getElementById("hoverToggle")
-      hoverMode: document.getElementById("hoverModeControl"),
+      hover: document.getElementById("hoverToggle"),
+      hoverMode: document.getElementById("hoverModeControl")
     };
 
     const valueDisplays = {
@@ -397,7 +397,7 @@
       size: document.getElementById("sizeValue"),
       speed: document.getElementById("speedValue"),
       distance: document.getElementById("distanceValue"),
-      color: document.getElementById("colorValue")
+      color: document.getElementById("colorValue"),
       hoverMode: document.getElementById("hoverModeValue")
     };
 
@@ -409,7 +409,7 @@
         distance: Number(controls.distance.value),
         color: controls.color.value,
         lines: controls.lines.checked,
-        hover: controls.hover.checked
+        hover: controls.hover.checked,
         hoverMode: controls.hoverMode.value
       };
     }
