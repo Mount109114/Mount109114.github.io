@@ -141,7 +141,16 @@
       background: transparent;
       cursor: pointer;
     }
-
+    select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.08);
+  color: var(--text);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+}
     .toggle-row {
       display: flex;
       align-items: center;
@@ -264,7 +273,17 @@
         <span>Hover Grab</span>
         <input id="hoverToggle" type="checkbox" checked>
       </div>
-
+      <div class="control">
+        <label for="hoverModeControl">
+          Hover Mode
+          <span class="value" id="hoverModeValue">grab</span>
+        </label>
+        <select id="hoverModeControl">
+          <option value="grab" selected>grab</option>
+          <option value="repulse">repulse</option>
+          <option value="bubble">bubble</option>
+        </select>
+      </div>
       <button class="reset-btn" id="resetBtn">Reset Defaults</button>
 
       <div class="panel-note">
@@ -283,6 +302,7 @@
       color: "#ffffff",
       lines: true,
       hover: true
+      hoverMode: "grab",
     };
 
     function particleConfig(settings) {
@@ -331,7 +351,7 @@
           events: {
             onhover: {
               enable: settings.hover,
-              mode: "grab"
+              mode: settings.hoverMode
             },
             onclick: {
               enable: true,
@@ -369,6 +389,7 @@
       color: document.getElementById("colorControl"),
       lines: document.getElementById("linesToggle"),
       hover: document.getElementById("hoverToggle")
+      hoverMode: document.getElementById("hoverModeControl"),
     };
 
     const valueDisplays = {
@@ -377,6 +398,7 @@
       speed: document.getElementById("speedValue"),
       distance: document.getElementById("distanceValue"),
       color: document.getElementById("colorValue")
+      hoverMode: document.getElementById("hoverModeValue")
     };
 
     function currentSettings() {
@@ -388,6 +410,7 @@
         color: controls.color.value,
         lines: controls.lines.checked,
         hover: controls.hover.checked
+        hoverMode: controls.hoverMode.value
       };
     }
 
@@ -397,6 +420,7 @@
       valueDisplays.speed.textContent = controls.speed.value;
       valueDisplays.distance.textContent = controls.distance.value;
       valueDisplays.color.textContent = controls.color.value;
+      valueDisplays.hoverMode.textContent = controls.hoverMode.value;
     }
 
     function rebuild() {
@@ -417,6 +441,7 @@
       controls.color.value = defaults.color;
       controls.lines.checked = defaults.lines;
       controls.hover.checked = defaults.hover;
+      controls.hoverMode.value = defaults.hoverMode;
       rebuild();
     });
 
