@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lorenz Attractor | Muntasir</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    :root {
+      --bg: #071225;
+      --bg2: #0c1830;
+      --panel: rgba(12, 24, 48, 0.52);
+      --panel-border: rgba(255,255,255,0.12);
+      --text: #eef3ff;
+      --muted: #b8c4e0;
+      --accent: #9cc0ff;
+      --accent2: #d9e6ff;
+      --shadow: 0 18px 50px rgba(0,0,0,0.28);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(112,160,255,0.16), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(196,220,255,0.10), transparent 24%),
+        linear-gradient(135deg, var(--bg), var(--bg2));
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .bg-orb {
+      position: fixed;
+      width: 340px;
+      height: 340px;
+      border-radius: 50%;
+      filter: blur(110px);
+      z-index: -1;
+      opacity: 0.32;
+      pointer-events: none;
+    }
+
+    .orb-1 {
+      top: -100px;
+      left: -80px;
+      background: #5f8dff;
+    }
+
+    .orb-2 {
+      right: -80px;
+      bottom: -120px;
+      background: #9dc0ff;
+    }
+
+    .container {
+      width: min(1320px, calc(100% - 36px));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(14px);
+      background: rgba(7,18,37,0.58);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .topbar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 16px 0;
+    }
+
+    .brand {
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+
+    .top-links {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .top-links a {
+      text-decoration: none;
+      color: var(--muted);
+      padding: 10px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.04);
+      transition: transform 0.18s ease, background 0.18s ease;
+    }
+
+    .top-links a:hover {
+      transform: translateY(-2px);
+      background: rgba(255,255,255,0.07);
+      color: var(--text);
+    }
+
+    .hero {
+      padding: 28px 0 18px;
+    }
+
+    .hero-head {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      margin-bottom: 12px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.10);
+      color: var(--accent2);
+      font-size: 0.88rem;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(2.2rem, 5vw, 4rem);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+    }
+
+    .hero-sub {
+      margin: 0 auto;
+      max-width: 760px;
+      color: var(--muted);
+      line-height: 1.75;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 22px;
+      align-items: start;
+      padding-bottom: 30px;
+    }
+
+    .panel,
+    .plot-card,
+    .info-card {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 24px;
+      backdrop-filter: blur(16px);
+      box-shadow: var(--shadow);
+    }
+
+    .panel {
+      padding: 20px;
+      position: sticky;
+      top: 92px;
+    }
+
+    .panel h2 {
+      margin: 0 0 8px;
+      font-size: 1.2rem;
+    }
+
+    .panel p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      line-height: 1.65;
+      font-size: 0.95rem;
+    }
+
+    .control {
+      margin-bottom: 16px;
+    }
+
+    .control label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      color: var(--text);
+      font-size: 0.95rem;
+      gap: 12px;
+    }
+
+    .value {
+      color: var(--accent);
+      font-size: 0.92rem;
+      min-width: 56px;
+      text-align: right;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      cursor: pointer;
+      accent-color: var(--accent);
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    button {
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 14px;
+      padding: 12px 14px;
+      cursor: pointer;
+      color: var(--text);
+      background: rgba(255,255,255,0.06);
+      transition: transform 0.18s ease, background 0.18s ease;
+      font-weight: 600;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      background: rgba(255,255,255,0.09);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #8fb4ff, #d6e5ff);
+      color: #071225;
+      border-color: transparent;
+    }
+
+    .plot-side {
+      display: grid;
+      gap: 18px;
+    }
+
+    .plot-card {
+      padding: 16px;
+    }
+
+    #plot {
+      width: 100%;
+      height: 720px;
+      border-radius: 18px;
+      overflow: hidden;
+    }
+
+    .info-card {
+      padding: 18px 20px;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+
+    .info-block {
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .info-block strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+      color: var(--accent2);
+    }
+
+    .info-block span {
+      color: var(--muted);
+      line-height: 1.65;
+      font-size: 0.94rem;
+    }
+
+    @media (max-width: 1100px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .panel {
+        position: relative;
+        top: 0;
+      }
+
+      .info-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      #plot {
+        height: 620px;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .container {
+        width: min(100%, calc(100% - 20px));
+      }
+
+      .topbar-inner {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .top-links {
+        justify-content: center;
+      }
+
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+
+      #plot {
+        height: 520px;
+      }
+
+      .button-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a class="brand" href="../../index.html">S. H. M. Muntasir Rahi</a>
+      <div class="top-links">
+        <a href="../particles@intro/fun.html">← Back to Fun Lab</a>
+        <a href="../../index.html">Main Site</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="hero">
+    <div class="container">
+      <div class="hero-head">
+        <div class="eyebrow">Chaos • Dynamical Systems • 3D Playground</div>
+        <h1>Lorenz Attractor</h1>
+        <p class="hero-sub">
+          An interactive 3D butterfly-effect plot with a dark premium style, live controls, and full camera interaction.
+          Drag to rotate, scroll to zoom, and explore the attractor from any angle.
+        </p>
+      </div>
+
+      <div class="main-grid">
+        <aside class="panel">
+          <h2>Controls</h2>
+          <p>
+            Adjust the visible range and Lorenz parameters. The plot updates live.
+          </p>
+
+          <div class="control">
+            <label for="startRange">
+              Start
+              <span class="value" id="startValue">0</span>
+            </label>
+            <input id="startRange" type="range" min="0" max="8000" step="100" value="0">
+          </div>
+
+          <div class="control">
+            <label for="endRange">
+              End
+              <span class="value" id="endValue">5000</span>
+            </label>
+            <input id="endRange" type="range" min="1000" max="20000" step="100" value="5000">
+          </div>
+
+          <div class="control">
+            <label for="dtRange">
+              Step Size
+              <span class="value" id="dtValue">0.010</span>
+            </label>
+            <input id="dtRange" type="range" min="0.001" max="0.03" step="0.001" value="0.010">
+          </div>
+
+          <div class="control">
+            <label for="sigmaRange">
+              σ (Sigma)
+              <span class="value" id="sigmaValue">10.0</span>
+            </label>
+            <input id="sigmaRange" type="range" min="1" max="20" step="0.5" value="10">
+          </div>
+
+          <div class="control">
+            <label for="rhoRange">
+              ρ (Rho)
+              <span class="value" id="rhoValue">28.0</span>
+            </label>
+            <input id="rhoRange" type="range" min="5" max="45" step="0.5" value="28">
+          </div>
+
+          <div class="control">
+            <label for="betaRange">
+              β (Beta)
+              <span class="value" id="betaValue">2.67</span>
+            </label>
+            <input id="betaRange" type="range" min="0.5" max="5" step="0.01" value="2.67">
+          </div>
+
+          <div class="button-row">
+            <button class="btn-primary" id="resetBtn">Reset</button>
+            <button id="viewBtn">Default View</button>
+          </div>
+        </aside>
+
+        <section class="plot-side">
+          <div class="plot-card">
+            <div id="plot"></div>
+          </div>
+
+          <div class="info-card">
+            <div class="info-grid">
+              <div class="info-block">
+                <strong>Equations</strong>
+                <span>
+                  dx/dt = σ(y − x)<br>
+                  dy/dt = x(ρ − z) − y<br>
+                  dz/dt = xy − βz
+                </span>
+              </div>
+              <div class="info-block">
+                <strong>Interaction</strong>
+                <span>
+                  Rotate with drag<br>
+                  Zoom with wheel<br>
+                  Pan with right drag
+                </span>
+              </div>
+              <div class="info-block">
+                <strong>State</strong>
+                <span>
+                  Deterministic<br>
+                  Nonlinear<br>
+                  Sensitive to initial conditions
+                </span>
+              </div>
+              <div class="info-block">
+                <strong>Visual</strong>
+                <span>
+                  Cyan → purple → pink line glow<br>
+                  Dark glass UI<br>
+                  Premium fun-lab style
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const controls = {
+      start: document.getElementById("startRange"),
+      end: document.getElementById("endRange"),
+      dt: document.getElementById("dtRange"),
+      sigma: document.getElementById("sigmaRange"),
+      rho: document.getElementById("rhoRange"),
+      beta: document.getElementById("betaRange")
+    };
+
+    const labels = {
+      start: document.getElementById("startValue"),
+      end: document.getElementById("endValue"),
+      dt: document.getElementById("dtValue"),
+      sigma: document.getElementById("sigmaValue"),
+      rho: document.getElementById("rhoValue"),
+      beta: document.getElementById("betaValue")
+    };
+
+    const defaults = {
+      start: 0,
+      end: 5000,
+      dt: 0.010,
+      sigma: 10.0,
+      rho: 28.0,
+      beta: 2.67
+    };
+
+    const plotEl = document.getElementById("plot");
+
+    function updateLabels() {
+      labels.start.textContent = controls.start.value;
+      labels.end.textContent = controls.end.value;
+      labels.dt.textContent = Number(controls.dt.value).toFixed(3);
+      labels.sigma.textContent = Number(controls.sigma.value).toFixed(1);
+      labels.rho.textContent = Number(controls.rho.value).toFixed(1);
+      labels.beta.textContent = Number(controls.beta.value).toFixed(2);
+    }
+
+    function generateLorenz(n, dt, sigma, rho, beta) {
+      let x = 0.1, y = 0, z = 0;
+      const xs = new Array(n);
+      const ys = new Array(n);
+      const zs = new Array(n);
+
+      for (let i = 0; i < n; i++) {
+        const dx = sigma * (y - x);
+        const dy = x * (rho - z) - y;
+        const dz = x * y - beta * z;
+
+        x += dx * dt;
+        y += dy * dt;
+        z += dz * dt;
+
+        xs[i] = x;
+        ys[i] = y;
+        zs[i] = z;
+      }
+
+      return { xs, ys, zs };
+    }
+
+    function gradientColors(n) {
+      const colors = [];
+      for (let i = 0; i < n; i++) {
+        const t = i / Math.max(1, n - 1);
+
+        let r, g, b;
+        if (t < 0.5) {
+          const u = t / 0.5;
+          r = Math.round(0 + u * (130 - 0));
+          g = Math.round(220 + u * (90 - 220));
+          b = Math.round(255 + u * (255 - 255));
+        } else {
+          const u = (t - 0.5) / 0.5;
+          r = Math.round(130 + u * (255 - 130));
+          g = Math.round(90 + u * (90 - 90));
+          b = Math.round(255 + u * (220 - 255));
+        }
+
+        colors.push(`rgb(${r},${g},${b})`);
+      }
+      return colors;
+    }
+
+    function buildPlot() {
+      updateLabels();
+
+      let start = Number(controls.start.value);
+      let end = Number(controls.end.value);
+      const dt = Number(controls.dt.value);
+      const sigma = Number(controls.sigma.value);
+      const rho = Number(controls.rho.value);
+      const beta = Number(controls.beta.value);
+
+      if (start >= end - 200) {
+        start = Math.max(0, end - 200);
+        controls.start.value = start;
+        updateLabels();
+      }
+
+      const totalSteps = Math.max(end, 1000);
+      const { xs, ys, zs } = generateLorenz(totalSteps, dt, sigma, rho, beta);
+
+      const x = xs.slice(start, end);
+      const y = ys.slice(start, end);
+      const z = zs.slice(start, end);
+      const colors = gradientColors(x.length);
+
+      const trace = {
+        type: "scatter3d",
+        mode: "lines",
+        x, y, z,
+        line: {
+          width: 4,
+          color: colors
+        },
+        hoverinfo: "skip"
+      };
+
+      const layout = {
+        margin: { l: 0, r: 0, t: 0, b: 0 },
+        paper_bgcolor: "rgba(0,0,0,0)",
+        plot_bgcolor: "rgba(0,0,0,0)",
+        scene: {
+          bgcolor: "rgba(0,0,0,0)",
+          xaxis: {
+            title: "x",
+            showbackground: true,
+            backgroundcolor: "rgba(10,20,45,0.25)",
+            gridcolor: "rgba(255,255,255,0.08)",
+            zerolinecolor: "rgba(255,255,255,0.12)",
+            color: "#dce8ff"
+          },
+          yaxis: {
+            title: "y",
+            showbackground: true,
+            backgroundcolor: "rgba(10,20,45,0.25)",
+            gridcolor: "rgba(255,255,255,0.08)",
+            zerolinecolor: "rgba(255,255,255,0.12)",
+            color: "#dce8ff"
+          },
+          zaxis: {
+            title: "z",
+            showbackground: true,
+            backgroundcolor: "rgba(10,20,45,0.25)",
+            gridcolor: "rgba(255,255,255,0.08)",
+            zerolinecolor: "rgba(255,255,255,0.12)",
+            color: "#dce8ff"
+          },
+          camera: {
+            eye: { x: 1.7, y: 1.6, z: 1.15 }
+          }
+        }
+      };
+
+      const config = {
+        responsive: true,
+        displaylogo: false,
+        modeBarButtonsToRemove: [
+          "lasso2d",
+          "select2d",
+          "zoom2d",
+          "pan2d",
+          "autoScale2d",
+          "resetScale2d"
+        ]
+      };
+
+      Plotly.react(plotEl, [trace], layout, config);
+    }
+
+    Object.values(controls).forEach(control => {
+      control.addEventListener("input", buildPlot);
+      control.addEventListener("change", buildPlot);
+    });
+
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      controls.start.value = defaults.start;
+      controls.end.value = defaults.end;
+      controls.dt.value = defaults.dt;
+      controls.sigma.value = defaults.sigma;
+      controls.rho.value = defaults.rho;
+      controls.beta.value = defaults.beta;
+      buildPlot();
+    });
+
+    document.getElementById("viewBtn").addEventListener("click", () => {
+      Plotly.relayout(plotEl, {
+        "scene.camera.eye": { x: 1.7, y: 1.6, z: 1.15 }
+      });
+    });
+
+    buildPlot();
+  </script>
+</body>
+</html>
