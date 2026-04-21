@@ -300,7 +300,12 @@
       background: rgba(255,255,255,0.05);
       border: 1px solid rgba(255,255,255,0.08);
     }
-
+  
+    <div class="btn-group">
+    <button id="btnPrev">← Previous Planet</button>
+    <button id="btnNext">Next Planet →</button>
+    </div>
+    
     .planet-info strong {
       display: block;
       margin-bottom: 6px;
@@ -392,17 +397,9 @@
           <input id="scaleControl" type="range" min="0.4" max="2.5" step="0.1" value="1">
         </div>
 
-        <div class="ctrl">
-          <label>
-            Planet Size
-            <span class="val" id="planetSizeVal">1.0×</span>
-          </label>
-          <input id="planetSizeControl" type="range" min="0.6" max="2.0" step="0.1" value="1">
-        </div>
-
         <div class="toggle-row">
           <span>Show Labels</span>
-          <input id="labelsToggle" type="checkbox" checked>
+          <input id="labelsToggle" type="checkbox">
         </div>
 
         <div class="toggle-row">
@@ -455,12 +452,15 @@
       { name: "Uranus",  color: "#8fd6e1", orbit: 380, size: 9, speed: 0.012, angle: Math.random() * Math.PI * 2, desc: "An ice giant with a pale blue-green appearance." },
       { name: "Neptune", color: "#5a8cff", orbit: 450, size: 8.8, speed: 0.006, angle: Math.random() * Math.PI * 2, desc: "A distant deep-blue ice giant with strong winds." }
     ];
+    const asteroidBelts = [
+  { inner: 185, outer: 215, count: 260, color: "rgba(210,220,255,0.22)" }, // main belt
+  { inner: 470, outer: 520, count: 220, color: "rgba(180,210,255,0.16)" }  // outer belt
+    ];
 
     let running = true;
     let simSpeed = 1.0;
     let orbitScale = 1.0;
-    let planetScale = 1.0;
-    let showLabels = true;
+    let showLabels = false;
     let showOrbits = true;
     let autoFocus = false;
 
@@ -473,11 +473,10 @@
     let lastY = 0;
 
     let focusedPlanet = null;
-    let focusLerp = 0.08;
+    let focusLerp = 0.055;
 
     const speedControl = document.getElementById("speedControl");
     const scaleControl = document.getElementById("scaleControl");
-    const planetSizeControl = document.getElementById("planetSizeControl");
     const labelsToggle = document.getElementById("labelsToggle");
     const orbitsToggle = document.getElementById("orbitsToggle");
     const focusToggle = document.getElementById("focusToggle");
@@ -495,7 +494,6 @@
       speedVal.textContent = `${simSpeed.toFixed(1)}×`;
       speedValTop.textContent = `${simSpeed.toFixed(1)}×`;
       scaleVal.textContent = `${orbitScale.toFixed(1)}×`;
-      planetSizeVal.textContent = `${planetScale.toFixed(1)}×`;
       zoomVal.textContent = `${zoom.toFixed(2)}×`;
 
       if (focusedPlanet) {
@@ -537,24 +535,51 @@
       ctx.restore();
     }
 
-    function drawSun(center) {
-      const radius = 18 * zoom * 0.9;
-      const glow = ctx.createRadialGradient(center.x, center.y, 0, center.x, center.y, radius * 3.2);
-      glow.addColorStop(0, "rgba(255,230,140,0.95)");
-      glow.addColorStop(0.25, "rgba(255,190,80,0.60)");
-      glow.addColorStop(0.55, "rgba(255,140,50,0.18)");
-      glow.addColorStop(1, "rgba(255,120,40,0)");
+    function drawAsteroidBelts(sunCenter) {
+  for (const belt of asteroidBelts) {
+    for (let i = 0; i < belt.count; i++) {
+      const angle = (i / belt.count) * Math.PI * 2 + i * 0.17;
+      const radius = (belt.inner + Math.random() * (belt.outer - belt.inner)) * orbitScale;
 
-      ctx.beginPath();
-      ctx.arc(center.x, center.y, radius * 3.2, 0, Math.PI * 2);
-      ctx.fillStyle = glow;
-      ctx.fill();
+      const wx = Math.cos(angle) * radius;
+      const wy = Math.sin(angle) * radius;
+      const screen = worldToScreen(wx, wy);
 
+      const size = (Math.random() * 1.6 + 0.4) * zoom;
       ctx.beginPath();
-      ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
-      ctx.fillStyle = "#ffd36e";
+      ctx.arc(screen.x, screen.y, size, 0, Math.PI * 2);
+      ctx.fillStyle = belt.color;
       ctx.fill();
     }
+  }
+}
+    
+    
+function drawSun(center) {
+  const radius = 26 * zoom * 0.95;
+
+  const glow = ctx.createRadialGradient(center.x, center.y, 0, center.x, center.y, radius * 4.6);
+  glow.addColorStop(0, "rgba(255,235,150,1)");
+  glow.addColorStop(0.18, "rgba(255,210,100,0.82)");
+  glow.addColorStop(0.42, "rgba(255,160,60,0.32)");
+  glow.addColorStop(0.72, "rgba(255,120,30,0.12)");
+  glow.addColorStop(1, "rgba(255,120,40,0)");
+
+  ctx.beginPath();
+  ctx.arc(center.x, center.y, radius * 4.6, 0, Math.PI * 2);
+  ctx.fillStyle = glow;
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
+  ctx.fillStyle = "#ffd54f";
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(center.x, center.y, radius * 0.78, 0, Math.PI * 2);
+  ctx.fillStyle = "#ffe98a";
+  ctx.fill();
+}
 
     function drawOrbit(center, r) {
       ctx.beginPath();
@@ -565,7 +590,7 @@
     }
 
     function drawPlanet(center, planet, isFocused) {
-      const r = planet.size * planetScale * zoom;
+      const r = planet.size * zoom;
       const glow = ctx.createRadialGradient(center.x, center.y, 0, center.x, center.y, r * 2.4);
       glow.addColorStop(0, `${planet.color}cc`);
       glow.addColorStop(1, "rgba(0,0,0,0)");
@@ -579,7 +604,18 @@
       ctx.arc(center.x, center.y, r, 0, Math.PI * 2);
       ctx.fillStyle = planet.color;
       ctx.fill();
-
+      
+      if (planet.name === "Saturn") {
+  ctx.save();
+  ctx.translate(center.x, center.y);
+  ctx.rotate(-0.35);
+  ctx.beginPath();
+  ctx.ellipse(0, 0, r * 1.9, r * 0.75, 0, 0, Math.PI * 2);
+  ctx.strokeStyle = "rgba(220,210,170,0.6)";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.restore();
+      }
       if (isFocused) {
         ctx.beginPath();
         ctx.arc(center.x, center.y, r + 5, 0, Math.PI * 2);
@@ -610,6 +646,24 @@
       };
     }
 
+
+
+    function focusPlanetByIndex(step) {
+  let currentIndex = planets.indexOf(focusedPlanet);
+
+  if (currentIndex === -1) {
+    currentIndex = 0;
+  } else {
+    currentIndex = (currentIndex + step + planets.length) % planets.length;
+  }
+
+  focusedPlanet = planets[currentIndex];
+  autoFocus = true;
+  focusToggle.checked = true;
+  updateLabelsUI();
+}
+
+    
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawStars();
@@ -627,7 +681,7 @@
       offsetY += (targetOffsetY - offsetY) * focusLerp;
 
       const sunCenter = worldToScreen(0, 0);
-
+      drawAsteroidBelts(sunCenter);
       if (showOrbits) {
         for (const planet of planets) {
           drawOrbit(sunCenter, planet.orbit * orbitScale);
@@ -655,7 +709,7 @@
       for (const planet of planets) {
         const pos = getPlanetPosition(planet);
         const screen = worldToScreen(pos.x, pos.y);
-        const r = planet.size * planetScale * zoom + 8;
+        const r = planet.size * zoom + 8;
         const dx = mx - screen.x;
         const dy = my - screen.y;
         if (dx * dx + dy * dy <= r * r) {
@@ -723,11 +777,6 @@
       updateLabelsUI();
     });
 
-    planetSizeControl.addEventListener("input", () => {
-      planetScale = Number(planetSizeControl.value);
-      updateLabelsUI();
-    });
-
     labelsToggle.addEventListener("change", () => {
       showLabels = labelsToggle.checked;
     });
@@ -755,10 +804,17 @@
       btnPlay.textContent = "⏸ Pause";
       btnPlay.classList.remove("paused");
 
+document.getElementById("btnPrev").addEventListener("click", () => {
+  focusPlanetByIndex(-1);
+});
+
+document.getElementById("btnNext").addEventListener("click", () => {
+  focusPlanetByIndex(1);
+});
+      
       simSpeed = 1.0;
       orbitScale = 1.0;
-      planetScale = 1.0;
-      showLabels = true;
+      showLabels = false;
       showOrbits = true;
       autoFocus = false;
       focusedPlanet = null;
@@ -768,8 +824,7 @@
 
       speedControl.value = 1;
       scaleControl.value = 1;
-      planetSizeControl.value = 1;
-      labelsToggle.checked = true;
+      labelsToggle.checked = false;
       orbitsToggle.checked = true;
       focusToggle.checked = false;
 
