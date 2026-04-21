@@ -558,7 +558,7 @@ function drawAsteroidBelts() {
 
       ctx.beginPath();
       ctx.arc(screen.x, screen.y, rock.size * zoom, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(210,220,255,${0.12 + Math.random()*0.18})`;
+      ctx.fillStyle = `rgba(210,220,255,${rock.opacity})`;
       ctx.fill();
     }
   }
@@ -572,14 +572,14 @@ function initAsteroidBelts() {
       const radius = belt.inner + Math.random() * (belt.outer - belt.inner);
       const size = Math.random() * 1.6 + 0.4;
       const opacity = 0.1 + Math.random() * 0.2;
-      
+
       belt.points.push({
-  angle,
-  radius,
-  size,
-  speed: (Math.random() - 0.5) * 0.0002   // tiny drift
-});
-      ctx.fillStyle = `rgba(210,220,255,${rock.opacity})`;
+        angle,
+        radius,
+        size,
+        opacity,
+        speed: (Math.random() - 0.5) * 0.0002
+      });
     }
   }
 }
