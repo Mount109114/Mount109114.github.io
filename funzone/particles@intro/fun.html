@@ -8,8 +8,8 @@
   <style>
     :root {
       --bg: #071225;
-      --panel: rgba(12, 24, 48, 0.45);
-      --panel-border: rgba(255, 255, 255, 0.14);
+      --panel: rgba(255,255,255,0.07);
+      --panel-border: rgba(255,255,255,0.12);
       --text: #eef3ff;
       --muted: #b8c4e0;
       --accent: #9cc0ff;
@@ -22,11 +22,37 @@
     body {
       margin: 0;
       font-family: Arial, Helvetica, sans-serif;
-      background: radial-gradient(circle at top left, #0e2245, #071225 60%);
+      background:
+        radial-gradient(circle at top left, rgba(112,160,255,0.16), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(196,220,255,0.10), transparent 25%),
+        linear-gradient(135deg, #071225, #0c1830);
       color: var(--text);
       overflow: hidden;
     }
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  filter: blur(110px);
+  opacity: 0.30;
+  z-index: -1;
+  pointer-events: none;
+}
 
+body::before {
+  top: -90px;
+  left: -70px;
+  background: #5f8dff;
+}
+
+body::after {
+  right: -80px;
+  bottom: -110px;
+  background: #9dc0ff;
+}
     #particles-js {
       position: fixed;
       inset: 0;
@@ -141,15 +167,34 @@
       background: transparent;
       cursor: pointer;
     }
-    select {
+select {
   width: 100%;
-  padding: 10px 12px;
+  padding: 10px 40px 10px 12px;
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,0.14);
-  background: rgba(255,255,255,0.08);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.05));
   color: var(--text);
   backdrop-filter: blur(10px);
   cursor: pointer;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 0.95rem;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #dce8ff 50%),
+    linear-gradient(135deg, #dce8ff 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) calc(50% - 3px),
+    calc(100% - 12px) calc(50% - 3px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+
+select option {
+  background: #0d1220;
+  color: #eef3ff;
 }
     .toggle-row {
       display: flex;
