@@ -76,7 +76,7 @@
     cursor: grabbing;
   }
 
-  .page {
+.page {
   position: relative;
   z-index: 5;
   min-height: 100vh;
@@ -84,12 +84,14 @@
   grid-template-columns: 1fr 340px;
   gap: 24px;
   padding: 28px;
+  pointer-events: none;
 }
 
 .hero {
   align-self: center;
   max-width: 760px;
   padding: 24px;
+  pointer-events: none;
 }
 
 .eyebrow {
@@ -131,6 +133,7 @@
   background: rgba(255,255,255,0.06);
   backdrop-filter: blur(10px);
   font-weight: 600;
+  pointer-events: auto;
 }
 
 #panel {
@@ -146,6 +149,7 @@
   box-shadow: var(--shadow);
   position: relative;
   z-index: 10;
+  pointer-events: auto;
 }
 
 #panel h2 {
@@ -224,16 +228,33 @@ input[type=range]::-webkit-slider-thumb {
 }
 
 select {
-  background: rgba(255,255,255,0.08);
-  border: 1px solid var(--border);
-  color: var(--text);
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 0.92rem;
-  padding: 10px 12px;
-  border-radius: 12px;
-  outline: none;
-  cursor: pointer;
   width: 100%;
+  padding: 10px 40px 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.05));
+  color: var(--text);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 0.95rem;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #dce8ff 50%),
+    linear-gradient(135deg, #dce8ff 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) calc(50% - 3px),
+    calc(100% - 12px) calc(50% - 3px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+
+select option {
+  background: #0d1220;
+  color: #eef3ff;
 }
 
 .btn-group {
@@ -297,6 +318,7 @@ button:hover {
   #panel {
     justify-self: stretch;
     max-width: none;
+   
   }
 
   .hero {
