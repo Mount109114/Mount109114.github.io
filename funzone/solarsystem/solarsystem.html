@@ -292,10 +292,7 @@
       border-color: rgba(255,255,255,0.16);
       color: var(--accent2);
     }
-<div class="btn-group">
-  <button id="btnPrev">← Previous Planet</button>
-  <button id="btnNext">Next Planet →</button>
-</div>
+
     .planet-info {
       margin-top: 14px;
       padding: 12px 14px;
@@ -414,7 +411,12 @@
           <button id="btnPlay">⏸ Pause</button>
           <button id="btnReset">↺ Reset View</button>
         </div>
-
+        
+        <div class="btn-group">
+          <button id="btnPrev">← Previous Planet</button>
+          <button id="btnNext">Next Planet →</button>
+        </div>
+        
         <div class="planet-info">
           <strong id="planetTitle">Sun</strong>
           <span id="planetDesc">
@@ -548,13 +550,15 @@ const asteroidBelts = [
 function drawAsteroidBelts() {
   for (const belt of asteroidBelts) {
     for (const rock of belt.points) {
+      rock.angle += rock.speed * simSpeed;
+      
       const wx = Math.cos(rock.angle) * rock.radius * orbitScale;
       const wy = Math.sin(rock.angle) * rock.radius * orbitScale;
       const screen = worldToScreen(wx, wy);
 
       ctx.beginPath();
       ctx.arc(screen.x, screen.y, rock.size * zoom, 0, Math.PI * 2);
-      ctx.fillStyle = belt.color;
+      ctx.fillStyle = `rgba(210,220,255,${0.12 + Math.random()*0.18})`;
       ctx.fill();
     }
   }
@@ -567,8 +571,15 @@ function initAsteroidBelts() {
       const angle = Math.random() * Math.PI * 2;
       const radius = belt.inner + Math.random() * (belt.outer - belt.inner);
       const size = Math.random() * 1.6 + 0.4;
-
-      belt.points.push({ angle, radius, size });
+      const opacity = 0.1 + Math.random() * 0.2;
+      
+      belt.points.push({
+  angle,
+  radius,
+  size,
+  speed: (Math.random() - 0.5) * 0.0002   // tiny drift
+});
+      ctx.fillStyle = `rgba(210,220,255,${rock.opacity})`;
     }
   }
 }
@@ -700,7 +711,7 @@ function drawSun(center) {
       offsetY += (targetOffsetY - offsetY) * focusLerp;
 
       const sunCenter = worldToScreen(0, 0);
-      drawAsteroidBelts(sunCenter);
+      drawAsteroidBelts();
       if (showOrbits) {
         for (const planet of planets) {
           drawOrbit(sunCenter, planet.orbit * orbitScale);
