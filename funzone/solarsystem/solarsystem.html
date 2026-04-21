@@ -292,7 +292,10 @@
       border-color: rgba(255,255,255,0.16);
       color: var(--accent2);
     }
-
+<div class="btn-group">
+  <button id="btnPrev">← Previous Planet</button>
+  <button id="btnNext">Next Planet →</button>
+</div>
     .planet-info {
       margin-top: 14px;
       padding: 12px 14px;
@@ -300,11 +303,6 @@
       background: rgba(255,255,255,0.05);
       border: 1px solid rgba(255,255,255,0.08);
     }
-  
-    <div class="btn-group">
-    <button id="btnPrev">← Previous Planet</button>
-    <button id="btnNext">Next Planet →</button>
-    </div>
     
     .planet-info strong {
       display: block;
@@ -452,10 +450,22 @@
       { name: "Uranus",  color: "#8fd6e1", orbit: 380, size: 9, speed: 0.012, angle: Math.random() * Math.PI * 2, desc: "An ice giant with a pale blue-green appearance." },
       { name: "Neptune", color: "#5a8cff", orbit: 450, size: 8.8, speed: 0.006, angle: Math.random() * Math.PI * 2, desc: "A distant deep-blue ice giant with strong winds." }
     ];
-    const asteroidBelts = [
-  { inner: 185, outer: 215, count: 260, color: "rgba(210,220,255,0.22)" }, // main belt
-  { inner: 470, outer: 520, count: 220, color: "rgba(180,210,255,0.16)" }  // outer belt
-    ];
+const asteroidBelts = [
+  {
+    inner: 185,
+    outer: 215,
+    count: 260,
+    color: "rgba(210,220,255,0.22)",
+    points: []
+  },
+  {
+    inner: 470,
+    outer: 500,
+    count: 180,
+    color: "rgba(180,210,255,0.16)",
+    points: []
+  }
+];
 
     let running = true;
     let simSpeed = 1.0;
@@ -535,21 +545,30 @@
       ctx.restore();
     }
 
-    function drawAsteroidBelts(sunCenter) {
+function drawAsteroidBelts() {
   for (const belt of asteroidBelts) {
-    for (let i = 0; i < belt.count; i++) {
-      const angle = (i / belt.count) * Math.PI * 2 + i * 0.17;
-      const radius = (belt.inner + Math.random() * (belt.outer - belt.inner)) * orbitScale;
-
-      const wx = Math.cos(angle) * radius;
-      const wy = Math.sin(angle) * radius;
+    for (const rock of belt.points) {
+      const wx = Math.cos(rock.angle) * rock.radius * orbitScale;
+      const wy = Math.sin(rock.angle) * rock.radius * orbitScale;
       const screen = worldToScreen(wx, wy);
 
-      const size = (Math.random() * 1.6 + 0.4) * zoom;
       ctx.beginPath();
-      ctx.arc(screen.x, screen.y, size, 0, Math.PI * 2);
+      ctx.arc(screen.x, screen.y, rock.size * zoom, 0, Math.PI * 2);
       ctx.fillStyle = belt.color;
       ctx.fill();
+    }
+  }
+}
+
+function initAsteroidBelts() {
+  for (const belt of asteroidBelts) {
+    belt.points = [];
+    for (let i = 0; i < belt.count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = belt.inner + Math.random() * (belt.outer - belt.inner);
+      const size = Math.random() * 1.6 + 0.4;
+
+      belt.points.push({ angle, radius, size });
     }
   }
 }
@@ -792,17 +811,12 @@ function drawSun(center) {
       }
     });
 
-    const btnPlay = document.getElementById("btnPlay");
-    btnPlay.addEventListener("click", () => {
-      running = !running;
-      btnPlay.textContent = running ? "⏸ Pause" : "▶ Start";
-      btnPlay.classList.toggle("paused", !running);
-    });
-
-    document.getElementById("btnReset").addEventListener("click", () => {
-      running = true;
-      btnPlay.textContent = "⏸ Pause";
-      btnPlay.classList.remove("paused");
+const btnPlay = document.getElementById("btnPlay");
+btnPlay.addEventListener("click", () => {
+  running = !running;
+  btnPlay.textContent = running ? "⏸ Pause" : "▶ Start";
+  btnPlay.classList.toggle("paused", !running);
+});
 
 document.getElementById("btnPrev").addEventListener("click", () => {
   focusPlanetByIndex(-1);
@@ -811,27 +825,33 @@ document.getElementById("btnPrev").addEventListener("click", () => {
 document.getElementById("btnNext").addEventListener("click", () => {
   focusPlanetByIndex(1);
 });
-      
-      simSpeed = 1.0;
-      orbitScale = 1.0;
-      showLabels = false;
-      showOrbits = true;
-      autoFocus = false;
-      focusedPlanet = null;
-      zoom = 1.0;
-      offsetX = 0;
-      offsetY = 0;
 
-      speedControl.value = 1;
-      scaleControl.value = 1;
-      labelsToggle.checked = false;
-      orbitsToggle.checked = true;
-      focusToggle.checked = false;
+document.getElementById("btnReset").addEventListener("click", () => {
+  running = true;
+  btnPlay.textContent = "⏸ Pause";
+  btnPlay.classList.remove("paused");
 
-      updateLabelsUI();
-    });
+  simSpeed = 1.0;
+  orbitScale = 1.0;
+  showLabels = false;
+  showOrbits = true;
+  autoFocus = false;
+  focusedPlanet = null;
+  zoom = 1.0;
+  offsetX = 0;
+  offsetY = 0;
+
+  speedControl.value = 1;
+  scaleControl.value = 1;
+  labelsToggle.checked = false;
+  orbitsToggle.checked = true;
+  focusToggle.checked = false;
+
+  updateLabelsUI();
+});
 
     updateLabelsUI();
+    initAsteroidBelts();
     loop();
   </script>
 </body>
