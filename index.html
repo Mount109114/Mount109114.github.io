@@ -1,812 +1,167 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>3-Body Problem | Muntasir's Fun Lab</title>
-<style>
-  *, *::before, *::after {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
-
-  :root {
-    --bg: #071225;
-    --bg2: #0c1830;
-    --panel: rgba(255,255,255,0.07);
-    --panel-strong: rgba(255,255,255,0.09);
-    --border: rgba(255,255,255,0.12);
-    --text: #eef3ff;
-    --muted: #b8c4e0;
-    --accent: #9cc0ff;
-    --accent2: #dce8ff;
-    --shadow: 0 18px 50px rgba(0,0,0,0.28);
-    --shadow-soft: 0 10px 28px rgba(0,0,0,0.18);
-  }
-
-  html, body {
-    width: 100%;
-    height: 100%;
-    background:
-      radial-gradient(circle at top left, rgba(112,160,255,0.16), transparent 28%),
-      radial-gradient(circle at bottom right, rgba(196,220,255,0.10), transparent 25%),
-      linear-gradient(135deg, var(--bg), var(--bg2));
-    color: var(--text);
-    font-family: Arial, Helvetica, sans-serif;
-    overflow: hidden;
-  }
-
-  body::before,
-  body::after {
-    content: "";
-    position: fixed;
-    width: 320px;
-    height: 320px;
-    border-radius: 50%;
-    filter: blur(110px);
-    opacity: 0.30;
-    z-index: 0;
-    pointer-events: none;
-  }
-
-  body::before {
-    top: -90px;
-    left: -70px;
-    background: #5f8dff;
-  }
-
-  body::after {
-    right: -80px;
-    bottom: -110px;
-    background: #9dc0ff;
-  }
-
-  canvas {
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    display: block;
-    cursor: crosshair;
-    z-index: 1;
-  }
-
-  .page {
-    position: relative;
-    z-index: 5;
-    min-height: 100vh;
-    display: grid;
-    grid-template-columns: 1fr 340px;
-    gap: 24px;
-    padding: 28px;
-    pointer-events: none;
-  }
-
-  .hero {
-    align-self: center;
-    max-width: 760px;
-    padding: 24px;
-    pointer-events: none;
-  }
-
-  .eyebrow {
-    display: inline-block;
-    padding: 8px 14px;
-    border-radius: 999px;
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.12);
-    color: var(--accent);
-    margin-bottom: 16px;
-    backdrop-filter: blur(10px);
-    font-size: 0.95rem;
-    font-weight: 600;
-  }
-
-  .hero h1 {
-    margin: 0 0 14px;
-    font-size: clamp(2.6rem, 6vw, 5.2rem);
-    line-height: 1.02;
-    letter-spacing: -0.04em;
-    max-width: 9ch;
-  }
-
-  .hero p {
-    color: var(--muted);
-    line-height: 1.7;
-    max-width: 58ch;
-    font-size: 1.05rem;
-  }
-
-  .hero-links {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-top: 18px;
-  }
-
-  .back-btn {
-    display: inline-block;
-    padding: 12px 18px;
-    text-decoration: none;
-    color: var(--text);
-    border: 1px solid rgba(255,255,255,0.16);
-    border-radius: 14px;
-    background: rgba(255,255,255,0.06);
-    backdrop-filter: blur(10px);
-    font-weight: 600;
-    pointer-events: auto;
-  }
-
-  /* ── panel ── */
-  #panel {
-    align-self: center;
-    justify-self: end;
-    width: 100%;
-    max-width: 340px;
-    padding: 22px;
-    border-radius: 24px;
-    background: rgba(255,255,255,0.07);
-    border: 1px solid rgba(255,255,255,0.12);
-    backdrop-filter: blur(16px);
-    box-shadow: var(--shadow);
-    position: relative;
-    z-index: 10;
-    pointer-events: auto;
-  }
-
-  #panel h2 {
-    margin: 0 0 8px;
-    font-size: 1.5rem;
-  }
-
-  .panel-sub {
-    margin: 0 0 18px;
-    color: var(--muted);
-    font-size: 0.98rem;
-    line-height: 1.65;
-  }
-
-  #stats {
-    position: static;
-    background: none;
-    border: none;
-    padding: 0;
-    margin-bottom: 18px;
-    min-width: auto;
-    text-align: right;
-    font-size: 0.88rem;
-    color: var(--muted);
-  }
-
-  #stats span {
-    color: var(--accent);
-    font-weight: 700;
-  }
-
-  /* body colour dots in stats */
-  .dot {
-    display: inline-block;
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    margin-right: 4px;
-    vertical-align: middle;
-  }
-
-  .panel-row {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .ctrl {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .ctrl label {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--text);
-  }
-
-  .ctrl .val {
-    color: var(--accent);
-    font-weight: 700;
-  }
-
-  input[type=range] {
-    -webkit-appearance: none;
-    width: 100%;
-    height: 4px;
-    background: rgba(255,255,255,0.12);
-    border-radius: 999px;
-    outline: none;
-    cursor: pointer;
-  }
-
-  input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 15px;
-    height: 15px;
-    border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 8px rgba(156,192,255,0.28);
-    cursor: pointer;
-  }
-
-  select {
-    width: 100%;
-    padding: 10px 40px 10px 12px;
-    border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.14);
-    background:
-      linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.05));
-    color: var(--text);
-    backdrop-filter: blur(10px);
-    cursor: pointer;
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 0.95rem;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background-image:
-      linear-gradient(45deg, transparent 50%, #dce8ff 50%),
-      linear-gradient(135deg, #dce8ff 50%, transparent 50%);
-    background-position:
-      calc(100% - 18px) calc(50% - 3px),
-      calc(100% - 12px) calc(50% - 3px);
-    background-size: 6px 6px, 6px 6px;
-    background-repeat: no-repeat;
-  }
-
-  select option {
-    background: #0d1220;
-    color: #eef3ff;
-  }
-
-  .btn-group {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 6px;
-  }
-
-  button {
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 0.88rem;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    border: 1px solid rgba(255,255,255,0.14);
-    border-radius: 14px;
-    padding: 11px 16px;
-    cursor: pointer;
-    transition: all 0.18s ease;
-    background: rgba(255,255,255,0.05);
-    color: var(--text);
-  }
-
-  button:hover {
-    background: rgba(255,255,255,0.10);
-    border-color: rgba(255,255,255,0.20);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-soft);
-  }
-
-  #btnStart {
-    background: linear-gradient(135deg, #8fb4ff, #d6e5ff);
-    color: #071225;
-    border-color: transparent;
-  }
-
-  #btnStart.running {
-    background: rgba(255,255,255,0.08);
-    border-color: rgba(255,255,255,0.16);
-    color: var(--accent2);
-  }
-
-  .panel-note {
-    margin-top: 14px;
-    font-size: 0.82rem;
-    color: var(--muted);
-    line-height: 1.6;
-  }
-
-  @media (max-width: 980px) {
-    html, body { overflow: auto; }
-
-    .page {
-      grid-template-columns: 1fr;
-      padding: 18px;
-    }
-
-    #panel {
-      justify-self: stretch;
-      max-width: none;
-    }
-
-    .hero {
-      padding: 10px 4px;
-    }
-
-    .hero h1 {
-      max-width: none;
-    }
-
-    .hero-links {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-top: 18px;
-    }
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>S. H. M. Muntasir Rahi</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
 
-<canvas id="c"></canvas>
-
-<div class="page">
-  <section class="hero">
-    <div class="eyebrow">Fun Zone</div>
-    <h1>Three-Body Problem.</h1>
-    <p>
-      Three masses, mutual gravity, infinite unpredictability. Watch order collapse into chaos —
-      or find the rare stable orbits hiding inside Newtonian mechanics.
-    </p>
-    <div class="hero-links">
-      <a class="back-btn" href="../../index.html">← Back to main site</a>
-      <a class="back-btn" href="../lorenz/index.html">→ Lorenz Attractor</a>
+  <header class="site-header">
+    <div class="container nav-wrap">
+      <a class="brand" href="#">S. H. M. Muntasir Rahi</a>
+      <nav class="nav">
+        <a href="about.html">About</a>
+        <a href="projects.html">Projects</a>
+        <a href="#contact">Contact</a>
+      </nav>
     </div>
-  </section>
+  </header>
 
-  <aside id="panel">
-    <h2>Gravity Controls</h2>
-    <p class="panel-sub">
-      Simple translucent panel. Enough control to explore without becoming messy.
-    </p>
+  <main>
+    <section class="hero">
+      <div class="container hero-grid">
+        <div class="hero-text card">
+          <div class="eyebrow">Mechanical Engineering • Research • Experimental Systems</div>
 
-    <div id="stats">
-      <span class="dot" style="background:#9cc0ff;"></span>KE <span id="ke">0.00</span> &nbsp;
-      <span class="dot" style="background:#ffb86c;"></span>PE <span id="pe">0.00</span><br>
-      t <span id="tv">0.00</span>s &nbsp; Δ <span id="dv">stable</span>
-    </div>
+          <h1>
+  Building ideas through engineering.
+</h1>
 
-    <div class="panel-row">
+<p class="hero-roles">
+  <span id="rotating-role">Researcher</span>
+</p>
 
-      <div class="ctrl">
-        <label>Preset Configuration</label>
-        <select id="preset">
-          <option value="figure8">Figure-8 Orbit</option>
-          <option value="lagrange">Lagrange L4/L5</option>
-          <option value="binary">Binary + Intruder</option>
-          <option value="chaotic">Chaotic Dance</option>
-          <option value="euler">Euler Collinear</option>
-        </select>
+<p class="subtitle">
+  Master's student in Mechanical Engineering at Clarkson University and Graduate Teaching Assistant in the Department of Mechanical and Aerospace Engineering.
+</p>
+
+          <p class="hero-copy">
+            I work at the intersection of experimental engineering, ultrasonic characterization, applied computation, and hands-on system development. My goal is to build meaningful research-driven solutions with strong technical depth and practical impact.
+          </p>
+
+          <div class="pill-row">
+            <span class="pill">Potsdam, New York</span>
+            <span class="pill">BUET → Clarkson</span>
+            <span class="pill">Research • Design • Prototyping</span>
+          </div>
+
+        <div class="button-row">
+          <a class="btn btn-primary" href="assets/resume.pdf" target="_blank">Download CV</a>
+          <a class="btn" href="assets/Cover%20Letter_Villanova%20University.pdf" target="_blank">Cover Letter</a>
+          <a class="btn" href="https://www.linkedin.com/in/s-h-m-muntasir-rahi-41336323b/" target="_blank">LinkedIn</a>
+          <a class="btn" href="https://github.com/Mount109114/" target="_blank">GitHub</a>
+        </div>
+        </div>
+
+        <aside class="hero-side card">
+          <div class="profile-photo-wrap">
+            <img src="assets/profile.jpg" alt="S. H. M. Muntasir Rahi profile photo" class="profile-photo" />
+          </div>
+
+          <h2>S. H. M. Muntasir Rahi</h2>
+          <p class="side-subtitle">MS Mechanical Engineering @ Clarkson University</p>
+
+          <div class="info-list">
+            <div class="info-item">
+              <strong>Current Focus</strong>
+              <span>Ultrasonics, PIML, Advanced Materials, and Experimental Systems</span>
+            </div>
+            <div class="info-item">
+              <strong>Background</strong>
+              <span>Mechanical Engineering, BUET</span>
+            </div>
+            <div class="info-item">
+              <strong>Direction</strong>
+              <span>Research, development, and engineering innovation</span>
+            </div>
+          </div>
+        </aside>
       </div>
+    </section>
 
-      <div class="ctrl">
-        <label>Speed <span class="val" id="speedVal">1.0×</span></label>
-        <input type="range" id="speed" min="0.1" max="5" step="0.1" value="1"/>
+    <section id="about" class="section">
+      <div class="container">
+        <div class="card section-card">
+          <h2>About</h2>
+          <p class="section-lead">
+            I am deeply interested in experimental engineering research that blends theory, testing, and practical implementation. My academic journey began in Bangladesh and continues at Clarkson University, where I am building expertise in materials, ultrasonics, inverse modeling, and research-oriented system development.
+          </p>
+
+          <div class="three-grid">
+            <div class="mini-card">
+              <h3>Research Mindset</h3>
+              <p>Curiosity-driven, experimentally grounded, and focused on extracting meaningful insight from real physical systems.</p>
+            </div>
+            <div class="mini-card">
+              <h3>Engineering Practice</h3>
+              <p>Comfortable with design iteration, instrumentation, embedded experimentation, coding, and lab-based problem solving.</p>
+            </div>
+            <div class="mini-card">
+              <h3>Long-Term Goal</h3>
+              <p>To contribute to impactful R&amp;D environments through rigorous engineering, creativity, and collaborative scientific work.</p>
+            </div>
+          </div>
+        </div>
       </div>
+    </section>
 
-      <div class="ctrl">
-        <label>Trail Length <span class="val" id="trailVal">600</span></label>
-        <input type="range" id="trail" min="50" max="2000" step="50" value="600"/>
+    <section id="projects" class="section">
+      <div class="container">
+        <div class="card section-card">
+          <h2>Featured Projects</h2>
+          <p class="section-lead">
+            A few selected directions from my current research and engineering work, with more project pages to be added later.
+          </p>
+
+          <div class="three-grid">
+            <div class="mini-card project-card">
+              <div class="tag">Research</div>
+              <h3>PIML Ultrasonic Framework</h3>
+              <p>Developing a physics-informed machine learning framework for ultrasonic inverse characterization of granular and viscoelastic material systems.</p>
+            </div>
+            <div class="mini-card project-card">
+              <div class="tag">Pharmaceutical Engineering</div>
+              <h3>Moisture Tablet Study</h3>
+              <p>Using ultrasound to track moisture-driven changes in tablet microstructure, stiffness, and viscoelastic response through non-destructive evaluation.</p>
+            </div>
+            <div class="mini-card project-card">
+              <div class="tag">NDT</div>
+              <h3>Ultrasonic Defect Detection</h3>
+              <p>Experimental investigation of embedded crack detection in metals using ultrasonic methods and calibration-based analysis.</p>
+            </div>
+          </div>
+        </div>
       </div>
+    </section>
 
-      <div class="ctrl">
-        <label>G Strength <span class="val" id="gVal">1.0</span></label>
-        <input type="range" id="gstrength" min="0.1" max="3" step="0.05" value="1"/>
+    <section id="contact" class="section last-section">
+      <div class="container">
+        <div class="card section-card">
+          <h2>Contact</h2>
+          <p class="section-lead">Feel free to connect for academic, research, or professional opportunities.</p>
+
+          <div class="contact-grid">
+            <a class="contact-box" href="mailto:rahi1162094@gmail.com">
+              <strong>Email</strong>
+              <span>rahi1162094@gmail.com</span>
+            </a>
+            <a class="contact-box" href="tel:+16465484835">
+              <strong>Phone</strong>
+              <span>+1 646 548 4835</span>
+            </a>
+            <a class="contact-box" href="https://www.linkedin.com/in/s-h-m-muntasir-rahi-41336323b/" target="_blank">
+              <strong>LinkedIn</strong>
+              <span>View profile</span>
+            </a>
+          </div>
+        </div>
       </div>
-
-      <div class="ctrl">
-        <label>Color Mode</label>
-        <select id="colorMode">
-          <option value="solid">Solid Glow</option>
-          <option value="velocity">Velocity Heat</option>
-          <option value="fade">Fade Trail</option>
-          <option value="rainbow">Rainbow</option>
-        </select>
-      </div>
-
-      <div class="btn-group">
-        <button id="btnStart" class="running">⏸ Pause</button>
-        <button id="btnReset">↺ Reset Preset</button>
-      </div>
-
-    </div>
-
-    <div class="panel-note">
-      Scroll to zoom · Drag canvas to pan · Double-click to reset view
-    </div>
-  </aside>
-</div>
-
-<script>
-// ── canvas ──
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-
-function resize() {
-  canvas.width  = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-resize();
-window.addEventListener('resize', resize);
-
-// ── sim params ──
-let G         = 1.0;
-let speed     = 1.0;
-let maxTrail  = 600;
-let colorMode = 'solid';
-let running   = true;
-
-// ── view (pan + zoom) ──
-let viewX = 0, viewY = 0, viewZ = 1;
-let panning = false, lastPX = 0, lastPY = 0;
-
-// ── body colours ──
-const COLORS = ['#9cc0ff', '#ffb86c', '#a8ffb8'];
-const GLOW   = ['rgba(156,192,255,', 'rgba(255,184,108,', 'rgba(168,255,184,'];
-
-// ── Body class ──
-class Body {
-  constructor(x, y, vx, vy, mass) {
-    this.x = x; this.y = y;
-    this.vx = vx; this.vy = vy;
-    this.mass = mass;
-    this.trail = [];
-    this.hue = 0;
-  }
-  clone() {
-    const b = new Body(this.x,this.y,this.vx,this.vy,this.mass);
-    b.hue = this.hue;
-    return b;
-  }
-}
-
-// ── Presets ──
-// All coords in simulation space; scale is arbitrary (drawn centered)
-function getPreset(name) {
-  switch (name) {
-    case 'figure8': {
-      // Chenciner & Montgomery figure-8 solution (scaled x100)
-      const v0x =  0.93240737 / 2;
-      const v0y =  0.86473146 / 2;
-      return [
-        new Body(-0.97000436*100,  0.24308753*100,  v0x*100,  v0y*100, 1),
-        new Body( 0.97000436*100, -0.24308753*100,  v0x*100,  v0y*100, 1),
-        new Body( 0,               0,              -2*v0x*100,-2*v0y*100, 1),
-      ];
-    }
-    case 'lagrange': {
-      // Equilateral triangle — Lagrange L4/L5 stable
-      const R = 130, om = Math.sqrt(3*G / (R*R*R)) * 60;
-      return [
-        new Body( R,       0,            0,        om*R,  1),
-        new Body(-R/2,  R*Math.sqrt(3)/2, -om*R*Math.sqrt(3)/2, -om*R/2, 1),
-        new Body(-R/2, -R*Math.sqrt(3)/2,  om*R*Math.sqrt(3)/2, -om*R/2, 1),
-      ];
-    }
-    case 'binary': {
-      // Tight binary pair + distant intruder
-      return [
-        new Body(-50,  0,   0,  90, 2),
-        new Body( 50,  0,   0, -90, 2),
-        new Body(  0, 280, -42,   0, 0.5),
-      ];
-    }
-    case 'chaotic': {
-      // Deliberately asymmetric — guaranteed chaos
-      return [
-        new Body(-120,  60,  20,  55, 1.2),
-        new Body(  80, -90, -55,  10, 0.9),
-        new Body(  30, 100,  35, -65, 1.5),
-      ];
-    }
-    case 'euler': {
-      // Euler collinear — unstable but fascinating
-      return [
-        new Body(-160,  0,   0,  52, 1),
-        new Body(   0,  0,   0, -104, 2),
-        new Body( 160,  0,   0,  52, 1),
-      ];
-    }
-  }
-}
-
-let bodies = [];
-let simTime = 0;
-let initEnergy = null;
-
-function loadPreset(name) {
-  bodies = getPreset(name);
-  bodies.forEach((b, i) => b.hue = i);
-  simTime = 0;
-  initEnergy = null;
-  viewX = 0; viewY = 0; viewZ = 1;
-}
-
-loadPreset('figure8');
-
-// ── Physics: RK4 ──
-const DT = 0.016;
-
-function accel(bs) {
-  // Returns [{ax,ay}] for each body
-  const acc = bs.map(() => ({ax:0, ay:0}));
-  for (let i = 0; i < bs.length; i++) {
-    for (let j = i+1; j < bs.length; j++) {
-      const dx = bs[j].x - bs[i].x;
-      const dy = bs[j].y - bs[i].y;
-      const dist2 = dx*dx + dy*dy;
-      const softened = dist2 + 80; // softening to avoid singularity
-      const dist = Math.sqrt(softened);
-      const force = G * bs[i].mass * bs[j].mass / softened;
-      const fx = force * dx / dist;
-      const fy = force * dy / dist;
-      acc[i].ax += fx / bs[i].mass;
-      acc[i].ay += fy / bs[i].mass;
-      acc[j].ax -= fx / bs[j].mass;
-      acc[j].ay -= fy / bs[j].mass;
-    }
-  }
-  return acc;
-}
-
-function rk4Step(bs, dt) {
-  const n = bs.length;
-
-  function deriv(state) {
-    const pos = state.map(s => ({x:s.x, y:s.y, mass:bs[0].mass}));
-    // rebuild temp bodies for accel
-    const tmp = state.map((s,i) => { const b = bs[i].clone(); b.x=s.x; b.y=s.y; b.vx=s.vx; b.vy=s.vy; return b; });
-    const a = accel(tmp);
-    return state.map((s,i) => ({
-      dx: s.vx, dy: s.vy,
-      dvx: a[i].ax, dvy: a[i].ay
-    }));
-  }
-
-  const s0 = bs.map(b => ({x:b.x,y:b.y,vx:b.vx,vy:b.vy}));
-
-  const k1 = deriv(s0);
-  const s1 = s0.map((s,i) => ({x:s.x+k1[i].dx*dt/2, y:s.y+k1[i].dy*dt/2, vx:s.vx+k1[i].dvx*dt/2, vy:s.vy+k1[i].dvy*dt/2}));
-
-  const k2 = deriv(s1);
-  const s2 = s0.map((s,i) => ({x:s.x+k2[i].dx*dt/2, y:s.y+k2[i].dy*dt/2, vx:s.vx+k2[i].dvx*dt/2, vy:s.vy+k2[i].dvy*dt/2}));
-
-  const k3 = deriv(s2);
-  const s3 = s0.map((s,i) => ({x:s.x+k3[i].dx*dt, y:s.y+k3[i].dy*dt, vx:s.vx+k3[i].dvx*dt, vy:s.vy+k3[i].dvy*dt}));
-
-  const k4 = deriv(s3);
-
-  bs.forEach((b,i) => {
-    b.x  += (dt/6)*(k1[i].dx  + 2*k2[i].dx  + 2*k3[i].dx  + k4[i].dx);
-    b.y  += (dt/6)*(k1[i].dy  + 2*k2[i].dy  + 2*k3[i].dy  + k4[i].dy);
-    b.vx += (dt/6)*(k1[i].dvx + 2*k2[i].dvx + 2*k3[i].dvx + k4[i].dvx);
-    b.vy += (dt/6)*(k1[i].dvy + 2*k2[i].dvy + 2*k3[i].dvy + k4[i].dvy);
-  });
-}
-
-// ── Energy helpers ──
-function kinetic() {
-  return bodies.reduce((s,b) => s + 0.5*b.mass*(b.vx*b.vx+b.vy*b.vy), 0);
-}
-function potential() {
-  let p = 0;
-  for (let i=0;i<bodies.length;i++)
-    for (let j=i+1;j<bodies.length;j++) {
-      const dx=bodies[j].x-bodies[i].x, dy=bodies[j].y-bodies[i].y;
-      p -= G*bodies[i].mass*bodies[j].mass / Math.sqrt(dx*dx+dy*dy+1);
-    }
-  return p;
-}
-
-// ── World → screen ──
-function wx(x) { return canvas.width/2  + (x + viewX) * viewZ; }
-function wy(y) { return canvas.height/2 + (y + viewY) * viewZ; }
-
-// ── Draw ──
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // draw trails
-  bodies.forEach((b, bi) => {
-    const trail = b.trail;
-    if (trail.length < 2) return;
-    const n = trail.length;
-
-    for (let i = 1; i < n; i++) {
-      const age = i / n;
-      const alpha = Math.pow(age, 0.5) * 0.75;
-      ctx.beginPath();
-      ctx.moveTo(wx(trail[i-1].x), wy(trail[i-1].y));
-      ctx.lineTo(wx(trail[i].x),   wy(trail[i].y));
-      ctx.lineWidth = 0.8 + age * 1.5;
-      ctx.globalAlpha = alpha;
-
-      if (colorMode === 'solid') {
-        ctx.strokeStyle = COLORS[bi];
-      } else if (colorMode === 'velocity') {
-        const dx = trail[i].x - trail[i-1].x;
-        const dy = trail[i].y - trail[i-1].y;
-        const v = Math.min(Math.sqrt(dx*dx+dy*dy) * 0.4, 1);
-        const r = Math.round(156 + v*(255-156));
-        const g = Math.round(192 + v*(80-192));
-        const bl= Math.round(255 + v*(60-255));
-        ctx.strokeStyle = `rgb(${r},${g},${bl})`;
-      } else if (colorMode === 'fade') {
-        ctx.strokeStyle = COLORS[bi];
-      } else {
-        const h = (bi*120 + i*0.15) % 360;
-        ctx.strokeStyle = `hsl(${h},80%,68%)`;
-      }
-      ctx.stroke();
-    }
-  });
-  ctx.globalAlpha = 1;
-
-  // draw bodies
-  bodies.forEach((b, bi) => {
-    const sx = wx(b.x), sy = wy(b.y);
-    const r = 5 + b.mass * 3;
-
-    // outer glow
-    const grd = ctx.createRadialGradient(sx, sy, 0, sx, sy, r * 3.5);
-    grd.addColorStop(0,   GLOW[bi] + '0.55)');
-    grd.addColorStop(0.4, GLOW[bi] + '0.20)');
-    grd.addColorStop(1,   GLOW[bi] + '0)');
-    ctx.beginPath();
-    ctx.arc(sx, sy, r * 3.5, 0, Math.PI*2);
-    ctx.fillStyle = grd;
-    ctx.fill();
-
-    // body disc
-    ctx.beginPath();
-    ctx.arc(sx, sy, r, 0, Math.PI*2);
-    const disc = ctx.createRadialGradient(sx - r*0.3, sy - r*0.3, 0, sx, sy, r);
-    disc.addColorStop(0, '#ffffff');
-    disc.addColorStop(0.35, COLORS[bi]);
-    disc.addColorStop(1,   COLORS[bi] + 'bb');
-    ctx.fillStyle = disc;
-    ctx.shadowBlur = 18;
-    ctx.shadowColor = COLORS[bi];
-    ctx.fill();
-    ctx.shadowBlur = 0;
-  });
-}
-
-// ── Simulation step ──
-function step(substeps) {
-  for (let s = 0; s < substeps; s++) {
-    rk4Step(bodies, DT);
-    simTime += DT;
-    bodies.forEach(b => {
-      b.trail.push({x: b.x, y: b.y});
-      if (b.trail.length > maxTrail) b.trail.shift();
-    });
-  }
-}
-
-// ── Stats update ──
-function updateStats() {
-  const ke = kinetic();
-  const pe = potential();
-  const total = ke + pe;
-  if (initEnergy === null) initEnergy = total;
-  const drift = initEnergy !== 0 ? Math.abs((total - initEnergy) / initEnergy) : 0;
-
-  document.getElementById('ke').textContent = ke.toFixed(1);
-  document.getElementById('pe').textContent = pe.toFixed(1);
-  document.getElementById('tv').textContent = simTime.toFixed(1);
-  const dEl = document.getElementById('dv');
-  if (drift < 0.01) { dEl.textContent = 'stable'; dEl.style.color = '#a8ffb8'; }
-  else if (drift < 0.05) { dEl.textContent = 'drifting'; dEl.style.color = '#ffb86c'; }
-  else { dEl.textContent = 'chaotic'; dEl.style.color = '#ff8888'; }
-}
-
-// ── Animation loop ──
-let last = performance.now();
-function loop(now) {
-  requestAnimationFrame(loop);
-  const elapsed = Math.min((now - last) / 1000, 0.05);
-  last = now;
-
-  if (running) {
-    const substeps = Math.max(1, Math.round(speed * 2));
-    step(substeps);
-  }
-
-  draw();
-  updateStats();
-}
-requestAnimationFrame(loop);
-
-// ── Control bindings ──
-function bindRange(id, valId, suffix, cb) {
-  const el = document.getElementById(id);
-  const vEl = document.getElementById(valId);
-  el.addEventListener('input', () => {
-    vEl.textContent = parseFloat(el.value).toFixed(1) + (suffix || '');
-    cb(parseFloat(el.value));
-  });
-}
-
-bindRange('speed',     'speedVal', '×', v => { speed = v; });
-bindRange('trail',     'trailVal', '',  v => { maxTrail = Math.round(v); });
-bindRange('gstrength', 'gVal',     '',  v => { G = v; reset(); });
-
-document.getElementById('preset').addEventListener('change', e => {
-  loadPreset(e.target.value);
-});
-
-document.getElementById('colorMode').addEventListener('change', e => {
-  colorMode = e.target.value;
-});
-
-const btnStart = document.getElementById('btnStart');
-btnStart.addEventListener('click', () => {
-  running = !running;
-  btnStart.textContent = running ? '⏸ Pause' : '▶ Start';
-  btnStart.classList.toggle('running', running);
-});
-
-document.getElementById('btnReset').addEventListener('click', reset);
-
-function reset() {
-  const sel = document.getElementById('preset').value;
-  loadPreset(sel);
-}
-
-// ── Scroll zoom ──
-canvas.addEventListener('wheel', e => {
-  const factor = e.deltaY < 0 ? 1.08 : 0.92;
-  viewZ = Math.max(0.15, Math.min(8, viewZ * factor));
-  e.preventDefault();
-}, {passive: false});
-
-// ── Pan ──
-canvas.addEventListener('mousedown', e => {
-  // only pan if not over the panel
-  panning = true;
-  lastPX = e.clientX;
-  lastPY = e.clientY;
-});
-window.addEventListener('mouseup', () => { panning = false; });
-window.addEventListener('mousemove', e => {
-  if (!panning) return;
-  viewX += (e.clientX - lastPX) / viewZ;
-  viewY += (e.clientY - lastPY) / viewZ;
-  lastPX = e.clientX;
-  lastPY = e.clientY;
-});
-
-// ── Touch pan ──
-canvas.addEventListener('touchstart', e => {
-  panning = true;
-  lastPX = e.touches[0].clientX;
-  lastPY = e.touches[0].clientY;
-}, {passive: true});
-window.addEventListener('touchend', () => { panning = false; });
-window.addEventListener('touchmove', e => {
-  if (!panning) return;
-  viewX += (e.touches[0].clientX - lastPX) / viewZ;
-  viewY += (e.touches[0].clientY - lastPY) / viewZ;
-  lastPX = e.touches[0].clientX;
-  lastPY = e.touches[0].clientY;
-}, {passive: true});
-
-// ── Double-click to reset view ──
-canvas.addEventListener('dblclick', () => {
-  viewX = 0; viewY = 0; viewZ = 1;
-});
-</script>
+    </section>
+  </main>
 </body>
+<script src="script.js"></script>
 </html>
