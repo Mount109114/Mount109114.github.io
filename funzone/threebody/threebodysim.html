@@ -397,12 +397,12 @@
 
       <div class="ctrl">
         <label>Trail Length <span class="val" id="trailVal">600</span></label>
-        <input type="range" id="trail" min="50" max="2000" step="50" value="600"/>
+        <input id="trail" type="range" min="50" max="2000" step="50" value="600"/>
       </div>
-
+      
       <div class="ctrl">
         <label>G Strength <span class="val" id="gVal">1.0</span></label>
-        <input type="range" id="gstrength" min="0.1" max="3" step="0.05" value="1"/>
+        <input id="gstrength" type="range" min="0.1" max="3" step="0.05" value="1"/>
       </div>
 
       <div class="ctrl">
@@ -564,7 +564,6 @@ function rk4Step(bs, dt) {
   const n = bs.length;
 
   function deriv(state) {
-    const pos = state.map(s => ({x:s.x, y:s.y, mass:bs[0].mass}));
     // rebuild temp bodies for accel
     const tmp = state.map((s,i) => { const b = bs[i].clone(); b.x=s.x; b.y=s.y; b.vx=s.vx; b.vy=s.vy; return b; });
     const a = accel(tmp);
@@ -715,7 +714,12 @@ function updateStats() {
 // ── Animation loop ──
 let last = performance.now();
 function loop(now) {
-  requestAnimationFrame(loop);
+
+ document.getElementById('speedVal').textContent = speed.toFixed(1) + '×';
+document.getElementById('trailVal').textContent = maxTrail;
+document.getElementById('gVal').textContent = G.toFixed(1);
+ 
+ requestAnimationFrame(loop);
   const elapsed = Math.min((now - last) / 1000, 0.05);
   last = now;
 
@@ -733,9 +737,11 @@ requestAnimationFrame(loop);
 function bindRange(id, valId, suffix, cb) {
   const el = document.getElementById(id);
   const vEl = document.getElementById(valId);
+  if (!el || !vEl) return;
   el.addEventListener('input', () => {
-    vEl.textContent = parseFloat(el.value).toFixed(1) + (suffix || '');
-    cb(parseFloat(el.value));
+    const num = parseFloat(el.value);
+    vEl.textContent = num.toFixed(1) + (suffix || '');
+    cb(num);
   });
 }
 
@@ -763,6 +769,14 @@ document.getElementById('btnReset').addEventListener('click', reset);
 function reset() {
   const sel = document.getElementById('preset').value;
   loadPreset(sel);
+
+  speed = parseFloat(document.getElementById('speed').value);
+  maxTrail = parseInt(document.getElementById('trail').value, 10);
+  G = parseFloat(document.getElementById('gstrength').value);
+
+  document.getElementById('speedVal').textContent = speed.toFixed(1) + '×';
+  document.getElementById('trailVal').textContent = maxTrail;
+  document.getElementById('gVal').textContent = G.toFixed(1);
 }
 
 // ── Scroll zoom ──
