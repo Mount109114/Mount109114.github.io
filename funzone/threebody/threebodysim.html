@@ -690,11 +690,14 @@ function loadPreset(name, syncMassControls = true) {
     syncMassSlidersFromBodies();
   }
 }
- 
+ const mass1El = document.getElementById('mass1');
+const mass2El = document.getElementById('mass2');
+const mass3El = document.getElementById('mass3');
 
-loadPreset('figure8');
-syncMassSlidersFromBodies();
- 
+const m1ValEl = document.getElementById('m1Val');
+const m2ValEl = document.getElementById('m2Val');
+const m3ValEl = document.getElementById('m3Val');
+
 function updateMassLabels() {
   m1ValEl.textContent = parseFloat(mass1El.value).toFixed(2);
   m2ValEl.textContent = parseFloat(mass2El.value).toFixed(2);
@@ -718,14 +721,12 @@ function applyMassSlidersToBodies() {
   bodies[1].mass = parseFloat(mass2El.value);
   bodies[2].mass = parseFloat(mass3El.value);
 
-  // since the system energy changes when masses change,
-  // restart the drift baseline
   initEnergy = null;
-
   updateMassLabels();
 }
 
-
+loadPreset('figure8');
+syncMassSlidersFromBodies();
  
 // ── Physics: RK4 ──
 const DT = 0.005;
