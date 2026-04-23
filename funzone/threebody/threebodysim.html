@@ -203,8 +203,25 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 10px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
+.preset-grid::-webkit-scrollbar {
+  width: 8px;
+}
+
+.preset-grid::-webkit-scrollbar-thumb {
+  background: rgba(156,192,255,0.22);
+  border-radius: 999px;
+}
+
+.preset-grid::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.04);
+  border-radius: 999px;
+}
+ 
 .preset-card {
   padding: 12px 14px;
   border-radius: 16px;
@@ -547,66 +564,69 @@ class Body {
 function getPreset(name) {
   switch (name) {
     case 'figure8': {
-      // Chenciner & Montgomery figure-8 solution (scaled x100)
-      const v0x =  0.93240737 / 2;
-      const v0y =  0.86473146 / 2;
       return [
-        new Body(-0.97000436*100,  0.24308753*100,  v0x*100,  v0y*100, 1),
-        new Body( 0.97000436*100, -0.24308753*100,  v0x*100,  v0y*100, 1),
-        new Body( 0,               0,              -2*v0x*100,-2*v0y*100, 1),
+        new Body(-0.97000436,  0.24308753,  0.466203685,  0.43236573, 1),
+        new Body( 0.97000436, -0.24308753,  0.466203685,  0.43236573, 1),
+        new Body( 0,           0,          -0.93240737, -0.86473146, 1),
       ];
     }
+
     case 'lagrange': {
-      // Equilateral triangle — Lagrange L4/L5 stable
-      const R = 130, om = Math.sqrt(3*G / (R*R*R)) * 60;
+      const R = 2.2;
+      const om = Math.sqrt(3 * G / Math.pow(R, 3));
       return [
-        new Body( R,       0,            0,        om*R,  1),
+        new Body( R, 0, 0, om * R, 1),
         new Body(-R/2,  R*Math.sqrt(3)/2, -om*R*Math.sqrt(3)/2, -om*R/2, 1),
         new Body(-R/2, -R*Math.sqrt(3)/2,  om*R*Math.sqrt(3)/2, -om*R/2, 1),
       ];
     }
+
     case 'binary': {
-      // Tight binary pair + distant intruder
       return [
-        new Body(-50,  0,   0,  90, 2),
-        new Body( 50,  0,   0, -90, 2),
-        new Body(  0, 280, -42,   0, 0.5),
+        new Body(-1.1,  0,   0,   0.95, 2.0),
+        new Body( 1.1,  0,   0,  -0.95, 2.0),
+        new Body( 0,    3.6, -1.0, 0,   0.5),
       ];
     }
+
     case 'chaotic': {
-      // Deliberately asymmetric — guaranteed chaos
       return [
-        new Body(-120,  60,  20,  55, 1.2),
-        new Body(  80, -90, -55,  10, 0.9),
-        new Body(  30, 100,  35, -65, 1.5),
+        new Body(-2.2,  1.0,  0.35,  0.9,  1.2),
+        new Body( 1.8, -1.6, -1.1,   0.2,  0.9),
+        new Body( 0.5,  2.0,  0.7,  -1.15, 1.5),
       ];
     }
+
     case 'euler': {
-      // Euler collinear — unstable but fascinating
       return [
-        new Body(-160,  0,   0,  52, 1),
-        new Body(   0,  0,   0, -104, 2),
-        new Body( 160,  0,   0,  52, 1),
+        new Body(-2.5, 0,  0,  0.8, 1),
+        new Body( 0.0, 0,  0, -1.6, 2),
+        new Body( 2.5, 0,  0,  0.8, 1),
       ];
     }
 
-     case 'resonance': {
-   return [
-     new Body(-90,  0,   0,  70, 1.1),
-     new Body( 90,  0,   0, -70, 1.1),
-     new Body(  0, 140, -55,   0, 0.8),
-   ];
- }
- 
- case 'slingshot': {
-   return [
-     new Body(-140, -20,  10,  52, 1.4),
-     new Body( 120,  10, -18, -45, 1.0),
-     new Body(  20, 180, -72,  -8, 0.6),
-   ];
- }
+    case 'resonance': {
+      return [
+        new Body(-1.6, 0,   0,   1.15, 1.1),
+        new Body( 1.6, 0,   0,  -1.15, 1.1),
+        new Body( 0,   2.8, -0.95, 0,   0.8),
+      ];
+    }
 
-    
+    case 'slingshot': {
+      return [
+        new Body(-2.8, -0.4,  0.25,  0.95, 1.4),
+        new Body( 2.4,  0.2, -0.4,  -0.8,  1.0),
+        new Body( 0.2,  3.2, -1.35, -0.15, 0.6),
+      ];
+    }
+
+    default:
+      return [
+        new Body(-0.97000436,  0.24308753,  0.466203685,  0.43236573, 1),
+        new Body( 0.97000436, -0.24308753,  0.466203685,  0.43236573, 1),
+        new Body( 0,           0,          -0.93240737, -0.86473146, 1),
+      ];
   }
 }
 
@@ -619,13 +639,13 @@ function loadPreset(name) {
   bodies.forEach((b, i) => b.hue = i);
   simTime = 0;
   initEnergy = null;
-  viewX = 0; viewY = 0; viewZ = 1;
+  viewX = 0; viewY = 0; viewZ = 95;
 }
 
 loadPreset('figure8');
 
 // ── Physics: RK4 ──
-const DT = 0.016;
+const DT = 0.005;
 
 function accel(bs) {
   // Returns [{ax,ay}] for each body
@@ -635,7 +655,7 @@ function accel(bs) {
       const dx = bs[j].x - bs[i].x;
       const dy = bs[j].y - bs[i].y;
       const dist2 = dx*dx + dy*dy;
-      const softened = dist2 + 80; // softening to avoid singularity
+      const softened = dist2 + 0.02; // softening to avoid singularity
       const dist = Math.sqrt(softened);
       const force = G * bs[i].mass * bs[j].mass / softened;
       const fx = force * dx / dist;
