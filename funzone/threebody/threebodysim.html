@@ -571,53 +571,53 @@ function getPreset(name) {
       ];
     }
 
-    case 'lagrange': {
-      const R = 2.2;
-      const om = Math.sqrt(3 * G / Math.pow(R, 3));
-      return [
-        new Body( R, 0, 0, om * R, 1),
-        new Body(-R/2,  R*Math.sqrt(3)/2, -om*R*Math.sqrt(3)/2, -om*R/2, 1),
-        new Body(-R/2, -R*Math.sqrt(3)/2,  om*R*Math.sqrt(3)/2, -om*R/2, 1),
-      ];
-    }
+   case 'lagrange': {
+     const R = 2.4;
+     const om = Math.sqrt(3 * G / Math.pow(R, 3));
+     return [
+       new Body( R, 0, 0, om * R, 1),
+       new Body(-R/2,  R*Math.sqrt(3)/2, -om*R*Math.sqrt(3)/2, -om*R/2, 1),
+       new Body(-R/2, -R*Math.sqrt(3)/2,  om*R*Math.sqrt(3)/2, -om*R/2, 1),
+     ];
+   }
 
     case 'binary': {
       return [
-        new Body(-1.1,  0,   0,   0.95, 2.0),
-        new Body( 1.1,  0,   0,  -0.95, 2.0),
-        new Body( 0,    3.6, -1.0, 0,   0.5),
+        new Body(-1.2,  0.0,  0.0,   1.15, 2.4),
+        new Body( 1.2,  0.0,  0.0,  -1.15, 2.4),
+        new Body( 0.0,  4.4, -1.55,  0.0,  0.35),
       ];
     }
 
     case 'chaotic': {
       return [
-        new Body(-2.2,  1.0,  0.35,  0.9,  1.2),
-        new Body( 1.8, -1.6, -1.1,   0.2,  0.9),
-        new Body( 0.5,  2.0,  0.7,  -1.15, 1.5),
+        new Body(-2.8,  1.1,  0.55,  1.05, 1.5),
+        new Body( 2.0, -1.9, -1.35,  0.25, 0.8),
+        new Body( 0.6,  2.6,  0.95, -1.45, 1.9),
       ];
     }
-
+    
     case 'euler': {
       return [
-        new Body(-2.5, 0,  0,  0.8, 1),
-        new Body( 0.0, 0,  0, -1.6, 2),
-        new Body( 2.5, 0,  0,  0.8, 1),
+        new Body(-3.2, 0,  0,  0.95, 1.0),
+        new Body( 0.0, 0,  0, -1.90, 2.8),
+        new Body( 3.2, 0,  0,  0.95, 1.0),
       ];
     }
 
     case 'resonance': {
       return [
-        new Body(-1.6, 0,   0,   1.15, 1.1),
-        new Body( 1.6, 0,   0,  -1.15, 1.1),
-        new Body( 0,   2.8, -0.95, 0,   0.8),
+        new Body(-1.4, 0.0,  0.0,   1.32, 1.2),
+        new Body( 1.4, 0.0,  0.0,  -1.32, 1.2),
+        new Body( 0.0, 2.3, -1.10,  0.0,  0.7),
       ];
     }
 
     case 'slingshot': {
       return [
-        new Body(-2.8, -0.4,  0.25,  0.95, 1.4),
-        new Body( 2.4,  0.2, -0.4,  -0.8,  1.0),
-        new Body( 0.2,  3.2, -1.35, -0.15, 0.6),
+        new Body(-2.6, -0.3,  0.18,  1.05, 1.6),
+        new Body( 2.0,  0.1, -0.30, -0.82, 1.1),
+        new Body( 0.2,  3.8, -1.85, -0.10, 0.28),
       ];
     }
 
@@ -942,7 +942,7 @@ window.addEventListener('touchmove', e => {
 
 // ── Double-click to reset view ──
 canvas.addEventListener('dblclick', () => {
-  viewX = 0; viewY = 0; viewZ = 1;
+  viewX = 0; viewY = 0; viewZ = 95;
 });
 </script>
 </body>
