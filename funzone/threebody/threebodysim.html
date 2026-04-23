@@ -493,6 +493,30 @@
         <input id="gstrength" type="range" min="0.1" max="3" step="0.05" value="1"/>
       </div>
 
+       <div class="ctrl">
+         <label>
+           <span><span class="dot" style="background:#9cc0ff;"></span>Mass 1</span>
+           <span class="val" id="m1Val">1.00</span>
+         </label>
+         <input id="mass1" type="range" min="0.2" max="5" step="0.05" value="1">
+       </div>
+       
+       <div class="ctrl">
+         <label>
+           <span><span class="dot" style="background:#ffb86c;"></span>Mass 2</span>
+           <span class="val" id="m2Val">1.00</span>
+         </label>
+         <input id="mass2" type="range" min="0.2" max="5" step="0.05" value="1">
+       </div>
+       
+       <div class="ctrl">
+         <label>
+           <span><span class="dot" style="background:#a8ffb8;"></span>Mass 3</span>
+           <span class="val" id="m3Val">1.00</span>
+         </label>
+         <input id="mass3" type="range" min="0.2" max="5" step="0.05" value="1">
+       </div>
+
       <div class="ctrl">
         <label>Color Mode</label>
         <select id="colorMode">
@@ -652,7 +676,7 @@ let bodies = [];
 let simTime = 0;
 let initEnergy = null;
 
-function loadPreset(name) {
+function loadPreset(name, syncMassControls = true) {
   const preset = getPreset(name);
   bodies = preset.bodies;
   bodies.forEach((b, i) => b.hue = i);
@@ -661,10 +685,48 @@ function loadPreset(name) {
   viewX = 0;
   viewY = 0;
   viewZ = preset.zoom;
+
+  if (syncMassControls) {
+    syncMassSlidersFromBodies();
+  }
 }
+ 
 
 loadPreset('figure8');
+syncMassSlidersFromBodies();
+ 
+function updateMassLabels() {
+  m1ValEl.textContent = parseFloat(mass1El.value).toFixed(2);
+  m2ValEl.textContent = parseFloat(mass2El.value).toFixed(2);
+  m3ValEl.textContent = parseFloat(mass3El.value).toFixed(2);
+}
 
+function syncMassSlidersFromBodies() {
+  if (bodies.length < 3) return;
+
+  mass1El.value = bodies[0].mass;
+  mass2El.value = bodies[1].mass;
+  mass3El.value = bodies[2].mass;
+
+  updateMassLabels();
+}
+
+function applyMassSlidersToBodies() {
+  if (bodies.length < 3) return;
+
+  bodies[0].mass = parseFloat(mass1El.value);
+  bodies[1].mass = parseFloat(mass2El.value);
+  bodies[2].mass = parseFloat(mass3El.value);
+
+  // since the system energy changes when masses change,
+  // restart the drift baseline
+  initEnergy = null;
+
+  updateMassLabels();
+}
+
+
+ 
 // ── Physics: RK4 ──
 const DT = 0.005;
 
@@ -879,6 +941,19 @@ bindRange('speed',     'speedVal', '×', v => { speed = v; });
 bindRange('trail',     'trailVal', '',  v => { maxTrail = Math.round(v); });
 bindRange('gstrength', 'gVal',     '',  v => { G = v; reset(); });
 
+ // ── Mass controls ──
+mass1El.addEventListener('input', () => {
+  applyMassSlidersToBodies();
+});
+
+mass2El.addEventListener('input', () => {
+  applyMassSlidersToBodies();
+});
+
+mass3El.addEventListener('input', () => {
+  applyMassSlidersToBodies();
+});
+
 const presetCards = document.querySelectorAll('.preset-card');
 let currentPreset = 'figure8';
 
@@ -891,7 +966,7 @@ function setActivePresetCard(name) {
 presetCards.forEach(card => {
   card.addEventListener('click', () => {
     currentPreset = card.dataset.preset;
-    loadPreset(currentPreset);
+    loadPreset(currentPreset, true);
     setActivePresetCard(currentPreset);
   });
 });
@@ -910,11 +985,13 @@ btnStart.addEventListener('click', () => {
 document.getElementById('btnReset').addEventListener('click', reset);
 
 function reset() {
-  loadPreset(currentPreset);
+  loadPreset(currentPreset, false);
 
   speed = parseFloat(document.getElementById('speed').value);
   maxTrail = parseInt(document.getElementById('trail').value, 10);
   G = parseFloat(document.getElementById('gstrength').value);
+
+  applyMassSlidersToBodies();
 
   document.getElementById('speedVal').textContent = speed.toFixed(1) + '×';
   document.getElementById('trailVal').textContent = maxTrail;
