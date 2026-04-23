@@ -199,6 +199,48 @@
     gap: 16px;
   }
 
+.preset-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.preset-card {
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  cursor: pointer;
+  transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+}
+
+.preset-card:hover {
+  transform: translateY(-2px);
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.16);
+}
+
+.preset-card.active {
+  background: rgba(156,192,255,0.10);
+  border-color: rgba(156,192,255,0.32);
+  box-shadow: 0 0 0 1px rgba(156,192,255,0.12) inset;
+}
+
+.preset-card strong {
+  display: block;
+  color: var(--accent2);
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+}
+
+.preset-card span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+ 
   .ctrl {
     display: flex;
     flex-direction: column;
@@ -379,16 +421,45 @@
 
     <div class="panel-row">
 
-      <div class="ctrl">
-        <label>Preset Configuration</label>
-        <select id="preset">
-          <option value="figure8">Figure-8 Orbit</option>
-          <option value="lagrange">Lagrange L4/L5</option>
-          <option value="binary">Binary + Intruder</option>
-          <option value="chaotic">Chaotic Dance</option>
-          <option value="euler">Euler Collinear</option>
-        </select>
-      </div>
+<div class="ctrl">
+  <label>Preset Gallery</label>
+  <div class="preset-grid" id="presetGrid">
+    <div class="preset-card active" data-preset="figure8">
+      <strong>Figure-8 Orbit</strong>
+      <span>Elegant choreographic motion with three equal masses.</span>
+    </div>
+
+    <div class="preset-card" data-preset="lagrange">
+      <strong>Lagrange Triangle</strong>
+      <span>Three bodies arranged in a rotating equilateral formation.</span>
+    </div>
+
+    <div class="preset-card" data-preset="binary">
+      <strong>Binary + Intruder</strong>
+      <span>A tight pair disturbed by a lighter third body.</span>
+    </div>
+
+    <div class="preset-card" data-preset="chaotic">
+      <strong>Chaotic Dance</strong>
+      <span>Asymmetric initial conditions with strong instability.</span>
+    </div>
+
+    <div class="preset-card" data-preset="euler">
+      <strong>Euler Collinear</strong>
+      <span>Three bodies aligned on a line — unstable but fascinating.</span>
+    </div>
+
+    <div class="preset-card" data-preset="resonance">
+      <strong>Tight Resonance</strong>
+      <span>Compact orbital exchange with near-repeating structure.</span>
+    </div>
+
+    <div class="preset-card" data-preset="slingshot">
+      <strong>Slingshot Escape</strong>
+      <span>One body steals momentum and is flung outward.</span>
+    </div>
+  </div>
+</div>
 
       <div class="ctrl">
         <label>Speed <span class="val" id="speedVal">1.0×</span></label>
@@ -518,6 +589,24 @@ function getPreset(name) {
         new Body( 160,  0,   0,  52, 1),
       ];
     }
+
+     case 'resonance': {
+   return [
+     new Body(-90,  0,   0,  70, 1.1),
+     new Body( 90,  0,   0, -70, 1.1),
+     new Body(  0, 140, -55,   0, 0.8),
+   ];
+ }
+ 
+ case 'slingshot': {
+   return [
+     new Body(-140, -20,  10,  52, 1.4),
+     new Body( 120,  10, -18, -45, 1.0),
+     new Body(  20, 180, -72,  -8, 0.6),
+   ];
+ }
+
+    
   }
 }
 
@@ -749,8 +838,21 @@ bindRange('speed',     'speedVal', '×', v => { speed = v; });
 bindRange('trail',     'trailVal', '',  v => { maxTrail = Math.round(v); });
 bindRange('gstrength', 'gVal',     '',  v => { G = v; reset(); });
 
-document.getElementById('preset').addEventListener('change', e => {
-  loadPreset(e.target.value);
+const presetCards = document.querySelectorAll('.preset-card');
+let currentPreset = 'figure8';
+
+function setActivePresetCard(name) {
+  presetCards.forEach(card => {
+    card.classList.toggle('active', card.dataset.preset === name);
+  });
+}
+
+presetCards.forEach(card => {
+  card.addEventListener('click', () => {
+    currentPreset = card.dataset.preset;
+    loadPreset(currentPreset);
+    setActivePresetCard(currentPreset);
+  });
 });
 
 document.getElementById('colorMode').addEventListener('change', e => {
@@ -767,8 +869,7 @@ btnStart.addEventListener('click', () => {
 document.getElementById('btnReset').addEventListener('click', reset);
 
 function reset() {
-  const sel = document.getElementById('preset').value;
-  loadPreset(sel);
+  loadPreset(currentPreset);
 
   speed = parseFloat(document.getElementById('speed').value);
   maxTrail = parseInt(document.getElementById('trail').value, 10);
@@ -777,6 +878,8 @@ function reset() {
   document.getElementById('speedVal').textContent = speed.toFixed(1) + '×';
   document.getElementById('trailVal').textContent = maxTrail;
   document.getElementById('gVal').textContent = G.toFixed(1);
+
+  setActivePresetCard(currentPreset);
 }
 
 // ── Scroll zoom ──
