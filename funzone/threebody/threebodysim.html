@@ -563,70 +563,88 @@ class Body {
 // All coords in simulation space; scale is arbitrary (drawn centered)
 function getPreset(name) {
   switch (name) {
-    case 'figure8': {
-      return [
-        new Body(-0.97000436,  0.24308753,  0.466203685,  0.43236573, 1),
-        new Body( 0.97000436, -0.24308753,  0.466203685,  0.43236573, 1),
-        new Body( 0,           0,          -0.93240737, -0.86473146, 1),
-      ];
+    case 'figure8':
+      return {
+        zoom: 95,
+        bodies: [
+          new Body(-0.97000436,  0.24308753,  0.466203685,  0.43236573, 1),
+          new Body( 0.97000436, -0.24308753,  0.466203685,  0.43236573, 1),
+          new Body( 0,           0,          -0.93240737, -0.86473146, 1),
+        ]
+      };
+
+    case 'lagrange': {
+      const R = 4.6;
+      const om = Math.sqrt(3 * G / Math.pow(R, 3));
+      return {
+        zoom: 52,
+        bodies: [
+          new Body( R, 0, 0, om * R, 1),
+          new Body(-R/2,  R*Math.sqrt(3)/2, -om*R*Math.sqrt(3)/2, -om*R/2, 1),
+          new Body(-R/2, -R*Math.sqrt(3)/2,  om*R*Math.sqrt(3)/2, -om*R/2, 1),
+        ]
+      };
     }
 
-   case 'lagrange': {
-     const R = 2.4;
-     const om = Math.sqrt(3 * G / Math.pow(R, 3));
-     return [
-       new Body( R, 0, 0, om * R, 1),
-       new Body(-R/2,  R*Math.sqrt(3)/2, -om*R*Math.sqrt(3)/2, -om*R/2, 1),
-       new Body(-R/2, -R*Math.sqrt(3)/2,  om*R*Math.sqrt(3)/2, -om*R/2, 1),
-     ];
-   }
+    case 'binary':
+      return {
+        zoom: 58,
+        bodies: [
+          new Body(-1.8,  0.0,  0.0,   1.45, 3.2),
+          new Body( 1.8,  0.0,  0.0,  -1.45, 3.2),
+          new Body( 0.0,  7.2, -1.95,  0.0,  0.18),
+        ]
+      };
 
-    case 'binary': {
-      return [
-        new Body(-1.2,  0.0,  0.0,   1.15, 2.4),
-        new Body( 1.2,  0.0,  0.0,  -1.15, 2.4),
-        new Body( 0.0,  4.4, -1.55,  0.0,  0.35),
-      ];
-    }
+    case 'chaotic':
+      return {
+        zoom: 56,
+        bodies: [
+          new Body(-4.5,  1.6,  0.85,  1.40, 1.8),
+          new Body( 3.0, -3.1, -1.85,  0.30, 0.7),
+          new Body( 0.8,  4.1,  1.15, -1.95, 2.2),
+        ]
+      };
 
-    case 'chaotic': {
-      return [
-        new Body(-2.8,  1.1,  0.55,  1.05, 1.5),
-        new Body( 2.0, -1.9, -1.35,  0.25, 0.8),
-        new Body( 0.6,  2.6,  0.95, -1.45, 1.9),
-      ];
-    }
-    
-    case 'euler': {
-      return [
-        new Body(-3.2, 0,  0,  0.95, 1.0),
-        new Body( 0.0, 0,  0, -1.90, 2.8),
-        new Body( 3.2, 0,  0,  0.95, 1.0),
-      ];
-    }
+    case 'euler':
+      return {
+        zoom: 42,
+        bodies: [
+          new Body(-5.5, 0,  0,  1.05, 1.0),
+          new Body( 0.0, 0,  0, -2.10, 3.8),
+          new Body( 5.5, 0,  0,  1.05, 1.0),
+        ]
+      };
 
-    case 'resonance': {
-      return [
-        new Body(-1.4, 0.0,  0.0,   1.32, 1.2),
-        new Body( 1.4, 0.0,  0.0,  -1.32, 1.2),
-        new Body( 0.0, 2.3, -1.10,  0.0,  0.7),
-      ];
-    }
+    case 'resonance':
+      return {
+        zoom: 68,
+        bodies: [
+          new Body(-2.0, 0.0,  0.0,   1.65, 1.3),
+          new Body( 2.0, 0.0,  0.0,  -1.65, 1.3),
+          new Body( 0.0, 3.4, -1.35,  0.0,  0.55),
+        ]
+      };
 
-    case 'slingshot': {
-      return [
-        new Body(-2.6, -0.3,  0.18,  1.05, 1.6),
-        new Body( 2.0,  0.1, -0.30, -0.82, 1.1),
-        new Body( 0.2,  3.8, -1.85, -0.10, 0.28),
-      ];
-    }
+    case 'slingshot':
+      return {
+        zoom: 48,
+        bodies: [
+          new Body(-4.2, -0.6,  0.22,  1.10, 1.9),
+          new Body( 3.2,  0.2, -0.38, -0.86, 1.2),
+          new Body( 0.2,  6.0, -2.35, -0.10, 0.14),
+        ]
+      };
 
     default:
-      return [
-        new Body(-0.97000436,  0.24308753,  0.466203685,  0.43236573, 1),
-        new Body( 0.97000436, -0.24308753,  0.466203685,  0.43236573, 1),
-        new Body( 0,           0,          -0.93240737, -0.86473146, 1),
-      ];
+      return {
+        zoom: 95,
+        bodies: [
+          new Body(-0.97000436,  0.24308753,  0.466203685,  0.43236573, 1),
+          new Body( 0.97000436, -0.24308753,  0.466203685,  0.43236573, 1),
+          new Body( 0,           0,          -0.93240737, -0.86473146, 1),
+        ]
+      };
   }
 }
 
@@ -635,11 +653,14 @@ let simTime = 0;
 let initEnergy = null;
 
 function loadPreset(name) {
-  bodies = getPreset(name);
+  const preset = getPreset(name);
+  bodies = preset.bodies;
   bodies.forEach((b, i) => b.hue = i);
   simTime = 0;
   initEnergy = null;
-  viewX = 0; viewY = 0; viewZ = 95;
+  viewX = 0;
+  viewY = 0;
+  viewZ = preset.zoom;
 }
 
 loadPreset('figure8');
@@ -905,9 +926,9 @@ function reset() {
 // ── Scroll zoom ──
 canvas.addEventListener('wheel', e => {
   const factor = e.deltaY < 0 ? 1.08 : 0.92;
-  viewZ = Math.max(0.15, Math.min(8, viewZ * factor));
+  viewZ = Math.max(20, Math.min(220, viewZ * factor));
   e.preventDefault();
-}, {passive: false});
+}, { passive: false });
 
 // ── Pan ──
 canvas.addEventListener('mousedown', e => {
@@ -942,7 +963,10 @@ window.addEventListener('touchmove', e => {
 
 // ── Double-click to reset view ──
 canvas.addEventListener('dblclick', () => {
-  viewX = 0; viewY = 0; viewZ = 95;
+  const preset = getPreset(currentPreset);
+  viewX = 0;
+  viewY = 0;
+  viewZ = preset.zoom;
 });
 </script>
 </body>
