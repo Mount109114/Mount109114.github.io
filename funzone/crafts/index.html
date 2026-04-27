@@ -175,23 +175,56 @@ h1 {
   to { opacity:1; transform:scale(1); }
 }
 
-.nav {
-  position:absolute;
-  top:220px;
-  transform:translateY(-50%);
-  width:44px;
-  height:44px;
-  border-radius:50%;
-  border:1px solid var(--border);
-  background:rgba(7,18,37,0.65);
-  color:var(--text);
-  font-size:1.6rem;
-  cursor:pointer;
-  backdrop-filter:blur(12px);
+.nav-zone {
+  position: absolute;
+  top: 22px;
+  bottom: 178px;
+  width: 18%;
+  border: none;
+  cursor: pointer;
+  z-index: 5;
+  color: var(--text);
+  background: transparent;
+  opacity: 0.55;
+  transition: opacity 0.2s ease;
 }
 
-.prev { left:34px; }
-.next { right:34px; }
+.nav-zone:hover {
+  opacity: 1;
+}
+
+.nav-zone span {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 1.8rem;
+  background: rgba(7,18,37,0.55);
+  border: 1px solid rgba(255,255,255,0.14);
+  backdrop-filter: blur(10px);
+}
+
+.nav-left {
+  left: 22px;
+  background: linear-gradient(90deg, rgba(7,18,37,0.75), rgba(7,18,37,0));
+}
+
+.nav-left span {
+  left: 18px;
+}
+
+.nav-right {
+  right: 22px;
+  background: linear-gradient(270deg, rgba(7,18,37,0.75), rgba(7,18,37,0));
+}
+
+.nav-right span {
+  right: 18px;
+}
 
 .meta {
   display:flex;
@@ -282,8 +315,13 @@ h1 {
     </div>
 
     <section class="carousel">
-      <button class="nav prev" id="prevBtn">‹</button>
-      <button class="nav next" id="nextBtn">›</button>
+    <button class="nav-zone nav-left" id="prevBtn" aria-label="Previous image">
+      <span>‹</span>
+    </button>
+    
+    <button class="nav-zone nav-right" id="nextBtn" aria-label="Next image">
+      <span>›</span>
+    </button>
 
       <div class="feature" id="featureBox">
         <div class="empty">Loading images...</div>
@@ -398,6 +436,7 @@ function renderThumbs() {
 
   images.forEach((src, i) => {
     const img = document.createElement("img");
+    img.loading = "lazy";
     img.src = src;
     img.alt = `thumbnail ${i + 1}`;
     img.addEventListener("click", () => showImage(i));
