@@ -37,17 +37,17 @@
 
   #globe-wrap {
     position: fixed;
-    left: 28%;
-    top: 0;
-    width: 48%;
-    height: 100vh;
+    left: 30%;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44%;
+    height: auto;
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 6;
     pointer-events: none;
     transform-origin: center center;
-    transition: transform 0.12s ease;
   }
 
   #globe-wrap canvas {
@@ -284,7 +284,7 @@
       
       <div class="ctrl">
         <label>Arc Width <span class="val" id="arcWidthVal">0.28</span></label>
-        <input type="range" id="arcWidth" min="0.05" max="1.2" step="0.05" value="0.28"/>
+        <input type="range" id="arcWidth" min="0.05" max="1.2" step="0.05" value="0.32"/>
       </div>
       <div class="ctrl">
         <label>Globe Style</label>
@@ -328,10 +328,10 @@ const ARC_PAIRS = [[0,1],[0,2],[0,4],[2,9],[4,8],[5,6]];
 const STYLES = {
   white: {
     dark: 0,
-    baseColor: [0.92, 0.94, 1.0],
-    glowColor: [0.85, 0.92, 1],
-    markerColor: [0.1, 0.28, 1],
-    arcColor: [0.1, 0.28, 1]
+    baseColor: [0.96, 0.97, 1.0],
+    glowColor: [0.7, 0.7, 0.7],
+    markerColor: [0.05, 0.05, 0.05],   // BLACK dots
+    arcColor: [0.1, 0.1, 0.1]          // DARK arcs
   },
 
   scifi: {
@@ -377,16 +377,16 @@ const STYLES = {
 
 let phi=0.8, theta=0.3, phiTarget=0.8, thetaTarget=0.3;
 let globeScale=1, rotSpeed=1.0, mapSamples=16000, diffuse=1.2;
-let arcHeight = 0.18;
+let arcHeight = 0.32;
 let markerElevation = 0.035;
 let arcWidth = 0.28;
-let autoRotate=true, showArcs=true, currentStyle='scifi';
+let autoRotate=true, showArcs=true, currentStyle='white';
 let globe=null, pointerDown=false, lastPX=0, lastPY=0;
 
 const canvas = document.getElementById('cobe');
 
 function globeSize() {
-  return Math.round(Math.min(window.innerWidth, window.innerHeight) * 0.70);
+  return Math.round(Math.min(window.innerWidth, window.innerHeight) * 0.84);
 }
 
 function initGlobe() {
@@ -468,6 +468,7 @@ function animateGlobe() {
     arcWidth,
     arcHeight,
     markerElevation,
+    arcAltitude: arcHeight
     arcs: showArcs ? ARC_PAIRS.map(([a,b]) => ({
       from: [CITIES[a].lat, CITIES[a].lng],
       to: [CITIES[b].lat, CITIES[b].lng],
@@ -517,7 +518,7 @@ canvas.addEventListener('pointerdown', e => {
 });
 canvas.addEventListener('pointermove', e => {
   if (!pointerDown) return;
-  phiTarget   -= (e.clientX - lastPX) * 0.008;
+  phiTarget   += (e.clientX - lastPX) * 0.008;
   thetaTarget  = Math.max(-0.6, Math.min(0.6, thetaTarget + (e.clientY - lastPY) * 0.008));
   lastPX=e.clientX; lastPY=e.clientY;
 });
