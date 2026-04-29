@@ -88,6 +88,11 @@ canvas {
   width: 100%;
   height: 100%;
   cursor: grab;
+  display: block;
+  position: relative;
+  z-index: 2;
+  touch-action: none;
+  user-select: none;
 }
 
 canvas:active {
@@ -334,14 +339,14 @@ const globe = createGlobe(canvas, {
   height: canvas.height,
   phi,
   theta: 0.18,
-  dark: 0,
-  diffuse: 1.25,
-  mapSamples: 18000,
-  mapBrightness: 5.8,
-  mapBaseBrightness: 0,
-  baseColor: [1, 1, 1],
-  markerColor: [0.1, 0.28, 1],
-  glowColor: [1, 1, 1],
+  dark: 1,
+  diffuse: 1.5,
+  mapSamples: 22000,
+  mapBrightness: 5.2,
+  mapBaseBrightness: 0.15,
+  baseColor: [0.02, 0.03, 0.07],
+  markerColor: [0.45, 0.65, 1],
+  glowColor: [0.55, 0.7, 1],
   markers: places.map((p, i) => ({
     location: p.location,
     size: i === active ? 0.07 : 0.045,
@@ -361,7 +366,7 @@ const globe = createGlobe(canvas, {
 
   onRender: (state) => {
   if (!dragging) {
-    targetPhi += 0.002; // auto-rotation speed
+    targetPhi += 0.004; // auto-rotation speed
   }
 
   phi += (targetPhi - phi) * 0.05;
@@ -381,21 +386,28 @@ const globe = createGlobe(canvas, {
 canvas.addEventListener("pointerdown", (e) => {
   dragging = true;
   lastX = e.clientX;
+  canvas.setPointerCapture(e.pointerId);
   canvas.style.cursor = "grabbing";
 });
 
-window.addEventListener("pointerup", () => {
+canvas.addEventListener("pointerup", (e) => {
+  dragging = false;
+  canvas.releasePointerCapture(e.pointerId);
+  canvas.style.cursor = "grab";
+});
+
+canvas.addEventListener("pointercancel", () => {
   dragging = false;
   canvas.style.cursor = "grab";
 });
 
-window.addEventListener("pointermove", (e) => {
+canvas.addEventListener("pointermove", (e) => {
   if (!dragging) return;
 
   const dx = e.clientX - lastX;
   lastX = e.clientX;
 
-  targetPhi += dx * 0.005;
+  targetPhi += dx * 0.008;
 });
 
 document.getElementById("prev").addEventListener("click", () => {
