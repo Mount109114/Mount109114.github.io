@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Globe | Muntasir's Fun Lab</title>
+
+<style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #071225;
+  --bg2: #0c1830;
+  --panel: rgba(255,255,255,0.07);
+  --border: rgba(255,255,255,0.12);
+  --text: #eef3ff;
+  --muted: #b8c4e0;
+  --accent: #9cc0ff;
+  --accent2: #dce8ff;
+}
+
+html, body {
+  width: 100%;
+  min-height: 100%;
+  background:
+    radial-gradient(circle at top left, rgba(112,160,255,0.16), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(196,220,255,0.12), transparent 25%),
+    linear-gradient(135deg, var(--bg), var(--bg2));
+  color: var(--text);
+  font-family: Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
+}
+
+.page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  align-items: center;
+  gap: 30px;
+  padding: 34px;
+  position: relative;
+}
+
+.hero {
+  max-width: 720px;
+  z-index: 3;
+}
+
+.eyebrow {
+  display: inline-block;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid var(--border);
+  color: var(--accent);
+  margin-bottom: 16px;
+  font-weight: 700;
+}
+
+h1 {
+  font-size: clamp(2.7rem, 6vw, 5.4rem);
+  line-height: 1.02;
+  letter-spacing: -0.045em;
+  margin-bottom: 18px;
+}
+
+p {
+  color: var(--muted);
+  line-height: 1.75;
+  font-size: 1.05rem;
+  max-width: 60ch;
+}
+
+.hero-links {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 22px;
+}
+
+.btn {
+  display: inline-block;
+  padding: 12px 18px;
+  border-radius: 14px;
+  text-decoration: none;
+  color: var(--text);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.16);
+  backdrop-filter: blur(10px);
+  font-weight: 700;
+}
+
+.btn:hover {
+  background: rgba(255,255,255,0.11);
+  transform: translateY(-2px);
+}
+
+.globe-wrap {
+  position: relative;
+  width: min(680px, 90vw);
+  aspect-ratio: 1;
+  justify-self: center;
+  display: grid;
+  place-items: center;
+}
+
+.globe-card {
+  position: absolute;
+  inset: 5%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 25%, rgba(156,192,255,0.18), transparent 32%),
+    radial-gradient(circle at center, rgba(255,255,255,0.06), transparent 58%);
+  filter: blur(0.2px);
+  box-shadow: 0 30px 90px rgba(0,0,0,0.35);
+}
+
+canvas {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  z-index: 2;
+  cursor: grab;
+}
+
+canvas:active {
+  cursor: grabbing;
+}
+
+.info-panel {
+  position: absolute;
+  right: 5%;
+  bottom: 10%;
+  width: 260px;
+  padding: 18px;
+  border-radius: 22px;
+  background: rgba(255,255,255,0.075);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 18px 50px rgba(0,0,0,0.25);
+  z-index: 4;
+}
+
+.info-panel h2 {
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.info-panel p {
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.location-list {
+  margin-top: 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.location {
+  padding: 9px 10px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.055);
+  color: var(--accent2);
+  font-size: 0.88rem;
+}
+
+@media (max-width: 950px) {
+  .page {
+    grid-template-columns: 1fr;
+    padding: 22px;
+  }
+
+  .hero {
+    padding-top: 20px;
+  }
+
+  .info-panel {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    width: 90%;
+    margin-top: -40px;
+  }
+}
+</style>
+</head>
+
+<body>
+  <main class="page">
+    <section class="hero">
+      <div class="eyebrow">Fun Zone</div>
+      <h1>Living Globe.</h1>
+      <p>
+        A tiny WebGL-powered globe showing places connected to my academic,
+        creative, and research journey — from Bangladesh to Clarkson and beyond.
+      </p>
+
+      <div class="hero-links">
+        <a class="btn" href="../../index.html">← Back to main site</a>
+        <a class="btn" href="../threebody/threebodysim.html">→ Three-Body Lab</a>
+        <a class="btn" href="../crafts/index.html">→ Handmade Works</a>
+      </div>
+    </section>
+
+    <section class="globe-wrap">
+      <div class="globe-card"></div>
+      <canvas id="cobe"></canvas>
+
+      <aside class="info-panel">
+        <h2>Global Journey</h2>
+        <p>
+          Drag the globe gently. Markers show important places in my journey.
+        </p>
+
+        <div class="location-list">
+          <div class="location">🇧🇩 Bangladesh / BUET</div>
+          <div class="location">🇺🇸 Clarkson University</div>
+          <div class="location">🔬 Research & collaboration path</div>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+<script type="module">
+import createGlobe from "https://cdn.jsdelivr.net/npm/cobe@2/+esm";
+
+const canvas = document.getElementById("cobe");
+
+let phi = 0;
+let width = 0;
+let pointerInteracting = null;
+let pointerInteractionMovement = 0;
+
+function resizeCanvas() {
+  width = canvas.offsetWidth;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = width * dpr;
+  canvas.height = width * dpr;
+}
+
+resizeCanvas();
+window.addEventListener("resize", () => {
+  resizeCanvas();
+  globe.update({
+    width: canvas.width,
+    height: canvas.height
+  });
+});
+
+const markers = [
+  {
+    location: [23.8103, 90.4125],
+    size: 0.075,
+    color: [0.62, 0.75, 1.0]
+  },
+  {
+    location: [44.6698, -74.9813],
+    size: 0.08,
+    color: [1.0, 0.72, 0.42]
+  },
+  {
+    location: [35.9606, -83.9207],
+    size: 0.055,
+    color: [0.65, 1.0, 0.75]
+  }
+];
+
+const arcs = [
+  {
+    from: [23.8103, 90.4125],
+    to: [44.6698, -74.9813],
+    color: [0.62, 0.75, 1.0]
+  },
+  {
+    from: [44.6698, -74.9813],
+    to: [35.9606, -83.9207],
+    color: [1.0, 0.72, 0.42]
+  }
+];
+
+const globe = createGlobe(canvas, {
+  devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+  width: canvas.width,
+  height: canvas.height,
+  phi: 0,
+  theta: 0.28,
+  dark: 1,
+  diffuse: 1.4,
+  mapSamples: 16000,
+  mapBrightness: 4.8,
+  baseColor: [0.12, 0.18, 0.34],
+  markerColor: [0.9, 0.75, 1],
+  glowColor: [0.55, 0.68, 1],
+  scale: 1.04,
+  opacity: 1,
+  markers,
+  arcs,
+  arcColor: [0.62, 0.75, 1],
+  arcWidth: 0.7,
+  arcHeight: 0.28,
+  markerElevation: 0.035,
+
+  onRender: (state) => {
+    if (!pointerInteracting) {
+      phi += 0.003;
+    }
+
+    state.phi = phi + pointerInteractionMovement;
+    state.width = canvas.width;
+    state.height = canvas.height;
+  }
+});
+
+canvas.addEventListener("pointerdown", (e) => {
+  pointerInteracting = e.clientX;
+  canvas.style.cursor = "grabbing";
+});
+
+canvas.addEventListener("pointerup", () => {
+  pointerInteracting = null;
+  canvas.style.cursor = "grab";
+});
+
+canvas.addEventListener("pointerout", () => {
+  pointerInteracting = null;
+  canvas.style.cursor = "grab";
+});
+
+canvas.addEventListener("pointermove", (e) => {
+  if (pointerInteracting !== null) {
+    const delta = e.clientX - pointerInteracting;
+    pointerInteractionMovement = delta / 180;
+  }
+});
+</script>
+</body>
+</html>
