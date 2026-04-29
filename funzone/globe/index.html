@@ -326,7 +326,7 @@ let globe=null, pointerDown=false, lastPX=0, lastPY=0;
 const canvas = document.getElementById('cobe');
 
 function globeSize() {
-  return Math.round(Math.min(window.innerWidth, window.innerHeight) * 0.82);
+  return Math.round(Math.min(window.innerWidth, window.innerHeight) * 0.70);
 }
 
 function initGlobe() {
@@ -366,19 +366,6 @@ globe = null;
       color: s.arcColor,
     })) : [],
     arcColor: s.arcColor, arcWidth: 0.4, arcHeight: 0.28,
-    onRender(state) {
-      if (autoRotate && !pointerDown) phiTarget += 0.008 * rotSpeed;
-      phi   += (phiTarget   - phi)   * 0.08;
-      theta += (thetaTarget - theta) * 0.08;
-      state.phi = phi; 
-      state.theta = theta;
-      state.width = size;
-      state.height = size;
-      state.mapSamples = mapSamples;
-      state.diffuse = diffuse;
-      document.getElementById('phi-val').textContent   = phi.toFixed(2);
-      document.getElementById('theta-val').textContent = theta.toFixed(2);
-    },
   });
 
 canvas.style.opacity = '1';
@@ -386,6 +373,51 @@ document.getElementById('loading').classList.add('hidden');
   
 }
 
+function animateGlobe() {
+  requestAnimationFrame(animateGlobe);
+
+  if (!globe) return;
+
+  const size = globeSize();
+
+  if (autoRotate && !pointerDown) {
+    phiTarget += 0.008 * rotSpeed;
+  }
+
+  phi += (phiTarget - phi) * 0.08;
+  theta += (thetaTarget - theta) * 0.08;
+
+  const s = STYLES[currentStyle];
+
+  globe.update({
+    phi,
+    theta,
+    width: size,
+    height: size,
+    dark: s.dark,
+    diffuse,
+    mapSamples,
+    mapBrightness: s.dark === 1 ? 1.4 : 6,
+    baseColor: s.baseColor,
+    markerColor: s.markerColor,
+    glowColor: s.glowColor,
+    arcColor: s.arcColor,
+    arcs: showArcs ? ARC_PAIRS.map(([a,b]) => ({
+      from: [CITIES[a].lat, CITIES[a].lng],
+      to: [CITIES[b].lat, CITIES[b].lng],
+      color: s.arcColor,
+    })) : [],
+    markers: CITIES.map((c,i) => ({
+      location: [c.lat, c.lng],
+      size: i === 0 ? 0.065 : 0.038,
+      color: i === 0 ? [1,0.8,0.3] : s.markerColor,
+    }))
+  });
+
+  document.getElementById('phi-val').textContent = phi.toFixed(2);
+  document.getElementById('theta-val').textContent = theta.toFixed(2);
+}
+ 
 // City list
 function buildCityList() {
   const list = document.getElementById('city-list');
@@ -468,6 +500,7 @@ window.addEventListener('resize', initGlobe);
 
 buildCityList();
 initGlobe();
+animateGlobe();
 </script>
 </body>
 </html>
