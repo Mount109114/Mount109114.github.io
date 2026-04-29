@@ -15,8 +15,11 @@
 html, body {
   min-height: 100%;
   font-family: Arial, Helvetica, sans-serif;
-  background: #f7f7f4;
-  color: #101828;
+  background:
+    radial-gradient(circle at top left, rgba(112,160,255,0.16), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(196,220,255,0.10), transparent 25%),
+    linear-gradient(135deg, #071225, #0c1830);
+  color: #eef3ff;
   overflow-x: hidden;
 }
 
@@ -57,7 +60,7 @@ h1 {
 }
 
 .subtitle {
-  color: #667085;
+  color: #b8c4e0;
   margin-bottom: 22px;
   font-size: 1rem;
 }
@@ -68,6 +71,18 @@ h1 {
   aspect-ratio: 1;
   margin: 0 auto;
 }
+
+.stage::after {
+  content: "";
+  position: absolute;
+  inset: 5%;
+  border-radius: 50%;
+  box-shadow:
+    0 0 40px rgba(156,192,255,0.25),
+    0 0 120px rgba(156,192,255,0.15);
+  pointer-events: none;
+}  
+  
 
 canvas {
   width: 100%;
@@ -164,7 +179,7 @@ canvas:active {
 .caption {
   max-width: 620px;
   margin: 28px auto 0;
-  color: #667085;
+  color: #b8c4e0;
   line-height: 1.7;
 }
 
@@ -266,8 +281,8 @@ let active = 0;
 let width = 0;
 let phi = places[0].phi;
 let targetPhi = places[0].phi;
-let pointerInteracting = null;
-let pointerDelta = 0;
+let dragging = false;
+let lastX = 0;
 
 const locationName = document.getElementById("locationName");
 const badgeCode = document.getElementById("badgeCode");
@@ -345,42 +360,42 @@ const globe = createGlobe(canvas, {
   opacity: 1,
 
   onRender: (state) => {
-    phi += (targetPhi - phi) * 0.035;
-
-    if (pointerInteracting === null) {
-      targetPhi += 0.0012;
-    }
-
-    state.phi = phi + pointerDelta;
-    state.width = canvas.width;
-    state.height = canvas.height;
-
-    state.markers = places.map((p, i) => ({
-      location: p.location,
-      size: i === active ? 0.07 : 0.04,
-      color: i === active ? [0.1, 0.28, 1] : [0.45, 0.55, 1]
-    }));
+  if (!dragging) {
+    targetPhi += 0.002; // auto-rotation speed
   }
+
+  phi += (targetPhi - phi) * 0.05;
+
+  state.phi = phi;
+  state.width = canvas.width;
+  state.height = canvas.height;
+
+  state.markers = places.map((p, i) => ({
+    location: p.location,
+    size: i === active ? 0.07 : 0.04,
+    color: i === active ? [0.1, 0.28, 1] : [0.45, 0.55, 1]
+  }));
+}
 });
 
 canvas.addEventListener("pointerdown", (e) => {
-  pointerInteracting = e.clientX;
+  dragging = true;
+  lastX = e.clientX;
+  canvas.style.cursor = "grabbing";
 });
 
-canvas.addEventListener("pointerup", () => {
-  pointerInteracting = null;
-  targetPhi = phi + pointerDelta;
-  pointerDelta = 0;
+window.addEventListener("pointerup", () => {
+  dragging = false;
+  canvas.style.cursor = "grab";
 });
 
-canvas.addEventListener("pointerout", () => {
-  pointerInteracting = null;
-});
+window.addEventListener("pointermove", (e) => {
+  if (!dragging) return;
 
-canvas.addEventListener("pointermove", (e) => {
-  if (pointerInteracting !== null) {
-    pointerDelta = (e.clientX - pointerInteracting) / 180;
-  }
+  const dx = e.clientX - lastX;
+  lastX = e.clientX;
+
+  targetPhi += dx * 0.005;
 });
 
 document.getElementById("prev").addEventListener("click", () => {
