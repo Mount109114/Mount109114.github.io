@@ -12,118 +12,66 @@
   padding: 0;
 }
 
-:root {
-  --bg: #071225;
-  --bg2: #0c1830;
-  --panel: rgba(255,255,255,0.07);
-  --border: rgba(255,255,255,0.12);
-  --text: #eef3ff;
-  --muted: #b8c4e0;
-  --accent: #9cc0ff;
-  --accent2: #dce8ff;
-}
-
 html, body {
-  width: 100%;
   min-height: 100%;
-  background:
-    radial-gradient(circle at top left, rgba(112,160,255,0.16), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(196,220,255,0.12), transparent 25%),
-    linear-gradient(135deg, var(--bg), var(--bg2));
-  color: var(--text);
   font-family: Arial, Helvetica, sans-serif;
+  background: #f7f7f4;
+  color: #101828;
   overflow-x: hidden;
 }
 
 .page {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 1fr 1.1fr;
-  align-items: center;
-  gap: 30px;
-  padding: 34px;
-  position: relative;
+  place-items: center;
+  padding: 28px;
 }
 
-.hero {
-  max-width: 720px;
-  z-index: 3;
+.globe-section {
+  width: min(980px, 96vw);
+  text-align: center;
 }
 
-.eyebrow {
-  display: inline-block;
-  padding: 8px 14px;
+.top-nav {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.top-nav a {
+  text-decoration: none;
+  color: #174cff;
+  border: 1px solid #d8dcff;
+  padding: 9px 14px;
   border-radius: 999px;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid var(--border);
-  color: var(--accent);
-  margin-bottom: 16px;
   font-weight: 700;
+  background: white;
 }
 
 h1 {
-  font-size: clamp(2.7rem, 6vw, 5.4rem);
-  line-height: 1.02;
-  letter-spacing: -0.045em;
-  margin-bottom: 18px;
+  font-size: clamp(2.4rem, 7vw, 5.8rem);
+  letter-spacing: -0.06em;
+  margin-bottom: 6px;
 }
 
-p {
-  color: var(--muted);
-  line-height: 1.75;
-  font-size: 1.05rem;
-  max-width: 60ch;
+.subtitle {
+  color: #667085;
+  margin-bottom: 22px;
+  font-size: 1rem;
 }
 
-.hero-links {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-top: 22px;
-}
-
-.btn {
-  display: inline-block;
-  padding: 12px 18px;
-  border-radius: 14px;
-  text-decoration: none;
-  color: var(--text);
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.16);
-  backdrop-filter: blur(10px);
-  font-weight: 700;
-}
-
-.btn:hover {
-  background: rgba(255,255,255,0.11);
-  transform: translateY(-2px);
-}
-
-.globe-wrap {
+.stage {
   position: relative;
-  width: min(680px, 90vw);
+  width: min(680px, 92vw);
   aspect-ratio: 1;
-  justify-self: center;
-  display: grid;
-  place-items: center;
-}
-
-.globe-card {
-  position: absolute;
-  inset: 5%;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 35% 25%, rgba(156,192,255,0.18), transparent 32%),
-    radial-gradient(circle at center, rgba(255,255,255,0.06), transparent 58%);
-  filter: blur(0.2px);
-  box-shadow: 0 30px 90px rgba(0,0,0,0.35);
+  margin: 0 auto;
 }
 
 canvas {
   width: 100%;
   height: 100%;
-  position: relative;
-  z-index: 2;
   cursor: grab;
 }
 
@@ -131,212 +79,319 @@ canvas:active {
   cursor: grabbing;
 }
 
-.info-panel {
+.badge {
   position: absolute;
-  right: 5%;
-  bottom: 10%;
-  width: 260px;
-  padding: 18px;
-  border-radius: 22px;
-  background: rgba(255,255,255,0.075);
-  border: 1px solid var(--border);
-  backdrop-filter: blur(16px);
-  box-shadow: 0 18px 50px rgba(0,0,0,0.25);
-  z-index: 4;
+  top: 7%;
+  left: 55%;
+  transform: translateX(-50%);
+  width: 92px;
+  padding: 12px 10px;
+  background: white;
+  border: 2px solid #174cff;
+  border-radius: 5px;
+  box-shadow: 0 14px 30px rgba(23, 76, 255, 0.16);
+  color: #174cff;
+  font-family: "Courier New", monospace;
+  font-weight: 800;
+  font-size: 0.72rem;
+  z-index: 5;
 }
 
-.info-panel h2 {
-  font-size: 1.1rem;
-  margin-bottom: 8px;
+.badge .bar {
+  height: 7px;
+  border-radius: 999px;
+  background: #174cff;
+  margin: 8px 0;
 }
 
-.info-panel p {
-  font-size: 0.88rem;
-  line-height: 1.6;
+.badge .num {
+  font-size: 1rem;
 }
 
-.location-list {
+.location-name {
+  margin-top: 18px;
+  color: #174cff;
+  font-family: "Courier New", monospace;
+  letter-spacing: 0.16em;
+  font-weight: 800;
+  min-height: 24px;
+}
+
+.dots {
   margin-top: 14px;
-  display: grid;
-  gap: 8px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
 }
 
-.location {
-  padding: 9px 10px;
-  border-radius: 12px;
-  background: rgba(255,255,255,0.055);
-  color: var(--accent2);
-  font-size: 0.88rem;
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #d4d4d0;
+  border: none;
+  cursor: pointer;
 }
 
-@media (max-width: 950px) {
-  .page {
-    grid-template-columns: 1fr;
-    padding: 22px;
-  }
+.dot.active {
+  background: #174cff;
+}
 
-  .hero {
-    padding-top: 20px;
-  }
+.controls {
+  margin-top: 18px;
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  align-items: center;
+}
 
-  .info-panel {
-    position: relative;
-    right: auto;
-    bottom: auto;
-    width: 90%;
-    margin-top: -40px;
+.controls button {
+  width: 42px;
+  height: 42px;
+  border: 1px solid #d0d5dd;
+  background: white;
+  color: #174cff;
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+.counter {
+  color: #174cff;
+  font-family: "Courier New", monospace;
+  font-weight: 800;
+}
+
+.caption {
+  max-width: 620px;
+  margin: 28px auto 0;
+  color: #667085;
+  line-height: 1.7;
+}
+
+@media (max-width: 700px) {
+  .badge {
+    top: 2%;
+    width: 78px;
+    font-size: 0.65rem;
   }
 }
 </style>
 </head>
 
 <body>
-  <main class="page">
-    <section class="hero">
-      <div class="eyebrow">Fun Zone</div>
-      <h1>Living Globe.</h1>
-      <p>
-        A tiny WebGL-powered globe showing places connected to my academic,
-        creative, and research journey — from Bangladesh to Clarkson and beyond.
-      </p>
+<main class="page">
+  <section class="globe-section">
 
-      <div class="hero-links">
-        <a class="btn" href="../../index.html">← Back to main site</a>
-        <a class="btn" href="../threebody/threebodysim.html">→ Three-Body Lab</a>
-        <a class="btn" href="../crafts/index.html">→ Handmade Works</a>
+    <div class="top-nav">
+      <a href="../../index.html">← Main Site</a>
+      <a href="../threebody/threebodysim.html">Three-Body Lab</a>
+      <a href="../crafts/index.html">Handmade Works</a>
+    </div>
+
+    <h1>Living Globe</h1>
+    <p class="subtitle">A tiny WebGL globe of my academic, creative, and research journey.</p>
+
+    <div class="stage">
+      <canvas id="globe"></canvas>
+
+      <div class="badge">
+        <div id="badgeCode">BD</div>
+        <div class="bar"></div>
+        <div class="num" id="badgeValue">95%</div>
       </div>
-    </section>
+    </div>
 
-    <section class="globe-wrap">
-      <div class="globe-card"></div>
-      <canvas id="cobe"></canvas>
+    <div class="location-name" id="locationName">BANGLADESH</div>
 
-      <aside class="info-panel">
-        <h2>Global Journey</h2>
-        <p>
-          Drag the globe gently. Markers show important places in my journey.
-        </p>
+    <div class="dots" id="dots"></div>
 
-        <div class="location-list">
-          <div class="location">🇧🇩 Bangladesh / BUET</div>
-          <div class="location">🇺🇸 Clarkson University</div>
-          <div class="location">🔬 Research & collaboration path</div>
-        </div>
-      </aside>
-    </section>
-  </main>
+    <div class="controls">
+      <button id="prev">←</button>
+      <div class="counter"><span id="current">1</span> / <span id="total">5</span></div>
+      <button id="next">→</button>
+    </div>
+
+    <p class="caption">
+      Drag the globe gently. Each point can represent a meaningful place:
+      Bangladesh, BUET, Clarkson University, future research collaborations, or travel memories.
+    </p>
+
+  </section>
+</main>
 
 <script type="module">
 import createGlobe from "https://cdn.jsdelivr.net/npm/cobe@2/+esm";
 
-const canvas = document.getElementById("cobe");
+const canvas = document.getElementById("globe");
 
-let phi = 0;
+const places = [
+  {
+    name: "BANGLADESH",
+    code: "BD",
+    value: "95%",
+    location: [23.8103, 90.4125],
+    phi: -1.6
+  },
+  {
+    name: "BUET",
+    code: "BUET",
+    value: "90%",
+    location: [23.7275, 90.3925],
+    phi: -1.6
+  },
+  {
+    name: "CLARKSON",
+    code: "NY",
+    value: "85%",
+    location: [44.6698, -74.9813],
+    phi: 1.4
+  },
+  {
+    name: "TENNESSEE",
+    code: "UTK",
+    value: "70%",
+    location: [35.9606, -83.9207],
+    phi: 1.25
+  },
+  {
+    name: "GLOBAL RESEARCH",
+    code: "R&D",
+    value: "∞",
+    location: [51.5072, -0.1276],
+    phi: 0.7
+  }
+];
+
+let active = 0;
 let width = 0;
+let phi = places[0].phi;
+let targetPhi = places[0].phi;
 let pointerInteracting = null;
-let pointerInteractionMovement = 0;
+let pointerDelta = 0;
 
-function resizeCanvas() {
+const locationName = document.getElementById("locationName");
+const badgeCode = document.getElementById("badgeCode");
+const badgeValue = document.getElementById("badgeValue");
+const current = document.getElementById("current");
+const total = document.getElementById("total");
+const dotsWrap = document.getElementById("dots");
+
+total.textContent = places.length;
+
+places.forEach((_, i) => {
+  const dot = document.createElement("button");
+  dot.className = "dot";
+  dot.addEventListener("click", () => setActive(i));
+  dotsWrap.appendChild(dot);
+});
+
+function updateUI() {
+  const p = places[active];
+  locationName.textContent = p.name;
+  badgeCode.textContent = p.code;
+  badgeValue.textContent = p.value;
+  current.textContent = active + 1;
+
+  document.querySelectorAll(".dot").forEach((dot, i) => {
+    dot.classList.toggle("active", i === active);
+  });
+}
+
+function setActive(i) {
+  active = (i + places.length) % places.length;
+  targetPhi = places[active].phi;
+  updateUI();
+}
+
+function resize() {
   width = canvas.offsetWidth;
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   canvas.width = width * dpr;
   canvas.height = width * dpr;
 }
 
-resizeCanvas();
-window.addEventListener("resize", () => {
-  resizeCanvas();
-  globe.update({
-    width: canvas.width,
-    height: canvas.height
-  });
-});
-
-const markers = [
-  {
-    location: [23.8103, 90.4125],
-    size: 0.075,
-    color: [0.62, 0.75, 1.0]
-  },
-  {
-    location: [44.6698, -74.9813],
-    size: 0.08,
-    color: [1.0, 0.72, 0.42]
-  },
-  {
-    location: [35.9606, -83.9207],
-    size: 0.055,
-    color: [0.65, 1.0, 0.75]
-  }
-];
-
-const arcs = [
-  {
-    from: [23.8103, 90.4125],
-    to: [44.6698, -74.9813],
-    color: [0.62, 0.75, 1.0]
-  },
-  {
-    from: [44.6698, -74.9813],
-    to: [35.9606, -83.9207],
-    color: [1.0, 0.72, 0.42]
-  }
-];
+resize();
+window.addEventListener("resize", resize);
 
 const globe = createGlobe(canvas, {
   devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
   width: canvas.width,
   height: canvas.height,
-  phi: 0,
-  theta: 0.28,
-  dark: 1,
-  diffuse: 1.4,
-  mapSamples: 16000,
-  mapBrightness: 4.8,
-  baseColor: [0.12, 0.18, 0.34],
-  markerColor: [0.9, 0.75, 1],
-  glowColor: [0.55, 0.68, 1],
-  scale: 1.04,
-  opacity: 1,
-  markers,
-  arcs,
-  arcColor: [0.62, 0.75, 1],
-  arcWidth: 0.7,
+  phi,
+  theta: 0.18,
+  dark: 0,
+  diffuse: 1.25,
+  mapSamples: 18000,
+  mapBrightness: 5.8,
+  mapBaseBrightness: 0,
+  baseColor: [1, 1, 1],
+  markerColor: [0.1, 0.28, 1],
+  glowColor: [1, 1, 1],
+  markers: places.map((p, i) => ({
+    location: p.location,
+    size: i === active ? 0.07 : 0.045,
+    color: i === active ? [0.1, 0.28, 1] : [0.45, 0.55, 1]
+  })),
+  arcs: [
+    { from: places[0].location, to: places[2].location },
+    { from: places[2].location, to: places[3].location },
+    { from: places[0].location, to: places[4].location }
+  ],
+  arcColor: [0.1, 0.28, 1],
+  arcWidth: 0.45,
   arcHeight: 0.28,
-  markerElevation: 0.035,
+  markerElevation: 0.025,
+  scale: 1,
+  opacity: 1,
 
   onRender: (state) => {
-    if (!pointerInteracting) {
-      phi += 0.003;
+    phi += (targetPhi - phi) * 0.035;
+
+    if (pointerInteracting === null) {
+      targetPhi += 0.0012;
     }
 
-    state.phi = phi + pointerInteractionMovement;
+    state.phi = phi + pointerDelta;
     state.width = canvas.width;
     state.height = canvas.height;
+
+    state.markers = places.map((p, i) => ({
+      location: p.location,
+      size: i === active ? 0.07 : 0.04,
+      color: i === active ? [0.1, 0.28, 1] : [0.45, 0.55, 1]
+    }));
   }
 });
 
 canvas.addEventListener("pointerdown", (e) => {
   pointerInteracting = e.clientX;
-  canvas.style.cursor = "grabbing";
 });
 
 canvas.addEventListener("pointerup", () => {
   pointerInteracting = null;
-  canvas.style.cursor = "grab";
+  targetPhi = phi + pointerDelta;
+  pointerDelta = 0;
 });
 
 canvas.addEventListener("pointerout", () => {
   pointerInteracting = null;
-  canvas.style.cursor = "grab";
 });
 
 canvas.addEventListener("pointermove", (e) => {
   if (pointerInteracting !== null) {
-    const delta = e.clientX - pointerInteracting;
-    pointerInteractionMovement = delta / 180;
+    pointerDelta = (e.clientX - pointerInteracting) / 180;
   }
 });
+
+document.getElementById("prev").addEventListener("click", () => {
+  setActive(active - 1);
+});
+
+document.getElementById("next").addEventListener("click", () => {
+  setActive(active + 1);
+});
+
+updateUI();
 </script>
 </body>
 </html>
