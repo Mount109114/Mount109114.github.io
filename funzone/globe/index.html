@@ -36,9 +36,16 @@
   body::after  { right: -80px; bottom: -110px; background: #9dc0ff; }
 
   #globe-wrap {
-    position: fixed; inset: 0;
-    display: flex; align-items: center; justify-content: center;
-    z-index: 1; pointer-events: none;
+    position: fixed;
+    left: 28%;
+    top: 0;
+    width: 48%;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 6;
+    pointer-events: none;
     transform-origin: center center;
     transition: transform 0.12s ease;
   }
@@ -324,8 +331,6 @@ function globeSize() {
 
 function initGlobe() {
   const size = globeSize();
-  canvas.width  = size * 2;
-  canvas.height = size * 2;
   canvas.style.width  = size + 'px';
   canvas.style.height = size + 'px';
 
@@ -340,8 +345,9 @@ globe = null;
   const s = STYLES[currentStyle];
 
   globe = createGlobe(canvas, {
-    devicePixelRatio: 2,
-    width: size*2, height: size*2,
+  devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+  width: size,
+  height: size,
     phi, theta,
     dark: s.dark, diffuse,
     mapSamples,
@@ -361,11 +367,15 @@ globe = null;
     })) : [],
     arcColor: s.arcColor, arcWidth: 0.4, arcHeight: 0.28,
     onRender(state) {
-      if (autoRotate && !pointerDown) phiTarget += 0.004 * rotSpeed;
+      if (autoRotate && !pointerDown) phiTarget += 0.008 * rotSpeed;
       phi   += (phiTarget   - phi)   * 0.08;
       theta += (thetaTarget - theta) * 0.08;
-      state.phi = phi; state.theta = theta;
-      state.width = size*2; state.height = size*2;
+      state.phi = phi; 
+      state.theta = theta;
+      state.width = size;
+      state.height = size;
+      state.mapSamples = mapSamples;
+      state.diffuse = diffuse;
       document.getElementById('phi-val').textContent   = phi.toFixed(2);
       document.getElementById('theta-val').textContent = theta.toFixed(2);
     },
@@ -434,12 +444,10 @@ document.getElementById('rotSpeed').addEventListener('input', e => {
 document.getElementById('density').addEventListener('input', e => {
   mapSamples = parseInt(e.target.value);
   document.getElementById('densityVal').textContent = Math.round(mapSamples/1000)+'k';
-  initGlobe();
 });
 document.getElementById('glow').addEventListener('input', e => {
   diffuse = parseFloat(e.target.value);
   document.getElementById('glowVal').textContent = diffuse<1?'low':diffuse<1.8?'med':'high';
-  initGlobe();
 });
 document.getElementById('styleMode').addEventListener('change', e => {
   currentStyle = e.target.value; initGlobe();
