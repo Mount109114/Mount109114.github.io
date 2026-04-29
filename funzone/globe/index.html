@@ -1,590 +1,465 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Globe | Muntasir's Fun Lab</title>
-
 <style>
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html, body {
-  min-height: 100%;
-  font-family: Arial, Helvetica, sans-serif;
-  background:
-    radial-gradient(circle at top left, rgba(112,160,255,0.16), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(196,220,255,0.10), transparent 25%),
-    linear-gradient(135deg, #071225, #0c1830);
-  color: #eef3ff;
-  overflow-x: hidden;
-}
-
-.page {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 28px;
-}
-
-.globe-section {
-  width: min(980px, 96vw);
-  text-align: center;
-}
-
-.top-nav {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  margin-bottom: 18px;
-  flex-wrap: wrap;
-}
-
-.top-nav a {
-  text-decoration: none;
-  color: #174cff;
-  border: 1px solid #d8dcff;
-  padding: 9px 14px;
-  border-radius: 999px;
-  font-weight: 700;
-  background: white;
-}
-
-h1 {
-  font-size: clamp(2.4rem, 7vw, 5.8rem);
-  letter-spacing: -0.06em;
-  margin-bottom: 6px;
-}
-
-.subtitle {
-  color: #b8c4e0;
-  margin-bottom: 22px;
-  font-size: 1rem;
-}
-
-.stage {
-  position: relative;
-  width: min(680px, 92vw);
-  aspect-ratio: 1;
-  margin: 0 auto;
-}
-
-.stage::after {
-  content: "";
-  position: absolute;
-  inset: 5%;
-  border-radius: 50%;
-  box-shadow:
-    0 0 40px rgba(156,192,255,0.25),
-    0 0 120px rgba(156,192,255,0.15);
-  pointer-events: none;
-}  
-  
-
-canvas {
-  width: 100%;
-  height: 100%;
-  cursor: grab;
-  display: block;
-  position: relative;
-  z-index: 2;
-  touch-action: none;
-  user-select: none;
-}
-
-canvas:active {
-  cursor: grabbing;
-}
-
-.badge {
-  position: absolute;
-  top: 7%;
-  left: 55%;
-  transform: translateX(-50%);
-  width: 92px;
-  padding: 12px 10px;
-  background: white;
-  border: 2px solid #174cff;
-  border-radius: 5px;
-  box-shadow: 0 14px 30px rgba(23, 76, 255, 0.16);
-  color: #174cff;
-  font-family: "Courier New", monospace;
-  font-weight: 800;
-  font-size: 0.72rem;
-  z-index: 5;
-  pointer-events: none;   
-}
-
-.badge .bar {
-  height: 7px;
-  border-radius: 999px;
-  background: #174cff;
-  margin: 8px 0;
-}
-
-.badge .num {
-  font-size: 1rem;
-}
-
-.location-name {
-  margin-top: 18px;
-  color: #174cff;
-  font-family: "Courier New", monospace;
-  letter-spacing: 0.16em;
-  font-weight: 800;
-  min-height: 24px;
-}
-
-.dots {
-  margin-top: 14px;
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-}
-
-.dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #d4d4d0;
-  border: none;
-  cursor: pointer;
-}
-
-.dot.active {
-  background: #174cff;
-}
-
-.controls {
-  margin-top: 18px;
-  display: flex;
-  justify-content: center;
-  gap: 18px;
-  align-items: center;
-}
-
-.controls button {
-  width: 42px;
-  height: 42px;
-  border: 1px solid #d0d5dd;
-  background: white;
-  color: #174cff;
-  cursor: pointer;
-  font-size: 1.2rem;
-}
-
-.counter {
-  color: #174cff;
-  font-family: "Courier New", monospace;
-  font-weight: 800;
-}
-
-.caption {
-  max-width: 620px;
-  margin: 28px auto 0;
-  color: #b8c4e0;
-  line-height: 1.7;
-}
-
-.control-panel {
-  position: fixed;
-  right: 28px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 280px;
-  padding: 20px;
-  border-radius: 22px;
-  background: rgba(255,255,255,0.075);
-  border: 1px solid rgba(255,255,255,0.14);
-  backdrop-filter: blur(16px);
-  box-shadow: 0 18px 50px rgba(0,0,0,0.28);
-  z-index: 20;
-}
-
-.control-panel h2 {
-  font-size: 1.25rem;
-  margin-bottom: 8px;
-}
-
-.control-panel p {
-  color: #b8c4e0;
-  font-size: 0.88rem;
-  line-height: 1.55;
-  margin-bottom: 16px;
-}
-
-.ctrl {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 14px;
-}
-
-.ctrl label {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: #eef3ff;
-}
-
-.ctrl .val {
-  color: #9cc0ff;
-}
-
-input[type=range] {
-  width: 100%;
-  cursor: pointer;
-}
-
-select {
-  width: 100%;
-  padding: 9px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.16);
-  background: rgba(255,255,255,0.08);
-  color: #eef3ff;
-}
-
-select option {
-  background: #0d1220;
-  color: #eef3ff;
-}
-
-.toggle-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #b8c4e0;
-  font-size: 0.9rem;
-  margin-top: 10px;
-}
-
-@media (max-width: 1050px) {
-  .control-panel {
-    position: relative;
-    right: auto;
-    top: auto;
-    transform: none;
-    width: min(680px, 92vw);
-    margin: 24px auto 0;
+  :root {
+    --bg: #071225; --bg2: #0c1830;
+    --border: rgba(255,255,255,0.12);
+    --text: #eef3ff; --muted: #b8c4e0;
+    --accent: #9cc0ff; --accent2: #dce8ff;
+    --shadow: 0 18px 50px rgba(0,0,0,0.28);
+    --shadow-soft: 0 10px 28px rgba(0,0,0,0.18);
   }
-}
-  
-@media (max-width: 700px) {
-  .badge {
-    top: 2%;
-    width: 78px;
-    font-size: 0.65rem;
+
+  html, body {
+    width: 100%; height: 100%;
+    background:
+      radial-gradient(circle at top left, rgba(112,160,255,0.16), transparent 28%),
+      radial-gradient(circle at bottom right, rgba(196,220,255,0.10), transparent 25%),
+      linear-gradient(135deg, var(--bg), var(--bg2));
+    color: var(--text);
+    font-family: Arial, Helvetica, sans-serif;
+    overflow: hidden;
   }
-}
+
+  body::before, body::after {
+    content: ""; position: fixed;
+    width: 320px; height: 320px; border-radius: 50%;
+    filter: blur(110px); opacity: 0.30; z-index: 0; pointer-events: none;
+  }
+  body::before { top: -90px; left: -70px; background: #5f8dff; }
+  body::after  { right: -80px; bottom: -110px; background: #9dc0ff; }
+
+  #globe-wrap {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1; pointer-events: none;
+    transform-origin: center center;
+    transition: transform 0.12s ease;
+  }
+
+  #globe-wrap canvas {
+    opacity: 0; transition: opacity 1.2s ease;
+    pointer-events: auto; cursor: grab; border-radius: 50%; display: block;
+  }
+  #globe-wrap canvas:active { cursor: grabbing; }
+
+  #globe-wrap::after {
+    content: ''; position: absolute; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,20,60,0.03) 3px, rgba(0,20,60,0.03) 4px);
+    pointer-events: none; z-index: 2;
+  }
+
+  .page {
+    position: relative; z-index: 5; min-height: 100vh;
+    display: grid; grid-template-columns: 1fr 340px;
+    gap: 24px; padding: 28px; pointer-events: none;
+  }
+
+  .hero {
+    align-self: center; max-width: 760px;
+    padding: 24px; pointer-events: none;
+  }
+
+  .eyebrow {
+    display: inline-block; padding: 8px 14px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+    color: var(--accent); margin-bottom: 16px; backdrop-filter: blur(10px);
+    font-size: 0.95rem; font-weight: 600;
+  }
+
+  .hero h1 {
+    margin: 0 0 14px;
+    font-size: clamp(2.6rem, 6vw, 5.2rem);
+    line-height: 1.02; letter-spacing: -0.04em; max-width: 9ch;
+  }
+
+  .hero p { color: var(--muted); line-height: 1.7; max-width: 58ch; font-size: 1.05rem; }
+
+  .hero-links { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
+
+  .back-btn {
+    display: inline-block; padding: 12px 18px; text-decoration: none;
+    color: var(--text); border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 14px; background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(10px); font-weight: 600; pointer-events: auto;
+    transition: all 0.18s ease;
+  }
+  .back-btn:hover { background: rgba(255,255,255,0.10); border-color: rgba(255,255,255,0.24); transform: translateY(-2px); }
+
+  #panel {
+    align-self: center; justify-self: end; width: 100%; max-width: 340px;
+    padding: 22px; border-radius: 24px;
+    background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+    backdrop-filter: blur(16px); box-shadow: var(--shadow);
+    position: relative; z-index: 10; pointer-events: auto;
+  }
+
+  #panel h2 { margin: 0 0 8px; font-size: 1.5rem; }
+  .panel-sub { margin: 0 0 18px; color: var(--muted); font-size: 0.98rem; line-height: 1.65; }
+
+  #city-list {
+    margin-bottom: 18px; display: flex; flex-direction: column; gap: 6px;
+    max-height: 230px; overflow-y: auto;
+  }
+  #city-list::-webkit-scrollbar { width: 3px; }
+  #city-list::-webkit-scrollbar-thumb { background: rgba(156,192,255,0.3); border-radius: 2px; }
+
+  .city-item {
+    display: flex; align-items: center; gap: 8px; font-size: 0.82rem;
+    color: var(--muted); padding: 5px 8px; border-radius: 8px;
+    background: rgba(255,255,255,0.03); border: 1px solid transparent;
+    cursor: pointer; transition: all 0.18s; pointer-events: auto;
+  }
+  .city-item:hover, .city-item.active {
+    background: rgba(156,192,255,0.10); border-color: rgba(156,192,255,0.25); color: var(--accent2);
+  }
+
+  .city-dot {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
+    flex-shrink: 0; box-shadow: 0 0 6px rgba(156,192,255,0.7);
+    animation: ping 2s ease-in-out infinite;
+  }
+  @keyframes ping {
+    0%,100% { box-shadow: 0 0 4px rgba(156,192,255,0.7); }
+    50%      { box-shadow: 0 0 10px rgba(156,192,255,1); }
+  }
+
+  .city-name { font-weight: 600; color: var(--text); }
+  .city-coords { margin-left: auto; font-size: 0.72rem; opacity: 0.55; }
+
+  .panel-row { display: flex; flex-direction: column; gap: 16px; }
+  .ctrl { display: flex; flex-direction: column; gap: 8px; }
+  .ctrl label { display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; font-weight: 600; color: var(--text); }
+  .ctrl .val { color: var(--accent); font-weight: 700; }
+
+  input[type=range] {
+    -webkit-appearance: none; width: 100%; height: 4px;
+    background: rgba(255,255,255,0.12); border-radius: 999px; outline: none; cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 15px; height: 15px; border-radius: 50%;
+    background: var(--accent); box-shadow: 0 0 8px rgba(156,192,255,0.28); cursor: pointer;
+  }
+
+  select {
+    width: 100%; padding: 10px 40px 10px 12px; border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.05));
+    color: var(--text); backdrop-filter: blur(10px); cursor: pointer;
+    font-family: Arial, Helvetica, sans-serif; font-size: 0.95rem;
+    appearance: none; -webkit-appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, #dce8ff 50%), linear-gradient(135deg, #dce8ff 50%, transparent 50%);
+    background-position: calc(100% - 18px) calc(50% - 3px), calc(100% - 12px) calc(50% - 3px);
+    background-size: 6px 6px, 6px 6px; background-repeat: no-repeat;
+  }
+  select option { background: #0d1220; color: #eef3ff; }
+
+  .btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+
+  button {
+    font-family: Arial, Helvetica, sans-serif; font-size: 0.88rem; font-weight: 700;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    border: 1px solid rgba(255,255,255,0.14); border-radius: 14px; padding: 11px 16px;
+    cursor: pointer; transition: all 0.18s ease;
+    background: rgba(255,255,255,0.05); color: var(--text);
+  }
+  button:hover {
+    background: rgba(255,255,255,0.10); border-color: rgba(255,255,255,0.20);
+    transform: translateY(-2px); box-shadow: var(--shadow-soft);
+  }
+
+  #btnRotate { background: linear-gradient(135deg, #8fb4ff, #d6e5ff); color: #071225; border-color: transparent; }
+  #btnRotate.paused { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.16); color: var(--accent2); }
+
+  .panel-note { margin-top: 14px; font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+
+  #hud {
+    position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    pointer-events: none; z-index: 2;
+  }
+  .hud-ring {
+    border-radius: 50%; border: 1px solid rgba(156,192,255,0.12);
+    position: absolute; animation: hud-spin 30s linear infinite;
+  }
+  .hud-ring:nth-child(2) { border-color: rgba(156,192,255,0.07); animation-duration: 50s; animation-direction: reverse; }
+  @keyframes hud-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+  #coords {
+    position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+    z-index: 10; font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase;
+    color: rgba(156,192,255,0.45); pointer-events: none;
+    font-family: 'Courier New', monospace; white-space: nowrap;
+  }
+
+  #loading {
+    position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    z-index: 20; pointer-events: none; transition: opacity 1s ease;
+  }
+  #loading.hidden { opacity: 0; }
+  .loader-text {
+    font-size: 0.75rem; letter-spacing: 0.18em; text-transform: uppercase;
+    color: rgba(156,192,255,0.5); font-family: 'Courier New', monospace;
+    animation: blink 1.2s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100% { opacity:0.4; } 50% { opacity:1; } }
+
+  @media (max-width: 980px) {
+    html, body { overflow: auto; }
+    .page { grid-template-columns: 1fr; padding: 18px; }
+    #panel { justify-self: stretch; max-width: none; }
+    .hero { padding: 10px 4px; }
+    .hero h1 { max-width: none; }
+  }
 </style>
 </head>
-
 <body>
-<main class="page">
-  <section class="globe-section">
 
-    <div class="top-nav">
-      <a href="../../index.html">← Main Site</a>
-      <a href="../threebody/threebodysim.html">Three-Body Lab</a>
-      <a href="../crafts/index.html">Handmade Works</a>
+<div id="loading"><span class="loader-text">Initializing WebGL Globe…</span></div>
+
+<div id="hud">
+  <div class="hud-ring" id="ring1"></div>
+  <div class="hud-ring" id="ring2"></div>
+</div>
+
+<div id="globe-wrap"><canvas id="cobe"></canvas></div>
+
+<div id="coords">
+  φ <span id="phi-val">0.80</span> rad &nbsp;·&nbsp;
+  θ <span id="theta-val">0.30</span> rad &nbsp;·&nbsp;
+  zoom <span id="zoom-val">1.0</span>×
+</div>
+
+<div class="page">
+  <section class="hero">
+    <div class="eyebrow">Fun Zone</div>
+    <h1>Interactive Globe.</h1>
+    <p>A real-time WebGL dot-matrix Earth. Drag to spin, explore city markers,
+    and watch signal arcs cross the planet. Built with COBE — only 5KB of GPU shader code.</p>
+    <div class="hero-links">
+      <a class="back-btn" href="../../index.html">← Back to main site</a>
+      <a class="back-btn" href="../lorenz/index.html">→ Lorenz Attractor</a>
+      <a class="back-btn" href="../threebody/index.html">→ 3-Body Problem</a>
     </div>
+  </section>
 
-    <h1>Living Globe</h1>
-    <p class="subtitle">A tiny WebGL globe of my academic, creative, and research journey.</p>
-
-    <div class="stage">
-      <canvas id="globe"></canvas>
-
-      <div class="badge">
-        <div id="badgeCode">BD</div>
-        <div class="bar"></div>
-        <div class="num" id="badgeValue">95%</div>
+  <aside id="panel">
+    <h2>Globe Controls</h2>
+    <p class="panel-sub">Drag the globe to explore. Click a city to focus it.</p>
+    <div id="city-list"></div>
+    <div class="panel-row">
+      <div class="ctrl">
+        <label>Rotation Speed <span class="val" id="rotSpeedVal">1.0×</span></label>
+        <input type="range" id="rotSpeed" min="0" max="4" step="0.1" value="1"/>
+      </div>
+      <div class="ctrl">
+        <label>Dot Density <span class="val" id="densityVal">16k</span></label>
+        <input type="range" id="density" min="4000" max="40000" step="2000" value="16000"/>
+      </div>
+      <div class="ctrl">
+        <label>Glow <span class="val" id="glowVal">med</span></label>
+        <input type="range" id="glow" min="0.5" max="2.5" step="0.1" value="1.2"/>
+      </div>
+      <div class="ctrl">
+        <label>Globe Style</label>
+        <select id="styleMode">
+          <option value="scifi">Sci-Fi Blue</option>
+          <option value="dark">Deep Space</option>
+          <option value="matrix">Matrix Green</option>
+          <option value="amber">Amber Recon</option>
+          <option value="white">Clean White</option>
+        </select>
+      </div>
+      <div class="btn-group">
+        <button id="btnRotate">⏸ Pause Rotation</button>
+        <button id="btnArcs">⚡ Toggle Arcs</button>
       </div>
     </div>
+    <div class="panel-note">Drag globe · Click city to fly there · Scroll to zoom</div>
+  </aside>
+</div>
 
-    <div class="location-name" id="locationName">BANGLADESH</div>
-
-    <div class="dots" id="dots"></div>
-
-    <div class="controls">
-      <button id="prev">←</button>
-      <div class="counter"><span id="current">1</span> / <span id="total">5</span></div>
-      <button id="next">→</button>
-    </div>
-
-    <p class="caption">
-      Drag the globe gently. Each point can represent a meaningful place:
-      Bangladesh, BUET, Clarkson University, future research collaborations, or travel memories.
-    </p>
-    <aside class="control-panel">
-  <h2>Globe Controls</h2>
-  <p>Adjust the globe view, map visibility, and motion.</p>
-
-  <div class="ctrl">
-    <label>Rotation Speed <span class="val" id="speedVal">0.004</span></label>
-    <input id="speedCtrl" type="range" min="0" max="0.015" step="0.001" value="0.004">
-  </div>
-
-  <div class="ctrl">
-    <label>Map Brightness <span class="val" id="brightVal">5.2</span></label>
-    <input id="brightCtrl" type="range" min="1" max="8" step="0.1" value="5.2">
-  </div>
-
-  <div class="ctrl">
-    <label>Globe Scale <span class="val" id="scaleVal">1.00</span></label>
-    <input id="scaleCtrl" type="range" min="0.75" max="1.25" step="0.01" value="1">
-  </div>
-
-  <div class="ctrl">
-    <label>Theme</label>
-    <select id="themeCtrl">
-      <option value="dark">Dark Mode</option>
-      <option value="light">Light Mode</option>
-    </select>
-  </div>
-
-  <label class="toggle-row">
-    <input id="arcToggle" type="checkbox" checked>
-    Show Arcs
-  </label>
-
-  <label class="toggle-row">
-    <input id="autoToggle" type="checkbox" checked>
-    Auto Rotate
-  </label>
-</aside>
-
-  </section>
-</main>
-
+<!-- ★ THE FIX: type="module" + ESM import — no more "createGlobe is not defined" ★ -->
 <script type="module">
 import createGlobe from "https://cdn.jsdelivr.net/npm/cobe@2/+esm";
 
-const canvas = document.getElementById("globe");
-
-const places = [
-  {
-    name: "BANGLADESH",
-    code: "BD",
-    value: "95%",
-    location: [23.8103, 90.4125],
-    phi: -1.6
-  },
-  {
-    name: "BUET",
-    code: "BUET",
-    value: "90%",
-    location: [23.7275, 90.3925],
-    phi: -1.6
-  },
-  {
-    name: "CLARKSON",
-    code: "NY",
-    value: "85%",
-    location: [44.6698, -74.9813],
-    phi: 1.4
-  },
-  {
-    name: "TENNESSEE",
-    code: "UTK",
-    value: "70%",
-    location: [35.9606, -83.9207],
-    phi: 1.25
-  },
-  {
-    name: "GLOBAL RESEARCH",
-    code: "R&D",
-    value: "∞",
-    location: [51.5072, -0.1276],
-    phi: 0.7
-  }
+const CITIES = [
+  { name:'Potsdam, NY', lat: 44.67, lng: -74.98, label:'HOME' },
+  { name:'New York',    lat: 40.71, lng: -74.01 },
+  { name:'London',      lat: 51.51, lng:  -0.13 },
+  { name:'Tokyo',       lat: 35.68, lng: 139.69 },
+  { name:'Dubai',       lat: 25.20, lng:  55.27 },
+  { name:'Sydney',      lat:-33.87, lng: 151.21 },
+  { name:'São Paulo',   lat:-23.55, lng: -46.63 },
+  { name:'Nairobi',     lat: -1.29, lng:  36.82 },
+  { name:'Singapore',   lat:  1.35, lng: 103.82 },
+  { name:'Berlin',      lat: 52.52, lng:  13.40 },
 ];
 
-let active = 0;
-let width = 0;
-let phi = places[0].phi;
-let targetPhi = places[0].phi;
-let dragging = false;
-let lastX = 0;
-let autoRotate = true;
-let rotationSpeed = 0.004;
-let mapBrightness = 5.2;
-let globeScale = 1;
-let showArcs = true;
-let theme = "dark";
+const ARC_PAIRS = [[0,2],[0,3],[1,4],[2,5],[3,8],[4,9],[6,2],[7,1],[8,3],[5,6]];
 
-const locationName = document.getElementById("locationName");
-const badgeCode = document.getElementById("badgeCode");
-const badgeValue = document.getElementById("badgeValue");
-const current = document.getElementById("current");
-const total = document.getElementById("total");
-const dotsWrap = document.getElementById("dots");
+const STYLES = {
+  scifi:  { dark:1, baseColor:[0.06,0.12,0.28], glowColor:[0.35,0.65,1.0], markerColor:[0.5,0.8,1],  arcColor:[0.4,0.75,1]  },
+  dark:   { dark:1, baseColor:[0.02,0.02,0.06], glowColor:[0.2,0.2,0.45],  markerColor:[0.6,0.6,1],  arcColor:[0.3,0.3,0.9] },
+  matrix: { dark:1, baseColor:[0.0,0.1,0.04],  glowColor:[0.1,0.8,0.25],  markerColor:[0.2,1,0.4],  arcColor:[0.1,0.9,0.3] },
+  amber:  { dark:1, baseColor:[0.15,0.08,0.0], glowColor:[1,0.6,0.1],     markerColor:[1,0.8,0.2],  arcColor:[1,0.65,0.1]  },
+  white:  { dark:0, baseColor:[0.9,0.92,1.0],  glowColor:[0.9,0.95,1],    markerColor:[0.2,0.4,1],  arcColor:[0.3,0.5,1]   },
+};
 
-total.textContent = places.length;
+let phi=0.8, theta=0.3, phiTarget=0.8, thetaTarget=0.3;
+let globeScale=1, rotSpeed=1.0, mapSamples=16000, diffuse=1.2;
+let autoRotate=true, showArcs=true, currentStyle='scifi';
+let globe=null, pointerDown=false, lastPX=0, lastPY=0;
 
-places.forEach((_, i) => {
-  const dot = document.createElement("button");
-  dot.className = "dot";
-  dot.addEventListener("click", () => setActive(i));
-  dotsWrap.appendChild(dot);
-});
+const canvas = document.getElementById('cobe');
 
-function updateUI() {
-  const p = places[active];
-  locationName.textContent = p.name;
-  badgeCode.textContent = p.code;
-  badgeValue.textContent = p.value;
-  current.textContent = active + 1;
+function globeSize() {
+  return Math.round(Math.min(window.innerWidth, window.innerHeight) * 0.82);
+}
 
-  document.querySelectorAll(".dot").forEach((dot, i) => {
-    dot.classList.toggle("active", i === active);
+function initGlobe() {
+  const size = globeSize();
+  canvas.width  = size * 2;
+  canvas.height = size * 2;
+  canvas.style.width  = size + 'px';
+  canvas.style.height = size + 'px';
+
+  document.getElementById('ring1').style.cssText = `width:${size*1.08}px;height:${size*1.08}px;`;
+  document.getElementById('ring2').style.cssText = `width:${size*1.18}px;height:${size*1.18}px;`;
+
+ if (globe && globe.destroy) {
+  globe.destroy();
+}
+globe = null;
+
+  const s = STYLES[currentStyle];
+
+  globe = createGlobe(canvas, {
+    devicePixelRatio: 2,
+    width: size*2, height: size*2,
+    phi, theta,
+    dark: s.dark, diffuse,
+    mapSamples,
+    mapBrightness: s.dark === 1 ? 1.4 : 6,
+    baseColor:   s.baseColor,
+    markerColor: s.markerColor,
+    glowColor:   s.glowColor,
+    markers: CITIES.map((c,i) => ({
+      location: [c.lat, c.lng],
+      size: i===0 ? 0.065 : 0.038,
+      color: i===0 ? [1,0.8,0.3] : s.markerColor,
+    })),
+    arcs: showArcs ? ARC_PAIRS.map(([a,b]) => ({
+      from:[CITIES[a].lat,CITIES[a].lng],
+      to:[CITIES[b].lat,CITIES[b].lng],
+      color: s.arcColor,
+    })) : [],
+    arcColor: s.arcColor, arcWidth: 0.4, arcHeight: 0.28,
+    onRender(state) {
+      if (autoRotate && !pointerDown) phiTarget += 0.004 * rotSpeed;
+      phi   += (phiTarget   - phi)   * 0.08;
+      theta += (thetaTarget - theta) * 0.08;
+      state.phi = phi; state.theta = theta;
+      state.width = size*2; state.height = size*2;
+      document.getElementById('phi-val').textContent   = phi.toFixed(2);
+      document.getElementById('theta-val').textContent = theta.toFixed(2);
+    },
+  });
+
+canvas.style.opacity = '1';
+document.getElementById('loading').classList.add('hidden');
+  
+}
+
+// City list
+function buildCityList() {
+  const list = document.getElementById('city-list');
+  CITIES.forEach((c,i) => {
+    const el = document.createElement('div');
+    el.className = 'city-item';
+    el.innerHTML = `
+      <span class="city-dot" style="${i===0?'background:#ffcc44;box-shadow:0 0 6px rgba(255,204,68,0.8);':''}"></span>
+      <span class="city-name">${c.name}</span>
+      ${c.label?`<span style="font-size:.68rem;color:#ffcc44;font-weight:700;margin-left:4px">${c.label}</span>`:''}
+      <span class="city-coords">${c.lat.toFixed(1)}°, ${c.lng.toFixed(1)}°</span>
+    `;
+    el.addEventListener('click', () => {
+      document.querySelectorAll('.city-item').forEach(e=>e.classList.remove('active'));
+      el.classList.add('active');
+      phiTarget   = (c.lng * Math.PI / 180) * -1;
+      thetaTarget = Math.max(-0.6, Math.min(0.6, (c.lat * Math.PI / 180) * -0.5 + 0.1));
+      autoRotate  = false;
+      setTimeout(() => {
+        if (!document.getElementById('btnRotate').classList.contains('paused')) autoRotate = true;
+      }, 5000);
+    });
+    list.appendChild(el);
   });
 }
 
-function setActive(i) {
-  active = (i + places.length) % places.length;
-  targetPhi = places[active].phi;
-  updateUI();
-}
-
-function resize() {
-  width = canvas.offsetWidth;
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  canvas.width = width * dpr;
-  canvas.height = width * dpr;
-}
-
-resize();
-window.addEventListener("resize", resize);
-
-const globe = createGlobe(canvas, {
-  devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
-  width: canvas.width,
-  height: canvas.height,
-  phi,
-  theta: 0.18,
-  dark: 1,
-  diffuse: 1.5,
-  mapSamples: 22000,
-  mapBrightness: mapBrightness,
-  mapBaseBrightness: 0.15,
-  baseColor: [0.02, 0.03, 0.07],
-  markerColor: [0.45, 0.65, 1],
-  glowColor: [0.55, 0.7, 1],
-  markers: places.map((p, i) => ({
-    location: p.location,
-    size: i === active ? 0.07 : 0.045,
-    color: i === active ? [0.1, 0.28, 1] : [0.45, 0.55, 1]
-  })),
-  arcs: [
-    { from: places[0].location, to: places[2].location },
-    { from: places[2].location, to: places[3].location },
-    { from: places[0].location, to: places[4].location }
-  ],
-  arcColor: [0.1, 0.28, 1],
-  arcWidth: 0.45,
-  arcHeight: 0.28,
-  markerElevation: 0.025,
-  scale: globeScale,
-  opacity: 1,
-
-  onRender: (state) => {
-  if (autoRotate && !dragging) {
-  targetPhi += rotationSpeed;
-}
-
-  phi += (targetPhi - phi) * 0.05;
-
-  state.phi = phi;
-  state.width = canvas.width;
-  state.height = canvas.height;
-  state.mapBrightness = mapBrightness;
-  state.scale = globeScale;
-  state.dark = theme === "dark" ? 1 : 0;
-  state.baseColor = theme === "dark" ? [0.02, 0.03, 0.07] : [1, 1, 1];
-  state.glowColor = theme === "dark" ? [0.55, 0.7, 1] : [1, 1, 1];
-  
-  state.arcs = showArcs ? [
-    { from: places[0].location, to: places[2].location },
-    { from: places[2].location, to: places[3].location },
-    { from: places[0].location, to: places[4].location }
-  ] : [];
-  state.markers = places.map((p, i) => ({
-    location: p.location,
-    size: i === active ? 0.07 : 0.04,
-    color: i === active ? [0.1, 0.28, 1] : [0.45, 0.55, 1]
-  }));
-}
+// Pointer
+canvas.addEventListener('pointerdown', e => {
+  pointerDown=true; lastPX=e.clientX; lastPY=e.clientY;
+  autoRotate=false; canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener('pointermove', e => {
+  if (!pointerDown) return;
+  phiTarget   += (e.clientX-lastPX)*0.008;
+  thetaTarget  = Math.max(-0.6, Math.min(0.6, thetaTarget-(e.clientY-lastPY)*0.008));
+  lastPX=e.clientX; lastPY=e.clientY;
+});
+canvas.addEventListener('pointerup', () => {
+  pointerDown=false;
+  setTimeout(()=>{ if (!document.getElementById('btnRotate').classList.contains('paused')) autoRotate=true; }, 2500);
 });
 
-canvas.addEventListener("pointerdown", (e) => {
-  dragging = true;
-  lastX = e.clientX;
-  canvas.setPointerCapture(e.pointerId);
-  canvas.style.cursor = "grabbing";
+// Scroll zoom
+canvas.addEventListener('wheel', e => {
+  globeScale = Math.max(0.5, Math.min(2.0, globeScale*(e.deltaY<0?1.06:0.94)));
+  document.getElementById('globe-wrap').style.transform = `scale(${globeScale})`;
+  document.getElementById('zoom-val').textContent = globeScale.toFixed(1);
+  e.preventDefault();
+}, { passive:false });
+
+// Controls
+document.getElementById('rotSpeed').addEventListener('input', e => {
+  rotSpeed = parseFloat(e.target.value);
+  document.getElementById('rotSpeedVal').textContent = rotSpeed.toFixed(1)+'×';
+});
+document.getElementById('density').addEventListener('input', e => {
+  mapSamples = parseInt(e.target.value);
+  document.getElementById('densityVal').textContent = Math.round(mapSamples/1000)+'k';
+  initGlobe();
+});
+document.getElementById('glow').addEventListener('input', e => {
+  diffuse = parseFloat(e.target.value);
+  document.getElementById('glowVal').textContent = diffuse<1?'low':diffuse<1.8?'med':'high';
+  initGlobe();
+});
+document.getElementById('styleMode').addEventListener('change', e => {
+  currentStyle = e.target.value; initGlobe();
+});
+document.getElementById('btnRotate').addEventListener('click', () => {
+  const btn = document.getElementById('btnRotate');
+  autoRotate = !autoRotate;
+  btn.textContent = autoRotate ? '⏸ Pause Rotation' : '▶ Resume Rotation';
+  btn.classList.toggle('paused', !autoRotate);
+});
+document.getElementById('btnArcs').addEventListener('click', () => {
+  showArcs = !showArcs;
+  document.getElementById('btnArcs').textContent = showArcs ? '⚡ Toggle Arcs' : '〇 Arcs Off';
+  initGlobe();
 });
 
-canvas.addEventListener("pointerup", (e) => {
-  dragging = false;
-  canvas.releasePointerCapture(e.pointerId);
-  canvas.style.cursor = "grab";
-});
+window.addEventListener('resize', initGlobe);
 
-canvas.addEventListener("pointercancel", () => {
-  dragging = false;
-  canvas.style.cursor = "grab";
-});
-
-canvas.addEventListener("pointermove", (e) => {
-  if (!dragging) return;
-
-  const dx = e.clientX - lastX;
-  lastX = e.clientX;
-
-  targetPhi += dx * 0.008;
-});
-
-document.getElementById("prev").addEventListener("click", () => {
-  setActive(active - 1);
-});
-
-document.getElementById("next").addEventListener("click", () => {
-  setActive(active + 1);
-});
-
-document.getElementById("speedCtrl").addEventListener("input", (e) => {
-  rotationSpeed = parseFloat(e.target.value);
-  document.getElementById("speedVal").textContent = rotationSpeed.toFixed(3);
-});
-
-document.getElementById("brightCtrl").addEventListener("input", (e) => {
-  mapBrightness = parseFloat(e.target.value);
-  document.getElementById("brightVal").textContent = mapBrightness.toFixed(1);
-});
-
-document.getElementById("scaleCtrl").addEventListener("input", (e) => {
-  globeScale = parseFloat(e.target.value);
-  document.getElementById("scaleVal").textContent = globeScale.toFixed(2);
-});
-
-document.getElementById("themeCtrl").addEventListener("change", (e) => {
-  theme = e.target.value;
-});
-
-document.getElementById("arcToggle").addEventListener("change", (e) => {
-  showArcs = e.target.checked;
-});
-
-document.getElementById("autoToggle").addEventListener("change", (e) => {
-  autoRotate = e.target.checked;
-});
-  
-updateUI();
+buildCityList();
+initGlobe();
 </script>
 </body>
 </html>
