@@ -115,6 +115,7 @@ canvas:active {
   font-weight: 800;
   font-size: 0.72rem;
   z-index: 5;
+  pointer-events: none;   
 }
 
 .badge .bar {
@@ -188,6 +189,91 @@ canvas:active {
   line-height: 1.7;
 }
 
+.control-panel {
+  position: fixed;
+  right: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 280px;
+  padding: 20px;
+  border-radius: 22px;
+  background: rgba(255,255,255,0.075);
+  border: 1px solid rgba(255,255,255,0.14);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 18px 50px rgba(0,0,0,0.28);
+  z-index: 20;
+}
+
+.control-panel h2 {
+  font-size: 1.25rem;
+  margin-bottom: 8px;
+}
+
+.control-panel p {
+  color: #b8c4e0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  margin-bottom: 16px;
+}
+
+.ctrl {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.ctrl label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #eef3ff;
+}
+
+.ctrl .val {
+  color: #9cc0ff;
+}
+
+input[type=range] {
+  width: 100%;
+  cursor: pointer;
+}
+
+select {
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.08);
+  color: #eef3ff;
+}
+
+select option {
+  background: #0d1220;
+  color: #eef3ff;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #b8c4e0;
+  font-size: 0.9rem;
+  margin-top: 10px;
+}
+
+@media (max-width: 1050px) {
+  .control-panel {
+    position: relative;
+    right: auto;
+    top: auto;
+    transform: none;
+    width: min(680px, 92vw);
+    margin: 24px auto 0;
+  }
+}
+  
 @media (max-width: 700px) {
   .badge {
     top: 2%;
@@ -235,6 +321,43 @@ canvas:active {
       Drag the globe gently. Each point can represent a meaningful place:
       Bangladesh, BUET, Clarkson University, future research collaborations, or travel memories.
     </p>
+    <aside class="control-panel">
+  <h2>Globe Controls</h2>
+  <p>Adjust the globe view, map visibility, and motion.</p>
+
+  <div class="ctrl">
+    <label>Rotation Speed <span class="val" id="speedVal">0.004</span></label>
+    <input id="speedCtrl" type="range" min="0" max="0.015" step="0.001" value="0.004">
+  </div>
+
+  <div class="ctrl">
+    <label>Map Brightness <span class="val" id="brightVal">5.2</span></label>
+    <input id="brightCtrl" type="range" min="1" max="8" step="0.1" value="5.2">
+  </div>
+
+  <div class="ctrl">
+    <label>Globe Scale <span class="val" id="scaleVal">1.00</span></label>
+    <input id="scaleCtrl" type="range" min="0.75" max="1.25" step="0.01" value="1">
+  </div>
+
+  <div class="ctrl">
+    <label>Theme</label>
+    <select id="themeCtrl">
+      <option value="dark">Dark Mode</option>
+      <option value="light">Light Mode</option>
+    </select>
+  </div>
+
+  <label class="toggle-row">
+    <input id="arcToggle" type="checkbox" checked>
+    Show Arcs
+  </label>
+
+  <label class="toggle-row">
+    <input id="autoToggle" type="checkbox" checked>
+    Auto Rotate
+  </label>
+</aside>
 
   </section>
 </main>
@@ -288,6 +411,12 @@ let phi = places[0].phi;
 let targetPhi = places[0].phi;
 let dragging = false;
 let lastX = 0;
+let autoRotate = true;
+let rotationSpeed = 0.004;
+let mapBrightness = 5.2;
+let globeScale = 1;
+let showArcs = true;
+let theme = "dark";
 
 const locationName = document.getElementById("locationName");
 const badgeCode = document.getElementById("badgeCode");
@@ -342,7 +471,7 @@ const globe = createGlobe(canvas, {
   dark: 1,
   diffuse: 1.5,
   mapSamples: 22000,
-  mapBrightness: 5.2,
+  mapBrightness: mapBrightness,
   mapBaseBrightness: 0.15,
   baseColor: [0.02, 0.03, 0.07],
   markerColor: [0.45, 0.65, 1],
@@ -361,20 +490,30 @@ const globe = createGlobe(canvas, {
   arcWidth: 0.45,
   arcHeight: 0.28,
   markerElevation: 0.025,
-  scale: 1,
+  scale: globeScale,
   opacity: 1,
 
   onRender: (state) => {
-  if (!dragging) {
-    targetPhi += 0.004; // auto-rotation speed
-  }
+  if (autoRotate && !dragging) {
+  targetPhi += rotationSpeed;
+}
 
   phi += (targetPhi - phi) * 0.05;
 
   state.phi = phi;
   state.width = canvas.width;
   state.height = canvas.height;
-
+  state.mapBrightness = mapBrightness;
+  state.scale = globeScale;
+  state.dark = theme === "dark" ? 1 : 0;
+  state.baseColor = theme === "dark" ? [0.02, 0.03, 0.07] : [1, 1, 1];
+  state.glowColor = theme === "dark" ? [0.55, 0.7, 1] : [1, 1, 1];
+  
+  state.arcs = showArcs ? [
+    { from: places[0].location, to: places[2].location },
+    { from: places[2].location, to: places[3].location },
+    { from: places[0].location, to: places[4].location }
+  ] : [];
   state.markers = places.map((p, i) => ({
     location: p.location,
     size: i === active ? 0.07 : 0.04,
@@ -418,6 +557,33 @@ document.getElementById("next").addEventListener("click", () => {
   setActive(active + 1);
 });
 
+document.getElementById("speedCtrl").addEventListener("input", (e) => {
+  rotationSpeed = parseFloat(e.target.value);
+  document.getElementById("speedVal").textContent = rotationSpeed.toFixed(3);
+});
+
+document.getElementById("brightCtrl").addEventListener("input", (e) => {
+  mapBrightness = parseFloat(e.target.value);
+  document.getElementById("brightVal").textContent = mapBrightness.toFixed(1);
+});
+
+document.getElementById("scaleCtrl").addEventListener("input", (e) => {
+  globeScale = parseFloat(e.target.value);
+  document.getElementById("scaleVal").textContent = globeScale.toFixed(2);
+});
+
+document.getElementById("themeCtrl").addEventListener("change", (e) => {
+  theme = e.target.value;
+});
+
+document.getElementById("arcToggle").addEventListener("change", (e) => {
+  showArcs = e.target.checked;
+});
+
+document.getElementById("autoToggle").addEventListener("change", (e) => {
+  autoRotate = e.target.checked;
+});
+  
 updateUI();
 </script>
 </body>
