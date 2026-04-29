@@ -273,13 +273,28 @@
         <input type="range" id="glow" min="0.5" max="2.5" step="0.1" value="1.2"/>
       </div>
       <div class="ctrl">
+        <label>Arc Height <span class="val" id="arcHeightVal">0.18</span></label>
+        <input type="range" id="arcHeight" min="0.02" max="0.6" step="0.01" value="0.18"/>
+      </div>
+      
+      <div class="ctrl">
+        <label>Marker Elevation <span class="val" id="markerElevationVal">0.035</span></label>
+        <input type="range" id="markerElevation" min="0" max="0.12" step="0.005" value="0.035"/>
+      </div>
+      
+      <div class="ctrl">
+        <label>Arc Width <span class="val" id="arcWidthVal">0.28</span></label>
+        <input type="range" id="arcWidth" min="0.05" max="1.2" step="0.05" value="0.28"/>
+      </div>
+      <div class="ctrl">
         <label>Globe Style</label>
         <select id="styleMode">
-          <option value="scifi">Sci-Fi Blue</option>
-          <option value="dark">Deep Space</option>
-          <option value="matrix">Matrix Green</option>
-          <option value="amber">Amber Recon</option>
-          <option value="white">Clean White</option>
+           <option value="white">Clean White</option>
+           <option value="scifi">Sci-Fi Blue</option>
+           <option value="aurora">Aurora Teal</option>
+           <option value="violet">Violet Nebula</option>
+           <option value="ember">Solar Ember</option>
+           <option value="cyber">Cyber Cyan</option>
         </select>
       </div>
       <div class="btn-group">
@@ -308,18 +323,52 @@ const CITIES = [
   { name:'Berlin',      lat: 52.52, lng:  13.40 },
 ];
 
-const ARC_PAIRS = [[0,2],[0,3],[1,4],[2,5],[3,8],[4,9],[6,2],[7,1],[8,3],[5,6]];
+const ARC_PAIRS = [[0,1],[0,2],[0,4],[2,9],[4,8],[5,6]];
 
 const STYLES = {
-  scifi:  { dark:1, baseColor:[0.06,0.12,0.28], glowColor:[0.35,0.65,1.0], markerColor:[0.5,0.8,1],  arcColor:[0.4,0.75,1]  },
-  dark:   { dark:1, baseColor:[0.02,0.02,0.06], glowColor:[0.2,0.2,0.45],  markerColor:[0.6,0.6,1],  arcColor:[0.3,0.3,0.9] },
-  matrix: { dark:1, baseColor:[0.0,0.1,0.04],  glowColor:[0.1,0.8,0.25],  markerColor:[0.2,1,0.4],  arcColor:[0.1,0.9,0.3] },
-  amber:  { dark:1, baseColor:[0.15,0.08,0.0], glowColor:[1,0.6,0.1],     markerColor:[1,0.8,0.2],  arcColor:[1,0.65,0.1]  },
-  white:  { dark:0, baseColor:[0.9,0.92,1.0],  glowColor:[0.9,0.95,1],    markerColor:[0.2,0.4,1],  arcColor:[0.3,0.5,1]   },
+   white: {
+    dark:0, baseColor:[0.92,0.94,1.0],
+    glowColor:[0.85,0.92,1],
+    markerColor:[0.1,0.28,1],
+    arcColor:[0.1,0.28,1]
+  }
+  scifi: {
+    dark:1, baseColor:[0.04,0.10,0.24],
+    glowColor:[0.35,0.65,1.0],
+    markerColor:[0.55,0.82,1],
+    arcColor:[0.35,0.75,1]
+  },
+  aurora: {
+    dark:1, baseColor:[0.02,0.10,0.12],
+    glowColor:[0.20,1.00,0.75],
+    markerColor:[0.45,1.00,0.80],
+    arcColor:[0.25,1.00,0.75]
+  },
+  violet: {
+    dark:1, baseColor:[0.10,0.04,0.22],
+    glowColor:[0.85,0.55,1.00],
+    markerColor:[0.95,0.72,1.00],
+    arcColor:[0.80,0.45,1.00]
+  },
+  ember: {
+    dark:1, baseColor:[0.16,0.07,0.02],
+    glowColor:[1.00,0.45,0.12],
+    markerColor:[1.00,0.72,0.25],
+    arcColor:[1.00,0.45,0.12]
+  },
+  cyber: {
+    dark:1, baseColor:[0.02,0.02,0.06],
+    glowColor:[0.15,0.95,1.00],
+    markerColor:[0.25,1.00,1.00],
+    arcColor:[0.10,0.85,1.00]
+  },
 };
 
 let phi=0.8, theta=0.3, phiTarget=0.8, thetaTarget=0.3;
 let globeScale=1, rotSpeed=1.0, mapSamples=16000, diffuse=1.2;
+let arcHeight = 0.18;
+let markerElevation = 0.035;
+let arcWidth = 0.28;
 let autoRotate=true, showArcs=true, currentStyle='scifi';
 let globe=null, pointerDown=false, lastPX=0, lastPY=0;
 
@@ -334,8 +383,8 @@ function initGlobe() {
   canvas.style.width  = size + 'px';
   canvas.style.height = size + 'px';
 
-  document.getElementById('ring1').style.cssText = `width:${size*1.08}px;height:${size*1.08}px;`;
-  document.getElementById('ring2').style.cssText = `width:${size*1.18}px;height:${size*1.18}px;`;
+  document.getElementById('ring1').style.cssText = `width:${size}px;height:${size}px;`;
+  document.getElementById('ring2').style.cssText = `width:${size*1.04}px;height:${size*1.04}px;`;
 
  if (globe && globe.destroy) {
   globe.destroy();
@@ -365,7 +414,10 @@ globe = null;
       to:[CITIES[b].lat,CITIES[b].lng],
       color: s.arcColor,
     })) : [],
-    arcColor: s.arcColor, arcWidth: 0.4, arcHeight: 0.28,
+    arcColor: s.arcColor,
+    arcWidth,
+    arcHeight,
+    markerElevation,
   });
 
 canvas.style.opacity = '1';
@@ -395,13 +447,16 @@ function animateGlobe() {
     width: size,
     height: size,
     dark: s.dark,
-    diffuse,
+    diffuse: diffuse * 1.3,
     mapSamples,
     mapBrightness: s.dark === 1 ? 1.4 : 6,
     baseColor: s.baseColor,
     markerColor: s.markerColor,
-    glowColor: s.glowColor,
+    glowColor: s.glowColor.map(v => Math.min(1, v * diffuse)),
     arcColor: s.arcColor,
+    arcWidth,
+    arcHeight,
+    markerElevation,
     arcs: showArcs ? ARC_PAIRS.map(([a,b]) => ({
       from: [CITIES[a].lat, CITIES[a].lng],
       to: [CITIES[b].lat, CITIES[b].lng],
@@ -433,8 +488,8 @@ function buildCityList() {
     el.addEventListener('click', () => {
       document.querySelectorAll('.city-item').forEach(e=>e.classList.remove('active'));
       el.classList.add('active');
-      phiTarget   = (c.lng * Math.PI / 180) * -1;
-      thetaTarget = Math.max(-0.6, Math.min(0.6, (c.lat * Math.PI / 180) * -0.5 + 0.1));
+      phiTarget = -c.lng * Math.PI / 180;
+      thetaTarget = Math.max(-0.55, Math.min(0.55, c.lat * Math.PI / 360));
       autoRotate  = false;
       setTimeout(() => {
         if (!document.getElementById('btnRotate').classList.contains('paused')) autoRotate = true;
@@ -451,8 +506,8 @@ canvas.addEventListener('pointerdown', e => {
 });
 canvas.addEventListener('pointermove', e => {
   if (!pointerDown) return;
-  phiTarget   += (e.clientX-lastPX)*0.008;
-  thetaTarget  = Math.max(-0.6, Math.min(0.6, thetaTarget-(e.clientY-lastPY)*0.008));
+  phiTarget   -= (e.clientX - lastPX) * 0.008;
+  thetaTarget  = Math.max(-0.6, Math.min(0.6, thetaTarget + (e.clientY - lastPY) * 0.008));
   lastPX=e.clientX; lastPY=e.clientY;
 });
 canvas.addEventListener('pointerup', () => {
@@ -493,9 +548,23 @@ document.getElementById('btnRotate').addEventListener('click', () => {
 document.getElementById('btnArcs').addEventListener('click', () => {
   showArcs = !showArcs;
   document.getElementById('btnArcs').textContent = showArcs ? '⚡ Toggle Arcs' : '〇 Arcs Off';
-  initGlobe();
 });
 
+document.getElementById('arcHeight').addEventListener('input', e => {
+  arcHeight = parseFloat(e.target.value);
+  document.getElementById('arcHeightVal').textContent = arcHeight.toFixed(2);
+});
+
+document.getElementById('markerElevation').addEventListener('input', e => {
+  markerElevation = parseFloat(e.target.value);
+  document.getElementById('markerElevationVal').textContent = markerElevation.toFixed(3);
+});
+
+document.getElementById('arcWidth').addEventListener('input', e => {
+  arcWidth = parseFloat(e.target.value);
+  document.getElementById('arcWidthVal').textContent = arcWidth.toFixed(2);
+});
+ 
 window.addEventListener('resize', initGlobe);
 
 buildCityList();
