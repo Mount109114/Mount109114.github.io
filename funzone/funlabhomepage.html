@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Fun Zone | Muntasir's Lab</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:      #071225;
+    --bg2:     #0c1830;
+    --text:    #eef3ff;
+    --muted:   #b8c4e0;
+    --accent:  #9cc0ff;
+    --accent2: #dce8ff;
+    --shadow:  0 18px 50px rgba(0,0,0,0.28);
+  }
+
+  /* ── cursor ── */
+  * { cursor: none !important; }
+
+  #cursor-dot {
+    position: fixed; z-index: 9999;
+    width: 8px; height: 8px;
+    background: #fff;
+    border-radius: 50%;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    transition: width 0.15s, height 0.15s, background 0.15s;
+    mix-blend-mode: difference;
+  }
+
+  #cursor-ring {
+    position: fixed; z-index: 9998;
+    width: 38px; height: 38px;
+    border: 1.5px solid rgba(156,192,255,0.55);
+    border-radius: 50%;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    transition: width 0.38s cubic-bezier(.16,.86,.44,.98),
+                height 0.38s cubic-bezier(.16,.86,.44,.98),
+                border-color 0.2s,
+                transform 0.12s linear;
+  }
+
+  body:has(a:hover) #cursor-ring,
+  body:has(button:hover) #cursor-ring {
+    width: 56px; height: 56px;
+    border-color: rgba(156,192,255,0.85);
+  }
+
+  /* ── canvas noise bg ── */
+  #noise-canvas {
+    position: fixed; inset: 0; z-index: 0;
+    opacity: 0.45;
+    pointer-events: none;
+  }
+
+  /* ── ambient glows ── */
+  html, body {
+    width: 100%; min-height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: Arial, Helvetica, sans-serif;
+    overflow-x: hidden;
+  }
+
+  .glow-blob {
+    position: fixed; border-radius: 50%;
+    filter: blur(120px); pointer-events: none; z-index: 0;
+  }
+  .glow-blob.a { width:420px;height:420px; top:-100px; left:-80px;  background:rgba(60,100,255,0.22); }
+  .glow-blob.b { width:340px;height:340px; bottom:-80px;right:-60px; background:rgba(100,160,255,0.15); }
+  .glow-blob.c { width:260px;height:260px; top:40%;   left:42%;     background:rgba(120,80,255,0.10); animation: drift 12s ease-in-out infinite alternate; }
+
+  @keyframes drift {
+    from { transform: translate(0,0); }
+    to   { transform: translate(40px, -30px); }
+  }
+
+  /* ── main layout ── */
+  main {
+    position: relative; z-index: 2;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+  }
+
+  /* ── nav ── */
+  nav {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 26px 48px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    backdrop-filter: blur(8px);
+    position: sticky; top: 0; z-index: 20;
+    background: rgba(7,18,37,0.7);
+  }
+
+  .nav-logo {
+    font-size: 0.78rem; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--accent); font-weight: 700;
+    text-decoration: none;
+  }
+
+  .nav-links {
+    display: flex; gap: 32px; list-style: none;
+  }
+
+  .nav-links a {
+    font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--muted); text-decoration: none; font-weight: 600;
+    transition: color 0.2s;
+    position: relative;
+  }
+
+  .nav-links a::after {
+    content: ''; position: absolute; bottom: -3px; left: 0;
+    width: 0; height: 1px; background: var(--accent);
+    transition: width 0.3s ease;
+  }
+
+  .nav-links a:hover { color: var(--accent2); }
+  .nav-links a:hover::after { width: 100%; }
+
+  /* ── hero ── */
+  .hero {
+    flex: 1;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 80px 48px 60px;
+    max-width: 1200px; margin: 0 auto; width: 100%;
+  }
+
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 28px;
+    opacity: 0; animation: fadeUp 0.8s 0.2s forwards;
+  }
+
+  .hero-eyebrow::before {
+    content: ''; width: 28px; height: 1px; background: var(--accent);
+  }
+
+  .hero h1 {
+    font-size: clamp(3.2rem, 8vw, 7.5rem);
+    line-height: 0.96; letter-spacing: -0.04em;
+    font-weight: 700;
+    max-width: 14ch;
+    opacity: 0; animation: fadeUp 0.9s 0.35s forwards;
+  }
+
+  .hero h1 .line { display: block; overflow: hidden; }
+  .hero h1 .word { display: inline-block; }
+
+  /* typewriter line */
+  .typewriter-wrap {
+    margin-top: 32px;
+    font-size: clamp(1rem, 2vw, 1.3rem);
+    color: var(--muted);
+    min-height: 2em;
+    opacity: 0; animation: fadeUp 0.9s 0.55s forwards;
+  }
+
+  #typewriter-text { color: var(--accent); }
+  .tw-cursor {
+    display: inline-block;
+    width: 2px; height: 1.1em;
+    background: var(--accent);
+    margin-left: 2px;
+    vertical-align: text-bottom;
+    animation: blink-cursor 0.7s step-end infinite;
+  }
+  @keyframes blink-cursor { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  .hero-sub {
+    margin-top: 18px;
+    font-size: 1rem; color: var(--muted); line-height: 1.75;
+    max-width: 52ch;
+    opacity: 0; animation: fadeUp 0.9s 0.7s forwards;
+  }
+
+  .hero-cta {
+    margin-top: 38px;
+    opacity: 0; animation: fadeUp 0.9s 0.85s forwards;
+  }
+
+  .btn-primary {
+    display: inline-block; padding: 14px 28px; text-decoration: none;
+    color: #071225; font-weight: 700; font-size: 0.85rem;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    background: linear-gradient(135deg, #8fb4ff, #d6e5ff);
+    border-radius: 14px; border: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(143,180,255,0.35); }
+
+  .btn-ghost {
+    display: inline-block; padding: 14px 28px; text-decoration: none;
+    color: var(--text); font-weight: 600; font-size: 0.85rem;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    border: 1px solid rgba(255,255,255,0.16); border-radius: 14px;
+    background: rgba(255,255,255,0.05); backdrop-filter: blur(10px);
+    transition: all 0.2s ease; margin-left: 14px;
+  }
+  .btn-ghost:hover { background: rgba(255,255,255,0.10); border-color: rgba(255,255,255,0.28); transform: translateY(-3px); }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform: translateY(22px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+
+  /* ── divider ── */
+  .divider {
+    width: 100%; height: 1px;
+    background: linear-gradient(to right, transparent, rgba(156,192,255,0.15), transparent);
+    margin: 0 48px; width: calc(100% - 96px);
+    align-self: center;
+  }
+
+  /* ── projects grid ── */
+  .projects {
+    padding: 72px 48px 80px;
+    max-width: 1200px; margin: 0 auto; width: 100%;
+  }
+
+  .section-label {
+    font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase;
+    color: rgba(156,192,255,0.45); margin-bottom: 36px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .section-label::after { content:''; flex:1; height:1px; background: rgba(156,192,255,0.1); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+
+  .card {
+    position: relative; overflow: hidden;
+    padding: 28px 26px 24px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    backdrop-filter: blur(12px);
+    text-decoration: none; color: var(--text);
+    transition: transform 0.28s cubic-bezier(.16,.86,.44,.98),
+                border-color 0.28s, background 0.28s, box-shadow 0.28s;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+
+  .card::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(156,192,255,0.08) 0%, transparent 65%);
+    opacity: 0; transition: opacity 0.3s;
+    pointer-events: none;
+  }
+
+  .card:hover { transform: translateY(-6px); border-color: rgba(156,192,255,0.22); box-shadow: 0 20px 50px rgba(0,0,0,0.35); }
+  .card:hover::before { opacity: 1; }
+
+  .card-icon {
+    font-size: 1.6rem; line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .card-tag {
+    font-size: 0.65rem; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--accent); font-weight: 700;
+    padding: 3px 8px; border-radius: 6px;
+    background: rgba(156,192,255,0.10); border: 1px solid rgba(156,192,255,0.18);
+    display: inline-block; width: fit-content;
+  }
+
+  .card h3 {
+    font-size: 1.15rem; font-weight: 700; letter-spacing: -0.02em;
+    margin-top: 4px; color: var(--accent2);
+  }
+
+  .card p {
+    font-size: 0.88rem; color: var(--muted); line-height: 1.65;
+  }
+
+  .card-arrow {
+    margin-top: auto; padding-top: 14px;
+    font-size: 0.78rem; color: var(--accent);
+    font-weight: 600; letter-spacing: 0.06em;
+    display: flex; align-items: center; gap: 6px;
+    transition: gap 0.2s;
+  }
+  .card:hover .card-arrow { gap: 12px; }
+
+  /* ── marquee ── */
+  .marquee-wrap {
+    position: relative; overflow: hidden;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    padding: 16px 0;
+    margin-bottom: 0;
+  }
+
+  .marquee-track {
+    display: flex; gap: 0;
+    white-space: nowrap;
+    animation: marquee-scroll 28s linear infinite;
+  }
+
+  .marquee-item {
+    display: inline-flex; align-items: center; gap: 18px;
+    font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase;
+    color: rgba(156,192,255,0.25); padding: 0 36px; flex-shrink: 0;
+  }
+
+  .marquee-dot {
+    width: 4px; height: 4px; border-radius: 50%;
+    background: rgba(156,192,255,0.3);
+  }
+
+  @keyframes marquee-scroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  /* ── footer ── */
+  footer {
+    position: relative; z-index: 2;
+    padding: 28px 48px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 0.75rem; color: rgba(156,192,255,0.35);
+    letter-spacing: 0.1em;
+  }
+
+  footer a { color: rgba(156,192,255,0.5); text-decoration: none; transition: color 0.2s; }
+  footer a:hover { color: var(--accent); }
+
+  /* ── status dot ── */
+  .status {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase;
+    color: rgba(168,255,184,0.7);
+  }
+  .status-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #a8ffb8;
+    box-shadow: 0 0 8px rgba(168,255,184,0.8);
+    animation: pulse-green 2.5s ease-in-out infinite;
+  }
+  @keyframes pulse-green {
+    0%,100% { box-shadow: 0 0 4px rgba(168,255,184,0.6); }
+    50%      { box-shadow: 0 0 12px rgba(168,255,184,1); }
+  }
+
+  @media (max-width: 768px) {
+    nav { padding: 20px 24px; }
+    .nav-links { gap: 20px; }
+    .hero { padding: 60px 24px 40px; }
+    .projects { padding: 50px 24px 60px; }
+    footer { padding: 22px 24px; flex-direction: column; gap: 10px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Custom cursor -->
+<div id="cursor-dot"></div>
+<div id="cursor-ring"></div>
+
+<!-- Animated noise canvas -->
+<canvas id="noise-canvas"></canvas>
+
+<!-- Ambient glows -->
+<div class="glow-blob a"></div>
+<div class="glow-blob b"></div>
+<div class="glow-blob c"></div>
+
+<main>
+
+  <!-- Nav -->
+  <nav>
+    <a class="nav-logo" href="../index.html">S H M Muntasir Rahi</a>
+    <ul class="nav-links">
+      <li><a href="../index.html">Portfolio</a></li>
+      <li><a href="#experiments">Experiments</a></li>
+      <li><a href="https://github.com/Mount109114" target="_blank">GitHub</a></li>
+    </ul>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-eyebrow">Secret Fun Lab</div>
+
+    <h1>
+      <span class="line"><span class="word">Where</span></span>
+      <span class="line"><span class="word">curiosity</span></span>
+      <span class="line"><span class="word">runs wild.</span></span>
+    </h1>
+
+    <div class="typewriter-wrap">
+      Currently exploring: <span id="typewriter-text"></span><span class="tw-cursor"></span>
+    </div>
+
+    <p class="hero-sub">
+      A private experimental space for chaos theory, orbital mechanics,
+      WebGL shaders, and anything that sparks curiosity. Not for resumes —
+      just for the joy of building.
+    </p>
+
+    <div class="hero-cta">
+      <a class="btn-primary" href="#experiments">Explore Lab ↓</a>
+      <a class="btn-ghost" href="../index.html">Main Site</a>
+    </div>
+  </section>
+
+  <!-- Marquee -->
+  <div class="marquee-wrap">
+    <div class="marquee-track" id="marquee">
+      <!-- filled by JS -->
+    </div>
+  </div>
+
+  <!-- Projects -->
+  <section class="projects" id="experiments">
+    <div class="section-label">Experiments</div>
+
+    <div class="grid" id="card-grid">
+      <!-- filled by JS -->
+    </div>
+  </section>
+
+</main>
+
+<!-- Footer -->
+<footer>
+  <span>© 2025 S H M Muntasir Rahi · Potsdam, NY</span>
+  <div class="status"><div class="status-dot"></div> Lab Active</div>
+  <span>Built with curiosity & caffeine</span>
+</footer>
+
+<script>
+// ── Custom cursor ──
+const dot  = document.getElementById('cursor-dot');
+const ring = document.getElementById('cursor-ring');
+let mx = window.innerWidth/2, my = window.innerHeight/2;
+let rx = mx, ry = my;
+
+document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+
+function animateCursor() {
+  dot.style.left  = mx + 'px';
+  dot.style.top   = my + 'px';
+  rx += (mx - rx) * 0.14;
+  ry += (my - ry) * 0.14;
+  ring.style.left = rx + 'px';
+  ring.style.top  = ry + 'px';
+  requestAnimationFrame(animateCursor);
+}
+animateCursor();
+
+// ── Card magnetic cursor glow ──
+document.querySelectorAll('.card').forEach(card => {
+  card.addEventListener('mousemove', e => {
+    const rect = card.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
+    const y = ((e.clientY - rect.top)  / rect.height * 100).toFixed(1);
+    card.style.setProperty('--mx', x + '%');
+    card.style.setProperty('--my', y + '%');
+  });
+});
+
+// ── Noise canvas ──
+(function() {
+  const canvas = document.getElementById('noise-canvas');
+  const ctx = canvas.getContext('2d');
+  let t = 0;
+
+  function resize() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // simple moving dot particles
+  const PARTICLES = Array.from({length: 80}, () => ({
+    x: Math.random(),
+    y: Math.random(),
+    vx: (Math.random() - 0.5) * 0.0003,
+    vy: (Math.random() - 0.5) * 0.0003,
+    size: Math.random() * 1.5 + 0.5,
+    alpha: Math.random() * 0.35 + 0.05,
+  }));
+
+  function drawNoise() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    t += 0.005;
+
+    PARTICLES.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.x < 0) p.x = 1;
+      if (p.x > 1) p.x = 0;
+      if (p.y < 0) p.y = 1;
+      if (p.y > 1) p.y = 0;
+
+      const px = p.x * canvas.width;
+      const py = p.y * canvas.height;
+
+      ctx.beginPath();
+      ctx.arc(px, py, p.size, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(156,192,255,${p.alpha})`;
+      ctx.fill();
+    });
+
+    // faint connection lines
+    for (let i = 0; i < PARTICLES.length; i++) {
+      for (let j = i+1; j < PARTICLES.length; j++) {
+        const pi = PARTICLES[i], pj = PARTICLES[j];
+        const dx = (pi.x - pj.x) * canvas.width;
+        const dy = (pi.y - pj.y) * canvas.height;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < 120) {
+          const alpha = (1 - dist/120) * 0.08;
+          ctx.beginPath();
+          ctx.moveTo(pi.x*canvas.width, pi.y*canvas.height);
+          ctx.lineTo(pj.x*canvas.width, pj.y*canvas.height);
+          ctx.strokeStyle = `rgba(156,192,255,${alpha})`;
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+      }
+    }
+
+    requestAnimationFrame(drawNoise);
+  }
+  drawNoise();
+})();
+
+// ── Typewriter ──
+const TW_STRINGS = [
+  'chaos theory.',
+  '3-body orbits.',
+  'Lorenz attractors.',
+  'WebGL shaders.',
+  'dot-matrix Earth.',
+  'gravity simulations.',
+  'butterfly effects.',
+  'Arduino projects.',
+  'signal arcs on a globe.',
+];
+
+let twIdx = 0, twChar = 0, twDeleting = false;
+const twEl = document.getElementById('typewriter-text');
+
+function typewriterTick() {
+  const str = TW_STRINGS[twIdx];
+  if (!twDeleting) {
+    twChar++;
+    twEl.textContent = str.slice(0, twChar);
+    if (twChar === str.length) {
+      twDeleting = true;
+      setTimeout(typewriterTick, 1600);
+      return;
+    }
+    setTimeout(typewriterTick, 65);
+  } else {
+    twChar--;
+    twEl.textContent = str.slice(0, twChar);
+    if (twChar === 0) {
+      twDeleting = false;
+      twIdx = (twIdx + 1) % TW_STRINGS.length;
+      setTimeout(typewriterTick, 400);
+      return;
+    }
+    setTimeout(typewriterTick, 32);
+  }
+}
+setTimeout(typewriterTick, 1200);
+
+// ── Project cards ──
+const PROJECTS = [
+  {
+    icon: '🌀',
+    tag: 'Chaos Theory',
+    title: 'Lorenz Attractor',
+    desc: '3D butterfly effect. Rotate, zoom, and explore chaotic dynamical systems with σ, ρ, β controls.',
+    href: 'lorenz/index.html',
+    cta: 'Explore attractor',
+  },
+  {
+    icon: '🪐',
+    tag: 'Orbital Mechanics',
+    title: '3-Body Problem',
+    desc: 'Three masses, mutual gravity, infinite unpredictability. RK4 integration with 7 preset configurations.',
+    href: 'threebody/index.html',
+    cta: 'Launch simulation',
+  },
+  {
+    icon: '🌍',
+    tag: 'WebGL · COBE',
+    title: 'Interactive Globe',
+    desc: 'Real-time dot-matrix Earth with city markers, animated signal arcs, and 9 visual styles.',
+    href: 'globe/index.html',
+    cta: 'Spin the globe',
+  },
+  {
+    icon: '☀️',
+    tag: 'Astrophysics',
+    title: 'Solar System',
+    desc: 'Scale model of our solar system with real orbital periods and interactive time controls.',
+    href: 'solarsystem/solarsystem.html',
+    cta: 'View orbits',
+  },
+  {
+    icon: '✨',
+    tag: 'Particles',
+    title: 'Particle Playground',
+    desc: 'Interactive particle system with grab, repulse, and bubble modes. The original fun lab.',
+    href: 'particles@intro/fun.html',
+    cta: 'Play with particles',
+  },
+  {
+    icon: '🔧',
+    tag: 'Coming Soon',
+    title: 'More Experiments',
+    desc: 'Fluid simulations, reaction-diffusion, cellular automata… The lab never sleeps.',
+    href: '#',
+    cta: 'Stay tuned',
+    dim: true,
+  },
+];
+
+const grid = document.getElementById('card-grid');
+PROJECTS.forEach(p => {
+  const a = document.createElement('a');
+  a.className = 'card' + (p.dim ? ' dim' : '');
+  a.href = p.href;
+  if (p.dim) a.style.opacity = '0.45';
+  a.innerHTML = `
+    <div class="card-icon">${p.icon}</div>
+    <span class="card-tag">${p.tag}</span>
+    <h3>${p.title}</h3>
+    <p>${p.desc}</p>
+    <div class="card-arrow">${p.cta} <span>→</span></div>
+  `;
+  // magnetic glow
+  a.addEventListener('mousemove', e => {
+    const r = a.getBoundingClientRect();
+    const x = ((e.clientX - r.left) / r.width * 100).toFixed(1);
+    const y = ((e.clientY - r.top)  / r.height * 100).toFixed(1);
+    a.style.setProperty('--mx', x + '%');
+    a.style.setProperty('--my', y + '%');
+  });
+  grid.appendChild(a);
+});
+
+// ── Marquee ──
+const MARQUEE_ITEMS = [
+  'Chaos Theory','Lorenz Attractor','3-Body Problem','WebGL Globe',
+  'Solar System','Particle System','Arduino Projects','ESP32',
+  'Non-Destructive Evaluation','Ultrasonic Characterization',
+  'Physics-Informed ML','Mechanical Engineering',
+];
+
+const track = document.getElementById('marquee');
+// duplicate for seamless loop
+[...MARQUEE_ITEMS, ...MARQUEE_ITEMS].forEach(text => {
+  const span = document.createElement('span');
+  span.className = 'marquee-item';
+  span.innerHTML = `${text} <span class="marquee-dot"></span>`;
+  track.appendChild(span);
+});
+</script>
+</body>
+</html>
+
