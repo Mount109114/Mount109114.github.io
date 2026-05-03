@@ -249,10 +249,9 @@
 }
 
 /* Positions */
-.sat1 { left: 38%; top: 13%; }
-.sat2 { left: 62%; top: 19%; }
-.sat3 { left: 69%; top: 58%; }
-.sat4 { left: 43%; top: 74%; }
+.satellite {
+  transform-origin: center center;
+}
 
 /* Visible only in Ember */
 body.ember-mode .satellite {
@@ -282,6 +281,11 @@ body.ember-mode .satellite {
 <div class="satellite sat2"></div>
 <div class="satellite sat3"></div>
 <div class="satellite sat4"></div>
+<div class="satellite sat5"></div>
+<div class="satellite sat6"></div>
+<div class="satellite sat7"></div>
+<div class="satellite sat8"></div>
+<div class="satellite sat9"></div>
 
 <div id="coords">
   φ <span id="phi-val">0.80</span> rad &nbsp;·&nbsp;
@@ -340,7 +344,6 @@ body.ember-mode .satellite {
            <option value="aurora">Aurora Teal</option>
            <option value="mono">Dark Mono</option>
            <option value="ember">Solar Ember</option>
-           <option value="cyber">Cyber Cyan</option>
         </select>
       </div>
       <div class="btn-group">
@@ -416,15 +419,6 @@ const STYLES = {
      arcColor: [1.00, 0.62, 0.25],
      mapBrightness: 7.2
    },
-   
-   cyber: {
-     dark: 1,
-     baseColor: [0.02, 0.02, 0.06],
-     glowColor: [0.15, 0.95, 1.00],
-     markerColor: [0.65, 1.00, 1.00],
-     arcColor: [0.35, 1.00, 1.00],
-     mapBrightness: 8.7
-   },
 };
 
 let phi=0.8, theta=0.3, phiTarget=0.8, thetaTarget=0.3;
@@ -437,6 +431,21 @@ let globe=null, pointerDown=false, lastPX=0, lastPY=0;
 
 const canvas = document.getElementById('cobe');
 
+const SATELLITES = [
+  { el: document.querySelector('.sat1'), r: 0.62, speed: 0.008, phase: 0.0,  tilt: 0.30 },
+  { el: document.querySelector('.sat2'), r: 0.72, speed: 0.012, phase: 1.2,  tilt: -0.20 },
+  { el: document.querySelector('.sat3'), r: 0.82, speed: 0.005, phase: 2.4,  tilt: 0.12 },
+  { el: document.querySelector('.sat4'), r: 0.90, speed: 0.015, phase: 3.1,  tilt: -0.35 },
+  { el: document.querySelector('.sat5'), r: 0.68, speed: 0.008, phase: 4.0,  tilt: 0.55 },
+  { el: document.querySelector('.sat6'), r: 0.78, speed: 0.003, phase: 5.2,  tilt: -0.55 },
+  { el: document.querySelector('.sat7'), r: 0.95, speed: 0.020, phase: 0.7,  tilt: 0.18 },
+  { el: document.querySelector('.sat8'), r: 0.58, speed: 0.006, phase: 2.0,  tilt: -0.12 },
+  { el: document.querySelector('.sat9'), r: 1.02, speed: 0.010, phase: 3.8,  tilt: 0.42 }
+];
+
+let satTime = 0;
+ 
+ 
 function globeSize() {
   return Math.round(Math.min(window.innerWidth, window.innerHeight) * 0.84);
 }
@@ -499,6 +508,9 @@ function animateGlobe() {
     phiTarget += 0.008 * rotSpeed;
   }
 
+ satTime += 1;
+updateSatellites();
+ 
   phi += (phiTarget - phi) * 0.08;
   theta += (thetaTarget - theta) * 0.08;
 
@@ -552,8 +564,19 @@ function buildCityList() {
     el.addEventListener('click', () => {
       document.querySelectorAll('.city-item').forEach(e=>e.classList.remove('active'));
       el.classList.add('active');
-      phiTarget = -c.lng * Math.PI / 180;
-      thetaTarget = Math.max(-0.55, Math.min(0.55, c.lat * Math.PI / 360));
+    const lngRad = c.lng * Math.PI / 180;
+    const latRad = c.lat * Math.PI / 180;
+    
+    let desiredPhi = Math.PI / 2 - lngRad;
+    
+    // shortest rotation path
+    desiredPhi = phi + Math.atan2(
+      Math.sin(desiredPhi - phi),
+      Math.cos(desiredPhi - phi)
+    );
+    
+    phiTarget = desiredPhi;
+    thetaTarget = Math.max(-0.65, Math.min(0.65, -latRad * 0.75));
       autoRotate  = false;
       setTimeout(() => {
         if (!document.getElementById('btnRotate').classList.contains('paused')) autoRotate = true;
@@ -639,6 +662,28 @@ window.addEventListener('resize', initGlobe);
 buildCityList();
 initGlobe();
  document.body.classList.toggle('ember-mode', currentStyle === 'ember');
+
+function updateSatellites() {
+  if (currentStyle !== 'ember') return;
+
+  const rect = document.getElementById('globe-wrap').getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const baseR = Math.min(rect.width, rect.height) * 0.42;
+
+  SATELLITES.forEach(sat => {
+    if (!sat.el) return;
+
+    const a = sat.phase + satTime * sat.speed;
+    const x = cx + Math.cos(a) * baseR * sat.r;
+    const y = cy + Math.sin(a) * baseR * sat.r * (0.45 + Math.abs(sat.tilt));
+
+    sat.el.style.left = x + 'px';
+    sat.el.style.top = y + 'px';
+    sat.el.style.transform = `translate(-50%, -50%) rotate(${a * 57.3 + 25}deg)`;
+  });
+} 
+ 
 animateGlobe();
 </script>
 </body>
