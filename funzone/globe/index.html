@@ -567,7 +567,7 @@ function buildCityList() {
     const lngRad = c.lng * Math.PI / 180;
     const latRad = c.lat * Math.PI / 180;
     
-    let desiredPhi = Math.PI / 2 - lngRad;
+    let desiredPhi = Math.PI / 2 + lngRad;
     
     // shortest rotation path
     desiredPhi = phi + Math.atan2(
@@ -576,7 +576,7 @@ function buildCityList() {
     );
     
     phiTarget = desiredPhi;
-    thetaTarget = Math.max(-0.65, Math.min(0.65, -latRad * 0.75));
+    thetaTarget = Math.max(-0.65, Math.min(0.65, latRad * 0.75));
       autoRotate  = false;
       setTimeout(() => {
         if (!document.getElementById('btnRotate').classList.contains('paused')) autoRotate = true;
@@ -669,20 +669,24 @@ function updateSatellites() {
   const rect = document.getElementById('globe-wrap').getBoundingClientRect();
   const cx = rect.left + rect.width / 2;
   const cy = rect.top + rect.height / 2;
-  const baseR = Math.min(rect.width, rect.height) * 0.42;
+  const baseR = Math.min(rect.width, rect.height) * 0.44;
 
   SATELLITES.forEach(sat => {
     if (!sat.el) return;
 
-    const a = sat.phase + satTime * sat.speed;
+    const a = sat.phase + satTime * sat.speed * 0.35; // slower
+    const depth = Math.sin(a); // front/back illusion
+
     const x = cx + Math.cos(a) * baseR * sat.r;
-    const y = cy + Math.sin(a) * baseR * sat.r * (0.45 + Math.abs(sat.tilt));
+    const y = cy + Math.sin(a) * baseR * sat.r * 0.38;
 
     sat.el.style.left = x + 'px';
     sat.el.style.top = y + 'px';
-    sat.el.style.transform = `translate(-50%, -50%) rotate(${a * 57.3 + 25}deg)`;
+    sat.el.style.transform = `translate(-50%, -50%) rotate(${a * 57.3 + 25}deg) scale(${depth > 0 ? 1 : 0.72})`;
+    sat.el.style.opacity = currentStyle === 'ember' ? (depth > 0 ? 1 : 0.12) : 0;
+    sat.el.style.zIndex = depth > 0 ? 7 : 1;
   });
-} 
+}
  
 animateGlobe();
 </script>
