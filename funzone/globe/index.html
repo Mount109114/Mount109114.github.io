@@ -432,15 +432,15 @@ let globe=null, pointerDown=false, lastPX=0, lastPY=0;
 const canvas = document.getElementById('cobe');
 
 const SATELLITES = [
-  { el: document.querySelector('.sat1'), r: 0.62, speed: 0.008, phase: 0.0,  tilt: 0.30 },
-  { el: document.querySelector('.sat2'), r: 0.72, speed: 0.012, phase: 1.2,  tilt: -0.20 },
-  { el: document.querySelector('.sat3'), r: 0.82, speed: 0.005, phase: 2.4,  tilt: 0.12 },
-  { el: document.querySelector('.sat4'), r: 0.90, speed: 0.015, phase: 3.1,  tilt: -0.35 },
-  { el: document.querySelector('.sat5'), r: 0.68, speed: 0.008, phase: 4.0,  tilt: 0.55 },
-  { el: document.querySelector('.sat6'), r: 0.78, speed: 0.003, phase: 5.2,  tilt: -0.55 },
-  { el: document.querySelector('.sat7'), r: 0.95, speed: 0.020, phase: 0.7,  tilt: 0.18 },
-  { el: document.querySelector('.sat8'), r: 0.58, speed: 0.006, phase: 2.0,  tilt: -0.12 },
-  { el: document.querySelector('.sat9'), r: 1.02, speed: 0.010, phase: 3.8,  tilt: 0.42 }
+  { el: document.querySelector('.sat1'), r: 0.62, speed: 0.008, phase: 0.0,  tilt: 0.20 },
+  { el: document.querySelector('.sat2'), r: 0.72, speed: 0.012, phase: 1.2,  tilt: 0.80 },
+  { el: document.querySelector('.sat3'), r: 0.82, speed: 0.005, phase: 2.4,  tilt: 0.45 },
+  { el: document.querySelector('.sat4'), r: 0.90, speed: 0.015, phase: 3.1,  tilt: 1.10 },
+  { el: document.querySelector('.sat5'), r: 0.68, speed: 0.008, phase: 4.0,  tilt: 0.60 },
+  { el: document.querySelector('.sat6'), r: 0.78, speed: 0.003, phase: 5.2,  tilt: 1.30 },
+  { el: document.querySelector('.sat7'), r: 0.95, speed: 0.020, phase: 0.7,  tilt: 0.25 },
+  { el: document.querySelector('.sat8'), r: 0.58, speed: 0.006, phase: 2.0,  tilt: 0.90 },
+  { el: document.querySelector('.sat9'), r: 1.02, speed: 0.010, phase: 3.8,  tilt: 0.70 }
 ];
 
 let satTime = 0;
@@ -678,7 +678,8 @@ function updateSatellites() {
     const depth = Math.sin(a); // front/back illusion
 
     const x = cx + Math.cos(a) * baseR * sat.r;
-    const y = cy + Math.sin(a) * baseR * sat.r * 0.80;
+    const y = cy + Math.sin(a) * baseR * sat.r * sat.tilt
+        + Math.sin(a * 2.3) * 6;
 
     sat.el.style.left = x + 'px';
     sat.el.style.top = y + 'px';
