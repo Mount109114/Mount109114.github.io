@@ -354,7 +354,7 @@ body.ember-mode .satellite {
 
 <!-- ★ THE FIX: type="module" + ESM import — no more "createGlobe is not defined" ★ -->
 <script type="module">
-import createGlobe from "https://cdn.jsdelivr.net/npm/cobe@2/+esm";
+import createGlobe from "./index.esm.js";
 
 const CITIES = [
   { name:'Potsdam, NY', lat: 44.67, lng: -74.98, label:'HOME' },
