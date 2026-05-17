@@ -646,7 +646,7 @@ function project(px, py, pz) {
   const d = fov / (fov + z2*zoom*0.5);
   return {
     sx: canvas.width/2  + x1*zoom*d,
-    sy: canvas.height/2 + 20 + y2*zoom*d
+    sy: canvas.height/2 + 90 + y2*zoom*d
   };
 }
 
@@ -768,7 +768,7 @@ function loop(now) {
   }
 
   if (autoRotate && !dragging) {
-    rotY -= 0.0012;
+    rotY -= 0.0018;
   }
 
   draw();
