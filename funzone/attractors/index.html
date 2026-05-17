@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Strange Attractors | Muntasir's Fun Lab</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #071225;
+    --bg2: #0c1830;
+    --panel: rgba(255,255,255,0.07);
+    --panel-strong: rgba(255,255,255,0.09);
+    --border: rgba(255,255,255,0.12);
+    --text: #eef3ff;
+    --muted: #b8c4e0;
+    --accent: #9cc0ff;
+    --accent2: #dce8ff;
+    --hot: #ff6b63;
+    --shadow: 0 18px 50px rgba(0,0,0,0.28);
+    --shadow-soft: 0 10px 28px rgba(0,0,0,0.18);
+  }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    background:
+      radial-gradient(circle at top left, rgba(112,160,255,0.16), transparent 28%),
+      radial-gradient(circle at bottom right, rgba(196,220,255,0.10), transparent 25%),
+      linear-gradient(135deg, var(--bg), var(--bg2));
+    color: var(--text);
+    font-family: Arial, Helvetica, sans-serif;
+    overflow: hidden;
+  }
+
+  body::before,
+  body::after {
+    content: "";
+    position: fixed;
+    width: 320px;
+    height: 320px;
+    border-radius: 50%;
+    filter: blur(110px);
+    opacity: 0.30;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  body::before { top: -90px; left: -70px; background: #5f8dff; }
+  body::after  { right: -80px; bottom: -110px; background: #9dc0ff; }
+
+  canvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: grab;
+    z-index: 1;
+  }
+
+  canvas:active { cursor: grabbing; }
+
+  .page {
+    position: relative;
+    z-index: 5;
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 24px;
+    padding: 28px;
+    pointer-events: none;
+  }
+
+  .hero {
+    align-self: center;
+    max-width: 760px;
+    padding: 24px;
+    pointer-events: none;
+  }
+
+  .eyebrow {
+    display: inline-block;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: var(--accent);
+    margin-bottom: 16px;
+    backdrop-filter: blur(10px);
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+
+  .hero h1 {
+    margin: 0 0 14px;
+    font-size: clamp(2.6rem, 6vw, 5.2rem);
+    line-height: 1.02;
+    letter-spacing: -0.04em;
+    max-width: 10ch;
+  }
+
+  .hero h1 span { color: var(--hot); }
+
+  .hero p {
+    color: var(--muted);
+    line-height: 1.7;
+    max-width: 58ch;
+    font-size: 1.05rem;
+  }
+
+  .hero-links {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+    pointer-events: auto;
+  }
+
+  .back-btn {
+    display: inline-block;
+    padding: 12px 18px;
+    text-decoration: none;
+    color: var(--text);
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 14px;
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(10px);
+    font-weight: 600;
+    pointer-events: auto;
+    transition: all 0.18s ease;
+  }
+
+  .back-btn:hover {
+    background: rgba(255,255,255,0.10);
+    border-color: rgba(255,255,255,0.24);
+    transform: translateY(-2px);
+  }
+
+  #panel {
+    align-self: center;
+    justify-self: end;
+    width: 100%;
+    max-width: 360px;
+    padding: 22px;
+    border-radius: 24px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    backdrop-filter: blur(16px);
+    box-shadow: var(--shadow);
+    position: relative;
+    z-index: 10;
+    pointer-events: auto;
+  }
+
+  #panel h2 { margin: 0 0 8px; font-size: 1.5rem; }
+
+  .panel-sub {
+    margin: 0 0 16px;
+    color: var(--muted);
+    font-size: 0.96rem;
+    line-height: 1.6;
+  }
+
+  .attractor-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin: 0 0 16px;
+  }
+
+  .preset-btn {
+    padding: 9px 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.05);
+    color: var(--text);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  .preset-btn:hover {
+    background: rgba(255,255,255,0.11);
+    transform: translateY(-1px);
+  }
+
+  .preset-btn.active {
+    color: #071225;
+    background: linear-gradient(135deg, #ff8b7f, #ffd3ce);
+    border-color: transparent;
+  }
+
+  #stats {
+    text-align: right;
+    font-size: 0.86rem;
+    color: var(--muted);
+    margin-bottom: 14px;
+    line-height: 1.6;
+  }
+
+  #stats span {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .equation-box {
+    margin-bottom: 16px;
+    padding: 12px 14px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: rgba(238,243,255,0.92);
+    font-family: "Times New Roman", serif;
+    font-size: 1.02rem;
+    line-height: 1.55;
+    white-space: pre-line;
+  }
+
+  .panel-row {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .ctrl {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .ctrl label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .ctrl .val { color: var(--accent); font-weight: 700; }
+
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 999px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px rgba(156,192,255,0.28);
+    cursor: pointer;
+  }
+
+  select {
+    width: 100%;
+    padding: 10px 40px 10px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.14);
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.05));
+    color: var(--text);
+    backdrop-filter: blur(10px);
+    cursor: pointer;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 0.95rem;
+  }
+
+  select option {
+    background: #0d1220;
+    color: #eef3ff;
+  }
+
+  .btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  button {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 14px;
+    padding: 11px 16px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    background: rgba(255,255,255,0.05);
+    color: var(--text);
+  }
+
+  button:hover {
+    background: rgba(255,255,255,0.10);
+    border-color: rgba(255,255,255,0.20);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-soft);
+  }
+
+  #btnStart {
+    background: linear-gradient(135deg, #8fb4ff, #d6e5ff);
+    color: #071225;
+    border-color: transparent;
+  }
+
+  #btnStart.paused {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.16);
+    color: var(--accent2);
+  }
+
+  .panel-note {
+    margin-top: 14px;
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  @media (max-width: 980px) {
+    html, body { overflow: auto; }
+    .page {
+      grid-template-columns: 1fr;
+      padding: 18px;
+    }
+
+    #panel {
+      justify-self: stretch;
+      max-width: none;
+    }
+
+    .hero { padding: 10px 4px; }
+    .hero h1 { max-width: none; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="c"></canvas>
+
+<div class="page">
+  <section class="hero">
+    <div class="eyebrow">Fun Zone</div>
+    <h1>Strange <span>Attractors</span>.</h1>
+    <p id="heroDesc">
+      Explore chaotic systems beyond Lorenz. Switch between Rössler, Aizawa, Thomas, Chen, and more using buttons.
+    </p>
+    <div class="hero-links">
+      <a class="back-btn" href="../../index.html">← Back to main site</a>
+      <a class="back-btn" href="../lorenz/index.html">→ Lorenz Playground</a>
+      <a class="back-btn" href="../galaxy/index.html">→ Galaxy</a>
+    </div>
+  </section>
+
+  <aside id="panel">
+    <h2>Attractor Controls</h2>
+    <p class="panel-sub">Choose an attractor using buttons. Then rotate, zoom, and tune the trail.</p>
+
+    <div class="attractor-buttons" id="attractorButtons"></div>
+
+    <div id="stats">
+      attractor <span id="attractorName">Rössler</span><br>
+      pts <span id="pv">0</span> · speed <span id="speedTop">1.0×</span> · zoom <span id="zoomTop">11.0</span>
+    </div>
+
+    <div class="equation-box" id="equationBox"></div>
+
+    <div class="panel-row">
+      <div class="ctrl">
+        <label>Speed <span class="val" id="speedVal">1.0×</span></label>
+        <input type="range" id="speed" min="0.1" max="4" step="0.1" value="1"/>
+      </div>
+
+      <div class="ctrl">
+        <label>Trail <span class="val" id="trailVal">7000</span></label>
+        <input type="range" id="trail" min="500" max="16000" step="100" value="7000"/>
+      </div>
+
+      <div class="ctrl">
+        <label>Scale <span class="val" id="scaleVal">1.0×</span></label>
+        <input type="range" id="scale" min="0.4" max="2.4" step="0.05" value="1"/>
+      </div>
+
+      <div class="ctrl">
+        <label>Color Mode</label>
+        <select id="colorMode">
+          <option value="red">Red Glow</option>
+          <option value="velocity">Velocity</option>
+          <option value="height">Height</option>
+          <option value="hueshift">Hue Shift</option>
+          <option value="mono">Monochrome</option>
+        </select>
+      </div>
+
+      <div class="btn-group">
+        <button id="btnStart">⏸ Pause</button>
+        <button id="btnReset">↺ Reset Current</button>
+      </div>
+    </div>
+
+    <div class="panel-note">
+      Drag to rotate · Scroll to zoom · Double click to restore auto-rotate
+    </div>
+  </aside>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+const ATTRACTORS = {
+  rossler: {
+    name: 'Rössler',
+    button: 'Rössler',
+    desc: 'A folded ribbon-like chaotic attractor with a simple three-equation structure.',
+    equation: 'dx/dt = -y - z\\ndy/dt = x + ay\\ndz/dt = b + z(x - c)',
+    init: { x: 0.1, y: 0, z: 0 },
+    dt: 0.012,
+    zoom: 11,
+    rotX: 0.65,
+    rotY: -0.35,
+    params: { a: 0.2, b: 0.2, c: 5.7 },
+    step: (p, s) => ({
+      x: -p.y - p.z,
+      y: p.x + s.a * p.y,
+      z: s.b + p.z * (p.x - s.c)
+    })
+  },
+
+  aizawa: {
+    name: 'Aizawa',
+    button: 'Aizawa',
+    desc: 'A sculptural chaotic attractor with looping vertical structures and twisted bands.',
+    equation: 'dx/dt = (z - b)x - dy\\ndy/dt = dx + (z - b)y\\ndz/dt = c + az - z³/3 - (x² + y²)(1 + ez) + fzx³',
+    init: { x: 0.1, y: 0, z: 0 },
+    dt: 0.006,
+    zoom: 150,
+    rotX: 0.55,
+    rotY: -0.75,
+    params: { a: 0.95, b: 0.7, c: 0.6, d: 3.5, e: 0.25, f: 0.1 },
+    step: (p, s) => ({
+      x: (p.z - s.b) * p.x - s.d * p.y,
+      y: s.d * p.x + (p.z - s.b) * p.y,
+      z: s.c + s.a * p.z - Math.pow(p.z, 3) / 3 - (p.x*p.x + p.y*p.y) * (1 + s.e * p.z) + s.f * p.z * Math.pow(p.x, 3)
+    })
+  },
+
+  lorenz: {
+    name: 'Lorenz',
+    button: 'Lorenz',
+    desc: 'The classic butterfly-shaped chaotic attractor.',
+    equation: 'dx/dt = σ(y - x)\\ndy/dt = x(ρ - z) - y\\ndz/dt = xy - βz',
+    init: { x: 0.1, y: 0, z: 0 },
+    dt: 0.005,
+    zoom: 9,
+    rotX: 0.3,
+    rotY: -0.4,
+    params: { sigma: 10, rho: 28, beta: 8/3 },
+    step: (p, s) => ({
+      x: s.sigma * (p.y - p.x),
+      y: p.x * (s.rho - p.z) - p.y,
+      z: p.x * p.y - s.beta * p.z
+    })
+  },
+
+  chen: {
+    name: 'Chen',
+    button: 'Chen',
+    desc: 'A Lorenz-family attractor with sharp folding and energetic lobes.',
+    equation: 'dx/dt = a(y - x)\\ndy/dt = (c - a)x - xz + cy\\ndz/dt = xy - bz',
+    init: { x: 0.1, y: 0, z: 0 },
+    dt: 0.003,
+    zoom: 6.5,
+    rotX: 0.25,
+    rotY: -0.55,
+    params: { a: 35, b: 3, c: 28 },
+    step: (p, s) => ({
+      x: s.a * (p.y - p.x),
+      y: (s.c - s.a) * p.x - p.x * p.z + s.c * p.y,
+      z: p.x * p.y - s.b * p.z
+    })
+  },
+
+  thomas: {
+    name: 'Thomas',
+    button: 'Thomas',
+    desc: 'A beautifully symmetric chaotic flow with looping spatial knots.',
+    equation: 'dx/dt = sin(y) - bx\\ndy/dt = sin(z) - by\\ndz/dt = sin(x) - bz',
+    init: { x: 0.1, y: 0, z: 0 },
+    dt: 0.035,
+    zoom: 95,
+    rotX: 0.45,
+    rotY: -0.45,
+    params: { b: 0.208186 },
+    step: (p, s) => ({
+      x: Math.sin(p.y) - s.b * p.x,
+      y: Math.sin(p.z) - s.b * p.y,
+      z: Math.sin(p.x) - s.b * p.z
+    })
+  },
+
+  halvorsen: {
+    name: 'Halvorsen',
+    button: 'Halvorsen',
+    desc: 'A symmetric three-wing chaotic attractor with strong rotational structure.',
+    equation: 'dx/dt = -ax - 4y - 4z - y²\\ndy/dt = -ay - 4z - 4x - z²\\ndz/dt = -az - 4x - 4y - x²',
+    init: { x: 1, y: 0, z: 0 },
+    dt: 0.006,
+    zoom: 26,
+    rotX: 0.45,
+    rotY: -0.2,
+    params: { a: 1.4 },
+    step: (p, s) => ({
+      x: -s.a*p.x - 4*p.y - 4*p.z - p.y*p.y,
+      y: -s.a*p.y - 4*p.z - 4*p.x - p.z*p.z,
+      z: -s.a*p.z - 4*p.x - 4*p.y - p.x*p.x
+    })
+  }
+};
+
+let currentKey = 'rossler';
+let current = ATTRACTORS[currentKey];
+
+let speed = 1;
+let maxPts = 7000;
+let colorMode = 'red';
+let running = true;
+let scaleFactor = 1;
+
+let points = [];
+let state = {...current.init};
+
+let rotX = current.rotX;
+let rotY = current.rotY;
+let zoom = current.zoom;
+let dragging = false;
+let lastMX = 0;
+let lastMY = 0;
+let autoRotate = true;
+let hueOffset = 0;
+
+function rk4Step(p, dt, system, params) {
+  const k1 = system(p, params);
+  const k2 = system({
+    x: p.x + k1.x * dt / 2,
+    y: p.y + k1.y * dt / 2,
+    z: p.z + k1.z * dt / 2
+  }, params);
+  const k3 = system({
+    x: p.x + k2.x * dt / 2,
+    y: p.y + k2.y * dt / 2,
+    z: p.z + k2.z * dt / 2
+  }, params);
+  const k4 = system({
+    x: p.x + k3.x * dt,
+    y: p.y + k3.y * dt,
+    z: p.z + k3.z * dt
+  }, params);
+
+  return {
+    x: p.x + (dt / 6) * (k1.x + 2*k2.x + 2*k3.x + k4.x),
+    y: p.y + (dt / 6) * (k1.y + 2*k2.y + 2*k3.y + k4.y),
+    z: p.z + (dt / 6) * (k1.z + 2*k2.z + 2*k3.z + k4.z)
+  };
+}
+
+function project(px, py, pz) {
+  px *= scaleFactor;
+  py *= scaleFactor;
+  pz *= scaleFactor;
+
+  const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
+  const x1 = px * cosY - pz * sinY;
+  const z1 = px * sinY + pz * cosY;
+
+  const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
+  const y2 = py * cosX - z1 * sinX;
+  const z2 = py * sinX + z1 * cosX;
+
+  const fov = 600;
+  const d = fov / (fov + z2 * zoom * 0.5);
+  return {
+    sx: canvas.width / 2 + x1 * zoom * d,
+    sy: canvas.height / 2 + y2 * zoom * d,
+    depth: z2
+  };
+}
+
+function velColor(i) {
+  if (i < 1 || i >= points.length) return 'rgba(255,90,80,0.7)';
+  const a = points[i-1], b = points[i];
+  const dx = b.x-a.x, dy = b.y-a.y, dz = b.z-a.z;
+  const v = Math.sqrt(dx*dx+dy*dy+dz*dz);
+  const t = Math.min(v * 5, 1);
+  const r = Math.round(140 + t*(255-140));
+  const g = Math.round(180 + t*(90-180));
+  const bl = Math.round(255 + t*(80-255));
+  return `rgb(${r},${g},${bl})`;
+}
+
+function heightColor(i) {
+  const z = points[i].z;
+  const t = Math.max(0, Math.min(1, (z + 20) / 45));
+  const h = 200 + t * 150;
+  return `hsl(${h},85%,65%)`;
+}
+
+function hueshiftColor(i) {
+  const h = (hueOffset + i * 0.04) % 360;
+  return `hsl(${h},85%,65%)`;
+}
+
+function redColor(i, alpha) {
+  const age = i / Math.max(points.length, 1);
+  const l = 54 + age * 18;
+  return `hsla(4, 100%, ${l}%, ${alpha})`;
+}
+
+function monoColor(i, alpha) {
+  return `rgba(220,230,255,${alpha})`;
+}
+
+function getColor(i, alpha) {
+  if (colorMode === 'velocity') return velColor(i);
+  if (colorMode === 'height') return heightColor(i);
+  if (colorMode === 'hueshift') return hueshiftColor(i);
+  if (colorMode === 'mono') return monoColor(i, alpha);
+  return redColor(i, alpha);
+}
+
+function stepSystem(steps) {
+  for (let s = 0; s < steps; s++) {
+    state = rk4Step(state, current.dt, current.step, current.params);
+    if (!Number.isFinite(state.x) || !Number.isFinite(state.y) || !Number.isFinite(state.z)) {
+      reset();
+      return;
+    }
+    points.push({...state});
+    if (points.length > maxPts) points.shift();
+  }
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (points.length < 2) return;
+
+  const n = points.length;
+
+  // soft glow pass
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.shadowBlur = 12;
+  ctx.shadowColor = colorMode === 'red' ? 'rgba(255,90,80,0.7)' : 'rgba(156,192,255,0.6)';
+
+  for (let i = 1; i < n; i++) {
+    const age = i / n;
+    const alpha = Math.pow(age, 0.65) * 0.75;
+    const a = project(points[i-1].x, points[i-1].y, points[i-1].z);
+    const b = project(points[i].x, points[i].y, points[i].z);
+
+    ctx.beginPath();
+    ctx.moveTo(a.sx, a.sy);
+    ctx.lineTo(b.sx, b.sy);
+    ctx.lineWidth = 0.55 + age * 1.05;
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = getColor(i, alpha);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // dotted highlight pass
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  const skip = Math.max(2, Math.floor(n / 1700));
+  for (let i = 0; i < n; i += skip) {
+    const age = i / n;
+    const alpha = Math.pow(age, 0.9) * 0.78;
+    const p = project(points[i].x, points[i].y, points[i].z);
+    ctx.beginPath();
+    ctx.arc(p.sx, p.sy, 1.15 + age * 0.6, 0, Math.PI * 2);
+    ctx.fillStyle = getColor(i, alpha);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  ctx.globalAlpha = 1;
+
+  const head = points[n-1];
+  const hp = project(head.x, head.y, head.z);
+  const grad = ctx.createRadialGradient(hp.sx, hp.sy, 0, hp.sx, hp.sy, 12);
+  grad.addColorStop(0, 'rgba(255,255,255,0.95)');
+  grad.addColorStop(0.35, 'rgba(255,110,100,0.55)');
+  grad.addColorStop(1, 'rgba(255,110,100,0)');
+  ctx.beginPath();
+  ctx.arc(hp.sx, hp.sy, 12, 0, Math.PI*2);
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(hp.sx, hp.sy, 2.6, 0, Math.PI*2);
+  ctx.fillStyle = '#fff';
+  ctx.fill();
+}
+
+let last = performance.now();
+function loop(now) {
+  requestAnimationFrame(loop);
+  last = now;
+
+  if (running) {
+    const steps = Math.round(speed * 4);
+    stepSystem(steps);
+    hueOffset += 0.35 * speed;
+  }
+
+  if (autoRotate && !dragging) {
+    rotY += 0.0022;
+  }
+
+  draw();
+  updateStats();
+}
+
+function updateStats() {
+  document.getElementById('attractorName').textContent = current.name;
+  document.getElementById('pv').textContent = points.length;
+  document.getElementById('speedTop').textContent = speed.toFixed(1) + '×';
+  document.getElementById('zoomTop').textContent = zoom.toFixed(1);
+}
+
+function buildButtons() {
+  const wrap = document.getElementById('attractorButtons');
+  Object.entries(ATTRACTORS).forEach(([key, a]) => {
+    const btn = document.createElement('button');
+    btn.className = 'preset-btn';
+    btn.textContent = a.button;
+    btn.addEventListener('click', () => switchAttractor(key));
+    wrap.appendChild(btn);
+  });
+}
+
+function switchAttractor(key) {
+  currentKey = key;
+  current = ATTRACTORS[key];
+  rotX = current.rotX;
+  rotY = current.rotY;
+  zoom = current.zoom;
+  points = [];
+  state = {
+    x: current.init.x + (Math.random() - 0.5) * 0.01,
+    y: current.init.y,
+    z: current.init.z
+  };
+
+  document.getElementById('heroDesc').textContent = current.desc;
+  document.getElementById('equationBox').textContent = current.equation;
+
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent === current.button);
+  });
+}
+
+function reset() {
+  switchAttractor(currentKey);
+}
+
+function bind(id, valId, suffix, cb) {
+  const el = document.getElementById(id);
+  const vEl = document.getElementById(valId);
+  el.addEventListener('input', () => {
+    const value = parseFloat(el.value);
+    vEl.textContent = value.toFixed(2).replace(/\.?0+$/, '') + (suffix || '');
+    cb(value);
+  });
+}
+
+bind('speed', 'speedVal', '×', v => speed = v);
+bind('trail', 'trailVal', '', v => { maxPts = v; });
+bind('scale', 'scaleVal', '×', v => { scaleFactor = v; });
+
+document.getElementById('colorMode').addEventListener('change', e => {
+  colorMode = e.target.value;
+});
+
+const btnStart = document.getElementById('btnStart');
+btnStart.addEventListener('click', () => {
+  running = !running;
+  btnStart.textContent = running ? '⏸ Pause' : '▶ Start';
+  btnStart.classList.toggle('paused', !running);
+});
+
+document.getElementById('btnReset').addEventListener('click', reset);
+
+canvas.addEventListener('mousedown', e => {
+  dragging = true;
+  autoRotate = false;
+  lastMX = e.clientX;
+  lastMY = e.clientY;
+});
+
+window.addEventListener('mouseup', () => { dragging = false; });
+
+window.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  rotY += (e.clientX - lastMX) * 0.007;
+  rotX += (e.clientY - lastMY) * 0.007;
+  lastMX = e.clientX;
+  lastMY = e.clientY;
+});
+
+canvas.addEventListener('touchstart', e => {
+  dragging = true;
+  autoRotate = false;
+  lastMX = e.touches[0].clientX;
+  lastMY = e.touches[0].clientY;
+}, {passive: true});
+
+window.addEventListener('touchend', () => { dragging = false; });
+
+window.addEventListener('touchmove', e => {
+  if (!dragging) return;
+  rotY += (e.touches[0].clientX - lastMX) * 0.007;
+  rotX += (e.touches[0].clientY - lastMY) * 0.007;
+  lastMX = e.touches[0].clientX;
+  lastMY = e.touches[0].clientY;
+}, {passive: true});
+
+canvas.addEventListener('wheel', e => {
+  zoom *= e.deltaY > 0 ? 0.93 : 1.07;
+  zoom = Math.max(2, Math.min(220, zoom));
+  e.preventDefault();
+}, {passive: false});
+
+canvas.addEventListener('dblclick', () => { autoRotate = true; });
+
+buildButtons();
+switchAttractor('rossler');
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
