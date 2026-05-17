@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Interactive Galaxy | Muntasir's Fun Lab</title>
+
+<style>
+:root {
+  --bg:#071225;
+  --bg2:#0c1830;
+  --text:#eef3ff;
+  --muted:#b8c4e0;
+  --accent:#9cc0ff;
+  --accent2:#dce8ff;
+  --panel:rgba(255,255,255,0.07);
+  --border:rgba(255,255,255,0.12);
+  --shadow:0 18px 50px rgba(0,0,0,0.28);
+}
+
+* {
+  box-sizing:border-box;
+}
+
+html, body {
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  font-family:Arial, Helvetica, sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(112,160,255,0.16), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(196,220,255,0.10), transparent 25%),
+    linear-gradient(135deg, var(--bg), var(--bg2));
+}
+
+canvas {
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100%;
+  display:block;
+  z-index:1;
+  cursor:grab;
+}
+
+canvas:active {
+  cursor:grabbing;
+}
+
+.page {
+  position:relative;
+  z-index:5;
+  min-height:100vh;
+  display:grid;
+  grid-template-columns:1fr 340px;
+  gap:24px;
+  padding:28px;
+  pointer-events:none;
+}
+
+.hero {
+  align-self:center;
+  max-width:760px;
+  padding:24px;
+  pointer-events:none;
+}
+
+.eyebrow {
+  display:inline-block;
+  padding:8px 14px;
+  border-radius:999px;
+  background:rgba(255,255,255,0.08);
+  border:1px solid var(--border);
+  color:var(--accent);
+  margin-bottom:16px;
+  backdrop-filter:blur(10px);
+  font-size:0.95rem;
+  font-weight:600;
+}
+
+.hero h1 {
+  margin:0 0 14px;
+  font-size:clamp(2.6rem, 6vw, 5.2rem);
+  line-height:1.02;
+  letter-spacing:-0.04em;
+  max-width:9ch;
+}
+
+.hero h1 span {
+  color:#a8ff7a;
+}
+
+.hero p {
+  color:var(--muted);
+  line-height:1.7;
+  max-width:58ch;
+  font-size:1.05rem;
+}
+
+.hero-links {
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-top:18px;
+  pointer-events:auto;
+}
+
+.back-btn {
+  display:inline-block;
+  padding:12px 18px;
+  text-decoration:none;
+  color:var(--text);
+  border:1px solid rgba(255,255,255,0.16);
+  border-radius:14px;
+  background:rgba(255,255,255,0.06);
+  backdrop-filter:blur(10px);
+  font-weight:600;
+  pointer-events:auto;
+}
+
+.back-btn:hover {
+  background:rgba(255,255,255,0.10);
+  transform:translateY(-2px);
+}
+
+#panel {
+  align-self:center;
+  justify-self:end;
+  width:100%;
+  max-width:340px;
+  padding:22px;
+  border-radius:24px;
+  background:var(--panel);
+  border:1px solid var(--border);
+  backdrop-filter:blur(16px);
+  box-shadow:var(--shadow);
+  position:relative;
+  z-index:10;
+  pointer-events:auto;
+}
+
+#panel h2 {
+  margin:0 0 8px;
+  font-size:1.5rem;
+}
+
+.panel-sub {
+  margin:0 0 18px;
+  color:var(--muted);
+  font-size:0.95rem;
+  line-height:1.6;
+}
+
+.ctrl {
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin-bottom:14px;
+}
+
+.ctrl label {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:0.9rem;
+  font-weight:700;
+}
+
+.ctrl .val {
+  color:var(--accent);
+}
+
+input[type="range"] {
+  -webkit-appearance:none;
+  width:100%;
+  height:4px;
+  background:rgba(255,255,255,0.14);
+  border-radius:999px;
+  outline:none;
+  cursor:pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance:none;
+  width:15px;
+  height:15px;
+  border-radius:50%;
+  background:var(--accent);
+  cursor:pointer;
+}
+
+input[type="color"] {
+  width:100%;
+  height:36px;
+  border:none;
+  border-radius:12px;
+  background:transparent;
+  cursor:pointer;
+}
+
+.toggle-row {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px 12px;
+  border-radius:14px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.08);
+  margin-bottom:10px;
+}
+
+button {
+  width:100%;
+  margin-top:10px;
+  padding:12px 16px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,0.14);
+  background:rgba(255,255,255,0.07);
+  color:var(--text);
+  font-weight:700;
+  cursor:pointer;
+}
+
+button:hover {
+  background:rgba(255,255,255,0.12);
+}
+
+#btnAuto {
+  background:linear-gradient(135deg, #8fb4ff, #d6e5ff);
+  color:#071225;
+}
+
+.panel-note {
+  margin-top:14px;
+  font-size:0.82rem;
+  color:var(--muted);
+  line-height:1.6;
+}
+
+@media (max-width:980px) {
+  html, body { overflow:auto; }
+  .page {
+    grid-template-columns:1fr;
+    padding:18px;
+  }
+  #panel {
+    justify-self:stretch;
+    max-width:none;
+  }
+}
+</style>
+</head>
+
+<body>
+<canvas id="galaxyCanvas"></canvas>
+
+<div class="page">
+  <section class="hero">
+    <div class="eyebrow">Fun Zone</div>
+    <h1>Interactive <span>Galaxy</span>.</h1>
+    <p>
+      A 3D spiral galaxy generator made with Three.js particles.
+      Drag to rotate, scroll to zoom, and tune the galaxy from the control panel.
+    </p>
+    <div class="hero-links">
+      <a class="back-btn" href="../../index.html">← Back to main site</a>
+      <a class="back-btn" href="../solarsystem/solarsystem.html">→ Solar System</a>
+      <a class="back-btn" href="../globe/index.html">→ Interactive Globe</a>
+    </div>
+  </section>
+
+  <aside id="panel">
+    <h2>Galaxy Controls</h2>
+    <p class="panel-sub">Tune density, spiral shape, colors, and motion.</p>
+
+    <div class="ctrl">
+      <label>Star Count <span class="val" id="countVal">80k</span></label>
+      <input id="count" type="range" min="10000" max="180000" step="10000" value="80000">
+    </div>
+
+    <div class="ctrl">
+      <label>Radius <span class="val" id="radiusVal">5.0</span></label>
+      <input id="radius" type="range" min="2" max="9" step="0.1" value="5">
+    </div>
+
+    <div class="ctrl">
+      <label>Branches <span class="val" id="branchesVal">4</span></label>
+      <input id="branches" type="range" min="2" max="8" step="1" value="4">
+    </div>
+
+    <div class="ctrl">
+      <label>Spin <span class="val" id="spinVal">1.20</span></label>
+      <input id="spin" type="range" min="-4" max="4" step="0.05" value="1.2">
+    </div>
+
+    <div class="ctrl">
+      <label>Randomness <span class="val" id="randomVal">0.35</span></label>
+      <input id="randomness" type="range" min="0" max="1.5" step="0.01" value="0.35">
+    </div>
+
+    <div class="ctrl">
+      <label>Star Size <span class="val" id="sizeVal">0.025</span></label>
+      <input id="starSize" type="range" min="0.005" max="0.08" step="0.001" value="0.025">
+    </div>
+
+    <div class="ctrl">
+      <label>Inside Color</label>
+      <input id="insideColor" type="color" value="#ffb86b">
+    </div>
+
+    <div class="ctrl">
+      <label>Outside Color</label>
+      <input id="outsideColor" type="color" value="#6ba8ff">
+    </div>
+
+    <div class="toggle-row">
+      <span>Auto Rotate</span>
+      <input id="autoRotate" type="checkbox" checked>
+    </div>
+
+    <button id="btnAuto">⏸ Pause Rotation</button>
+    <button id="btnRandom">✨ Random Galaxy</button>
+    <button id="btnReset">↺ Reset Camera</button>
+
+    <div class="panel-note">
+      Drag to rotate · Scroll to zoom · Right-drag to pan
+    </div>
+  </aside>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+const canvas = document.getElementById("galaxyCanvas");
+
+const scene = new THREE.Scene();
+
+const camera = new THREE.PerspectiveCamera(
+  60,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  100
+);
+camera.position.set(4, 3, 7);
+
+const renderer = new THREE.WebGLRenderer({
+  canvas,
+  antialias: true,
+  alpha: true
+});
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.45;
+
+let geometry = null;
+let material = null;
+let points = null;
+
+const params = {
+  count: 80000,
+  size: 0.025,
+  radius: 5,
+  branches: 4,
+  spin: 1.2,
+  randomness: 0.35,
+  randomnessPower: 3,
+  insideColor: "#ffb86b",
+  outsideColor: "#6ba8ff"
+};
+
+const controlsMap = {
+  count: document.getElementById("count"),
+  radius: document.getElementById("radius"),
+  branches: document.getElementById("branches"),
+  spin: document.getElementById("spin"),
+  randomness: document.getElementById("randomness"),
+  size: document.getElementById("starSize"),
+  insideColor: document.getElementById("insideColor"),
+  outsideColor: document.getElementById("outsideColor")
+};
+
+function updateLabels() {
+  document.getElementById("countVal").textContent = Math.round(params.count / 1000) + "k";
+  document.getElementById("radiusVal").textContent = params.radius.toFixed(1);
+  document.getElementById("branchesVal").textContent = params.branches;
+  document.getElementById("spinVal").textContent = params.spin.toFixed(2);
+  document.getElementById("randomVal").textContent = params.randomness.toFixed(2);
+  document.getElementById("sizeVal").textContent = params.size.toFixed(3);
+}
+
+function generateGalaxy() {
+  if (points !== null) {
+    geometry.dispose();
+    material.dispose();
+    scene.remove(points);
+  }
+
+  geometry = new THREE.BufferGeometry();
+
+  const positions = new Float32Array(params.count * 3);
+  const colors = new Float32Array(params.count * 3);
+
+  const colorInside = new THREE.Color(params.insideColor);
+  const colorOutside = new THREE.Color(params.outsideColor);
+
+  for (let i = 0; i < params.count; i++) {
+    const i3 = i * 3;
+
+    const radius = Math.random() * params.radius;
+    const branchAngle = ((i % params.branches) / params.branches) * Math.PI * 2;
+    const spinAngle = radius * params.spin;
+
+    const randomX =
+      Math.pow(Math.random(), params.randomnessPower) *
+      (Math.random() < 0.5 ? 1 : -1) *
+      params.randomness *
+      radius;
+
+    const randomY =
+      Math.pow(Math.random(), params.randomnessPower) *
+      (Math.random() < 0.5 ? 1 : -1) *
+      params.randomness *
+      radius *
+      0.35;
+
+    const randomZ =
+      Math.pow(Math.random(), params.randomnessPower) *
+      (Math.random() < 0.5 ? 1 : -1) *
+      params.randomness *
+      radius;
+
+    positions[i3] = Math.cos(branchAngle + spinAngle) * radius + randomX;
+    positions[i3 + 1] = randomY;
+    positions[i3 + 2] = Math.sin(branchAngle + spinAngle) * radius + randomZ;
+
+    const mixedColor = colorInside.clone();
+    mixedColor.lerp(colorOutside, radius / params.radius);
+
+    colors[i3] = mixedColor.r;
+    colors[i3 + 1] = mixedColor.g;
+    colors[i3 + 2] = mixedColor.b;
+  }
+
+  geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+
+  material = new THREE.PointsMaterial({
+    size: params.size,
+    sizeAttenuation: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    vertexColors: true
+  });
+
+  points = new THREE.Points(geometry, material);
+  scene.add(points);
+
+  updateLabels();
+}
+
+function bindSlider(id, key, isInt = false) {
+  const el = document.getElementById(id);
+  el.addEventListener("input", () => {
+    params[key] = isInt ? parseInt(el.value) : parseFloat(el.value);
+    generateGalaxy();
+  });
+}
+
+bindSlider("count", "count", true);
+bindSlider("radius", "radius");
+bindSlider("branches", "branches", true);
+bindSlider("spin", "spin");
+bindSlider("randomness", "randomness");
+bindSlider("starSize", "size");
+
+document.getElementById("insideColor").addEventListener("input", e => {
+  params.insideColor = e.target.value;
+  generateGalaxy();
+});
+
+document.getElementById("outsideColor").addEventListener("input", e => {
+  params.outsideColor = e.target.value;
+  generateGalaxy();
+});
+
+document.getElementById("autoRotate").addEventListener("change", e => {
+  controls.autoRotate = e.target.checked;
+  document.getElementById("btnAuto").textContent =
+    e.target.checked ? "⏸ Pause Rotation" : "▶ Resume Rotation";
+});
+
+document.getElementById("btnAuto").addEventListener("click", () => {
+  controls.autoRotate = !controls.autoRotate;
+  document.getElementById("autoRotate").checked = controls.autoRotate;
+  document.getElementById("btnAuto").textContent =
+    controls.autoRotate ? "⏸ Pause Rotation" : "▶ Resume Rotation";
+});
+
+document.getElementById("btnRandom").addEventListener("click", () => {
+  params.branches = Math.floor(2 + Math.random() * 7);
+  params.spin = -3 + Math.random() * 6;
+  params.randomness = 0.15 + Math.random() * 0.8;
+  params.radius = 3.5 + Math.random() * 4;
+  params.insideColor = "#" + Math.floor(Math.random() * 16777215).toString(16).padStart(6, "0");
+  params.outsideColor = "#" + Math.floor(Math.random() * 16777215).toString(16).padStart(6, "0");
+
+  document.getElementById("branches").value = params.branches;
+  document.getElementById("spin").value = params.spin;
+  document.getElementById("randomness").value = params.randomness;
+  document.getElementById("radius").value = params.radius;
+  document.getElementById("insideColor").value = params.insideColor;
+  document.getElementById("outsideColor").value = params.outsideColor;
+
+  generateGalaxy();
+});
+
+document.getElementById("btnReset").addEventListener("click", () => {
+  camera.position.set(4, 3, 7);
+  controls.target.set(0, 0, 0);
+  controls.update();
+});
+
+window.addEventListener("resize", () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+});
+
+function animate() {
+  controls.update();
+  renderer.render(scene, camera);
+  requestAnimationFrame(animate);
+}
+
+generateGalaxy();
+animate();
+</script>
+</body>
+</html>
