@@ -89,7 +89,7 @@ canvas:active {
 }
 
 .hero h1 span {
-  color:#a8ff7a;
+  color: var(--text);
 }
 
 .hero p {
@@ -266,7 +266,6 @@ button:hover {
     </p>
     <div class="hero-links">
       <a class="back-btn" href="../../index.html">← Back to main site</a>
-      <a class="back-btn" href="../solarsystem/solarsystem.html">→ Solar System</a>
       <a class="back-btn" href="../globe/index.html">→ Interactive Globe</a>
     </div>
   </section>
@@ -287,7 +286,7 @@ button:hover {
 
     <div class="ctrl">
       <label>Branches <span class="val" id="branchesVal">4</span></label>
-      <input id="branches" type="range" min="2" max="8" step="1" value="4">
+      <input id="branches" type="range" min="2" max="8" step="1" value="8">
     </div>
 
     <div class="ctrl">
@@ -297,12 +296,12 @@ button:hover {
 
     <div class="ctrl">
       <label>Randomness <span class="val" id="randomVal">0.35</span></label>
-      <input id="randomness" type="range" min="0" max="1.5" step="0.01" value="0.35">
+      <input id="randomness" type="range" min="0" max="1.5" step="0.01" value="1.4">
     </div>
 
     <div class="ctrl">
       <label>Star Size <span class="val" id="sizeVal">0.025</span></label>
-      <input id="starSize" type="range" min="0.005" max="0.08" step="0.001" value="0.025">
+      <input id="starSize" type="range" min="0.005" max="0.08" step="0.001" value="0.005">
     </div>
 
     <div class="ctrl">
@@ -375,11 +374,11 @@ let points = null;
 
 const params = {
   count: 80000,
-  size: 0.025,
+  size: 0.005,
   radius: 5,
-  branches: 4,
+  branches: 8,
   spin: 1.2,
-  randomness: 0.35,
+  randomness: 1.4,
   randomnessPower: 3,
   insideColor: "#ffb86b",
   outsideColor: "#6ba8ff"
