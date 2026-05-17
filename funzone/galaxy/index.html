@@ -469,6 +469,8 @@ function generateGalaxy() {
   });
 
   points = new THREE.Points(geometry, material);
+  points.rotation.x = 0.15;
+  points.rotation.z = 0.1;
   scene.add(points);
 
   updateLabels();
