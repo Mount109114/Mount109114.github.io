@@ -445,9 +445,9 @@ const ATTRACTORS = {
     // ★ FIX: better initial camera so the 3D spiral shape is visible, not flat
     init: { x: 0.1, y: 0, z: 0 },
     dt:   0.010,
-    zoom: 11,
-    rotX: 1.28,
-    rotY: -0.15,
+    zoom: 24,
+    rotX: 1.45,
+    rotY: 1.15,
     params: { a: 0.2, b: 0.2, c: 5.7 },
     step: (p, s) => ({
       x: -p.y - p.z,
@@ -646,7 +646,7 @@ function project(px, py, pz) {
   const d = fov / (fov + z2*zoom*0.5);
   return {
     sx: canvas.width/2  + x1*zoom*d,
-    sy: canvas.height/2 + y2*zoom*d
+    sy: canvas.height/2 + 20 + y2*zoom*d
   };
 }
 
@@ -768,7 +768,7 @@ function loop(now) {
   }
 
   if (autoRotate && !dragging) {
-    rotY += 0.002;
+    rotY -= 0.0012;
   }
 
   draw();
