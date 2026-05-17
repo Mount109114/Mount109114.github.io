@@ -332,15 +332,15 @@ button:hover {
 <script type="importmap">
 {
   "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"
+    "three": "./vendor/three.module.js",
+    "three/addons/": "./vendor/"
   }
 }
 </script>
 
 <script type="module">
 import * as THREE from "three";
-import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { OrbitControls } from "three/addons/OrbitControls.js";
 
 const canvas = document.getElementById("galaxyCanvas");
 
@@ -352,7 +352,7 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   100
 );
-camera.position.set(4, 3, 7);
+camera.position.set(4, 3, 5);
 
 const renderer = new THREE.WebGLRenderer({
   canvas,
@@ -531,7 +531,7 @@ document.getElementById("btnRandom").addEventListener("click", () => {
 });
 
 document.getElementById("btnReset").addEventListener("click", () => {
-  camera.position.set(4, 3, 7);
+  camera.position.set(4, 3, 5);
   controls.target.set(0, 0, 0);
   controls.update();
 });
