@@ -34,13 +34,13 @@ button{width:100%;margin-top:10px;padding:12px 16px;border-radius:14px;border:1p
 <aside id="panel">
 <h2>Motion Controls</h2><p class="panel-sub">Tune the color-force physics and watch the system self-organize.</p>
 <div id="stats">Particles <span id="statCount">220</span><br>Spectrum <span id="statSpectrum">360°</span><br>Force mix <span id="statRatio">50:50</span></div>
-<div class="ctrl"><label>Particle Count <span class="val" id="countVal">220</span></label><input id="count" type="range" min="60" max="520" step="20" value="100"></div>
+<div class="ctrl"><label>Particle Count <span class="val" id="countVal">220</span></label><input id="count" type="range" min="60" max="520" step="20" value="150"></div>
 <div class="ctrl"><label>Color Spectrum <span class="val" id="spectrumVal">360°</span></label><input id="spectrum" type="range" min="30" max="360" step="10" value="360"></div>
 <div class="ctrl"><label>Attract : Repel <span class="val" id="ratioVal">50:50</span></label><input id="ratio" type="range" min="0" max="100" step="1" value="50"></div>
 <div class="ctrl"><label>Force Strength <span class="val" id="forceVal">1.0×</span></label><input id="force" type="range" min="0.2" max="3" step="0.1" value="0.2"></div>
 <div class="ctrl"><label>Bond Strength <span class="val" id="bondVal">0.8×</span></label><input id="bond" type="range" min="0" max="2.5" step="0.1" value="0.0"></div>
 <div class="ctrl"><label>Particle Size <span class="val" id="sizeVal">5</span></label><input id="size" type="range" min="2" max="10" step="1" value="5"></div>
-<div class="ctrl"><label>Damping <span class="val" id="dampingVal">0.90</span></label><input id="damping" type="range" min="0.82" max="0.98" step="0.01" value="0.98"></div>
+<div class="ctrl"><label>Damping <span class="val" id="dampingVal">0.90</span></label><input id="damping" type="range" min="0.82" max="0.98" step="0.01" value="0.94"></div>
 <div class="ctrl"><label>Containment <span class="val" id="containVal">0.8×</span></label><input id="contain" type="range" min="0" max="2.5" step="0.1" value="0.0"></div>
 <div class="toggle-row"><span>Show Bonds</span><input id="bondsToggle" type="checkbox" checked></div>
 <div class="toggle-row"><span>Auto Stir</span><input id="stirToggle" type="checkbox" checked></div>
@@ -50,14 +50,25 @@ button{width:100%;margin-top:10px;padding:12px 16px;border-radius:14px;border:1p
 <script>
 const canvas=document.getElementById("motionCanvas"),ctx=canvas.getContext("2d");let W=0,H=0;function resize(){W=canvas.width=innerWidth;H=canvas.height=innerHeight}resize();addEventListener("resize",resize);
 let particles=[],running=true,dragging=false,lastMouse={x:0,y:0},time=0;
-const params={count:100,spectrum:360,ratio:50,force:.2,bond:0,size:5,damping:.98,containment:0,showBonds:true,autoStir:true};
+const params={count:150,spectrum:360,ratio:50,force:.2,bond:0,size:5,damping:.94,containment:0,showBonds:true,autoStir:true};
 const ids={count:["count","countVal",v=>v],spectrum:["spectrum","spectrumVal",v=>v+"°"],ratio:["ratio","ratioVal",v=>`${v}:${100-v}`],force:["force","forceVal",v=>Number(v).toFixed(1)+"×"],bond:["bond","bondVal",v=>Number(v).toFixed(1)+"×"],size:["size","sizeVal",v=>v],damping:["damping","dampingVal",v=>Number(v).toFixed(2)],containment:["contain","containVal",v=>Number(v).toFixed(1)+"×"]};
 function hueDistance(a,b){let d=Math.abs(a-b)%360;return Math.min(d,360-d)/180}
 function colorForHue(h){return `hsl(${h},95%,62%)`}
 function randomParticle(i,mode="random"){const cx=W*.52,cy=H*.50,hue=(i/Math.max(params.count-1,1))*params.spectrum;if(mode==="ring"){const a=i/params.count*Math.PI*2,r=Math.min(W,H)*.22+(Math.random()-.5)*30;return{x:cx+Math.cos(a)*r,y:cy+Math.sin(a)*r,vx:Math.sin(a)*.5,vy:-Math.cos(a)*.5,hue,mass:.8+Math.random()*.4}}return{x:cx+(Math.random()-.5)*Math.min(W,H)*1.15,y:cy+(Math.random()-.5)*Math.min(W,H)*0.90,vx:(Math.random()-.5)*2,vy:(Math.random()-.5)*2,hue,mass:.8+Math.random()*.4}}
 function createParticles(mode="random"){particles=[];for(let i=0;i<params.count;i++)particles.push(randomParticle(i,mode));updateLabels()}
 function updateLabels(){for(const key in ids){const [id,labelId,fmt]=ids[key],el=document.getElementById(id),label=document.getElementById(labelId);if(el)el.value=params[key];if(label)label.textContent=fmt(params[key])}statCount.textContent=params.count;statSpectrum.textContent=params.spectrum+"°";statRatio.textContent=`${params.ratio}:${100-params.ratio}`}
-function bindControls(){for(const key in ids){const [id]=ids[key],el=document.getElementById(id);el.addEventListener("input",()=>{params[key]=(key==="count"||key==="spectrum"||key==="ratio"||key==="size")?parseInt(el.value):parseFloat(el.value);if(key==="count"||key==="spectrum")createParticles("ring");else updateLabels()})}bondsToggle.addEventListener("change",e=>params.showBonds=e.target.checked);stirToggle.addEventListener("change",e=>params.autoStir=e.target.checked);btnPlay.addEventListener("click",()=>{running=!running;btnPlay.textContent=running?"⏸ Pause":"▶ Start"});btnShuffle.addEventListener("click",()=>createParticles("random"));btnRing.addEventListener("click",()=>createParticles("ring"))}
+function bindControls(){for(const key in ids){const [id]=ids[key],el=document.getElementById(id);el.addEventListener("input",()=>{params[key]=(key==="count"||key==="spectrum"||key==="ratio"||key==="size")?parseInt(el.value):parseFloat(el.value);if(key==="count"){
+    createParticles("random");
+}
+else if(key==="spectrum"){
+    particles.forEach((p,i)=>{
+        p.hue=(i/Math.max(params.count-1,1))*params.spectrum;
+    });
+    updateLabels();
+}
+else{
+    updateLabels();
+}})}bondsToggle.addEventListener("change",e=>params.showBonds=e.target.checked);stirToggle.addEventListener("change",e=>params.autoStir=e.target.checked);btnPlay.addEventListener("click",()=>{running=!running;btnPlay.textContent=running?"⏸ Pause":"▶ Start"});btnShuffle.addEventListener("click",()=>createParticles("random"));btnRing.addEventListener("click",()=>createParticles("ring"))}
 function simulate(){const n=particles.length,cx=W*.52,cy=H*.50,minR=params.size*2.2,desired=params.size*2.65,attract=params.ratio/100,repel=1-attract;for(let i=0;i<n;i++){const a=particles[i];for(let j=i+1;j<n;j++){const b=particles[j];let dx=b.x-a.x,dy=b.y-a.y,d2=dx*dx+dy*dy;if(d2<.001)d2=.001;const dist=Math.sqrt(d2),nx=dx/dist,ny=dy/dist,hueD=hueDistance(a.hue,b.hue),sim=1-hueD,opp=hueD;let force=(sim*attract*.018)-(opp*repel*.030/Math.max(dist/42,.75));force*=params.force;if(sim>.72)force+=(dist-desired)*.0009*sim*params.bond;if(dist<minR)force-=(minR-dist)*.020;const fx=force*nx,fy=force*ny;a.vx+=fx/a.mass;a.vy+=fy/a.mass;b.vx-=fx/b.mass;b.vy-=fy/b.mass}}for(const p of particles){const dx=cx-p.x,dy=cy-p.y,r=Math.sqrt(dx*dx+dy*dy)||1,targetR=Math.min(W,H)*.31;if(r>targetR){p.vx+=(dx/r)*(r-targetR)*.0008*params.containment;p.vy+=(dy/r)*(r-targetR)*.0008*params.containment}if(params.autoStir){const swirl=.00035;p.vx+=-dy*swirl*Math.sin(time*.015+p.hue*.02);p.vy+=dx*swirl*Math.cos(time*.015+p.hue*.02)}p.vx*=params.damping;p.vy*=params.damping;p.x+=p.vx;p.y+=p.vy}}
 function drawBackground(){ctx.save();ctx.globalAlpha=.38;for(let i=0;i<120;i++){const x=(i*137.5+time*.05)%W,y=(i*91.7)%H,r=(i%3)*.35+.25;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=`rgba(220,230,255,${.05+(i%5)*.025})`;ctx.fill()}ctx.restore()}
 function drawBonds(){if(!params.showBonds)return;ctx.save();ctx.globalCompositeOperation="lighter";for(let i=0;i<particles.length;i++){const a=particles[i];for(let j=i+1;j<particles.length;j++){const b=particles[j],sim=1-hueDistance(a.hue,b.hue);if(sim<.82)continue;const dx=b.x-a.x,dy=b.y-a.y,d=Math.sqrt(dx*dx+dy*dy);if(d>params.size*7)continue;const alpha=(sim-.82)/.18*(1-d/(params.size*7))*.35;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=`hsla(${(a.hue+b.hue)/2},95%,65%,${alpha})`;ctx.lineWidth=.75;ctx.stroke()}}ctx.restore()}
