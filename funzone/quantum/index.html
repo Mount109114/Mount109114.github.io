@@ -507,9 +507,28 @@ function buildCache() {
   for (let i = 0; i < SAMPLES; i++) {
     const x  = -10 + i * (20 / (SAMPLES - 1));
     const s  = packetState(x);
-    const ry = Math.cos(s.phase) * s.envelope;
-    const rz = Math.sin(s.phase) * s.envelope;
-    waveCache.push({ x, ry, rz, phase: s.phase, env: s.envelope, sigmaNow: s.sigmaNow, center: s.center });
+const tailFade = Math.pow(
+  Math.min(1, s.envelope / 0.28),
+  2.2
+);
+
+const softenedEnvelope =
+  s.envelope * tailFade;
+
+const ry =
+  Math.cos(s.phase) * softenedEnvelope;
+
+const rz =
+  Math.sin(s.phase) * softenedEnvelope;
+    waveCache.push({
+  x,
+  ry,
+  rz,
+  phase: s.phase,
+  env: softenedEnvelope,
+  sigmaNow: s.sigmaNow,
+  center: s.center
+});
   }
 }
 
