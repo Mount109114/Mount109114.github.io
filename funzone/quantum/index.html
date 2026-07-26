@@ -247,7 +247,7 @@
 
     <div class="ctrl">
       <label>Group Speed <span class="val" id="speedVal">1.0×</span></label>
-      <input id="speed" type="range" min="0" max="3" step="0.05" value="1">
+      <input id="speed" type="range" min="0" max="3" step="0.05" value="0.7">
     </div>
     <div class="ctrl">
       <label>
@@ -265,24 +265,24 @@
     </div>
     <div class="ctrl">
       <label>Phase Speed <span class="val" id="phaseVal">1.1×</span></label>
-      <input id="phaseSpeed" type="range" min="0" max="4" step="0.1" value="1">
+      <input id="phaseSpeed" type="range" min="0" max="4" step="0.1" value="1.1">
     </div>
 
     <div class="ctrl">
       <label>Dispersion β <span class="val" id="dispVal">0.5</span></label>
-      <input id="dispersion" type="range" min="0" max="1.5" step="0.05" value="0.25">
+      <input id="dispersion" type="range" min="0" max="1.5" step="0.05" value="0.50">
     </div>
 
     <div class="section-label">Shape</div>
 
     <div class="ctrl">
       <label>Width σ <span class="val" id="sigmaVal">1.75</span></label>
-      <input id="sigma" type="range" min="0.5" max="4" step="0.05" value="1.6">
+      <input id="sigma" type="range" min="0.5" max="4" step="0.05" value="0.75">
     </div>
 
     <div class="ctrl">
       <label>Wave Number k <span class="val" id="kVal">13.0</span></label>
-      <input id="waveNumber" type="range" min="1" max="14" step="0.2" value="13">
+      <input id="waveNumber" type="range" min="1" max="14" step="0.2" value="13.4">
     </div>
 
     <div class="ctrl">
@@ -811,13 +811,7 @@ function drawFullCarrierWave() {
       0 far from the packet,
       1 at the packet center.
     */
-    const proximity = Math.exp(
-      -0.5 *
-      Math.pow(
-        arcDistance / (currentSigma * 2.5),
-        2
-      )
-    );
+
 
     /*
       27% opacity far away,
