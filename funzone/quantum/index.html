@@ -734,9 +734,11 @@ function carrierPoint(
   const worldX =
     Math.cos(angle) * effectiveRadius;
 
+  const centerY =
+    Math.sin(packetAngle * 0.5) * 0.45;
+  
   const worldY =
-    Math.sin(angle * 0.5) * 0.7 +
-    verticalOffset;
+    centerY + verticalOffset;
 
   const worldZ =
     Math.sin(angle) * effectiveRadius;
@@ -749,21 +751,29 @@ function carrierPoint(
 }
  
 function drawFullCarrierWave() {
-  if (currentMode !== "curved") return;
+  if (P.motionMode !== "circular") return;
 
   const orbitRadius = P.orbitRadius;
   const packetAngle = t * 0.42 * P.speed;
 
   const segments = 800;
-  const carrierAmplitude = 0.09;
+  const carrierAmplitude = 0.04;
 
   const omega = P.k * P.k / 2;
+  const currentSigma = packetState(0).sigmaNow;
 
   ctx.save();
   ctx.globalCompositeOperation = "source-over";
   ctx.lineWidth = 1.15;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
+ const proximity = Math.exp(
+  -0.5 *
+  Math.pow(
+    arcDistance / (currentSigma * 2.5),
+    2
+  )
+);
 
   for (let i = 1; i <= segments; i++) {
     const angleA = ((i - 1) / segments) * Math.PI * 2;
@@ -804,7 +814,7 @@ function drawFullCarrierWave() {
     const proximity = Math.exp(
       -0.5 *
       Math.pow(
-        arcDistance / (P.sigma * 2.5),
+        arcDistance / (currentSigma * 2.5),
         2
       )
     );
