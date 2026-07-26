@@ -508,8 +508,8 @@ function buildCache() {
     const x  = -10 + i * (20 / (SAMPLES - 1));
     const s  = packetState(x);
 const tailFade = Math.pow(
-  Math.min(1, s.envelope / 0.28),
-  2.2
+  Math.min(1, s.envelope / 0.22),
+  1.8
 );
 
 const softenedEnvelope =
