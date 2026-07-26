@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Gaussian Wave Packet | Muntasir's Fun Lab</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:#071225; --bg2:#0c1830;
+    --panel:rgba(255,255,255,0.07);
+    --border:rgba(255,255,255,0.12);
+    --text:#eef3ff; --muted:#b8c4e0;
+    --accent:#9cc0ff; --accent2:#dce8ff;
+    --shadow:0 18px 50px rgba(0,0,0,0.28);
+    --shadow-soft:0 10px 28px rgba(0,0,0,0.18);
+  }
+
+  html, body {
+    width:100%; height:100%; overflow:hidden;
+    background:
+      radial-gradient(circle at top left, rgba(112,160,255,0.16), transparent 28%),
+      radial-gradient(circle at bottom right, rgba(196,220,255,0.10), transparent 25%),
+      linear-gradient(135deg,var(--bg),var(--bg2));
+    color:var(--text);
+    font-family:Arial,Helvetica,sans-serif;
+  }
+
+  body::before, body::after {
+    content:""; position:fixed;
+    width:320px; height:320px; border-radius:50%;
+    filter:blur(110px); opacity:.30; z-index:0; pointer-events:none;
+  }
+  body::before { top:-90px; left:-70px; background:#5f8dff; }
+  body::after  { right:-80px; bottom:-110px; background:#9dc0ff; }
+
+  canvas { position:fixed; inset:0; width:100%; height:100%; display:block; cursor:grab; z-index:1; }
+  canvas:active { cursor:grabbing; }
+
+  .page {
+    position:relative; z-index:5; min-height:100vh;
+    display:grid; grid-template-columns:1fr 360px;
+    gap:24px; padding:28px; pointer-events:none;
+  }
+
+  .hero {
+    align-self:center; max-width:760px;
+    padding:24px; pointer-events:none;
+  }
+
+  .eyebrow {
+    display:inline-block; padding:8px 14px; border-radius:999px;
+    background:rgba(255,255,255,0.08); border:1px solid var(--border);
+    color:var(--accent); margin-bottom:16px;
+    backdrop-filter:blur(10px); font-size:.95rem; font-weight:600;
+  }
+
+  .hero h1 {
+    margin:0 0 14px;
+    font-size:clamp(2.6rem,6vw,5.2rem);
+    line-height:1.02; letter-spacing:-.04em; max-width:11ch;
+  }
+
+  .hero p { color:var(--muted); line-height:1.7; max-width:58ch; font-size:1.05rem; }
+
+  .equation {
+    margin-top:14px;
+    color:rgba(238,243,255,.85);
+    font-family:"Times New Roman",serif;
+    font-size:1.05rem; line-height:1.55;
+  }
+
+  .hero-links { display:flex; gap:12px; flex-wrap:wrap; margin-top:18px; pointer-events:auto; }
+
+  .back-btn {
+    display:inline-block; padding:12px 18px; text-decoration:none;
+    color:var(--text); border:1px solid rgba(255,255,255,.16);
+    border-radius:14px; background:rgba(255,255,255,.06);
+    backdrop-filter:blur(10px); font-weight:600; pointer-events:auto;
+    transition:all .18s ease;
+  }
+  .back-btn:hover { background:rgba(255,255,255,.10); transform:translateY(-2px); }
+
+  /* ── panel ── */
+  #panel {
+    align-self:center; justify-self:end; width:100%; max-width:360px;
+    max-height:calc(100vh - 56px); overflow-y:auto;
+    padding:22px; border-radius:24px;
+    background:var(--panel); border:1px solid var(--border);
+    backdrop-filter:blur(16px); box-shadow:var(--shadow);
+    position:relative; z-index:10; pointer-events:auto;
+  }
+
+  #panel::-webkit-scrollbar { width:4px; }
+  #panel::-webkit-scrollbar-thumb { background:rgba(156,192,255,0.25); border-radius:999px; }
+
+  #panel h2 { margin:0 0 8px; font-size:1.5rem; }
+  .panel-sub { margin:0 0 14px; color:var(--muted); font-size:.95rem; line-height:1.6; }
+
+  /* ── section label ── */
+  .section-label {
+    font-size:.68rem; letter-spacing:.14em; text-transform:uppercase;
+    color:rgba(156,192,255,0.4); margin:14px 0 8px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .section-label::after { content:''; flex:1; height:1px; background:rgba(156,192,255,0.1); }
+
+  /* ── stats ── */
+  #stats {
+    margin-bottom:12px; padding:10px 12px;
+    border-radius:14px;
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.08);
+    color:var(--muted); font-size:.84rem; line-height:1.75;
+    font-family:'Courier New',monospace;
+  }
+  #stats span { color:var(--accent); font-weight:700; }
+
+  .ctrl { display:flex; flex-direction:column; gap:7px; margin-bottom:13px; }
+  .ctrl label {
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:.92rem; font-weight:600; color:var(--text);
+  }
+  .ctrl .val { color:var(--accent); font-weight:700; }
+
+  input[type=range] {
+    -webkit-appearance:none; width:100%; height:4px;
+    background:rgba(255,255,255,.14); border-radius:999px; outline:none; cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance:none; width:15px; height:15px;
+    border-radius:50%; background:var(--accent);
+    box-shadow:0 0 8px rgba(156,192,255,0.3); cursor:pointer;
+  }
+  input[type=range]:hover::-webkit-slider-thumb { transform:scale(1.15); }
+
+  select {
+    width:100%; padding:9px 12px; border-radius:12px;
+    border:1px solid rgba(255,255,255,.14);
+    background:rgba(255,255,255,.06); color:var(--text);
+    font-family:Arial,Helvetica,sans-serif; font-size:.9rem;
+    cursor:pointer;
+  }
+  select option { background:#0d1220; color:#eef3ff; }
+
+  .toggle-row {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:9px 12px; border-radius:12px;
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.07);
+    margin-bottom:8px; font-size:.9rem; color:var(--muted);
+    cursor:pointer;
+  }
+  .toggle-row:hover { background:rgba(255,255,255,.07); }
+
+  input[type=checkbox] { cursor:pointer; accent-color:var(--accent); width:15px; height:15px; }
+
+  .btn-group { display:flex; flex-direction:column; gap:9px; margin-top:4px; }
+
+  button {
+    width:100%; padding:11px 16px; border-radius:14px;
+    border:1px solid rgba(255,255,255,.14);
+    background:rgba(255,255,255,.06); color:var(--text);
+    font-family:Arial,Helvetica,sans-serif;
+    font-size:.88rem; font-weight:700;
+    letter-spacing:.05em; text-transform:uppercase;
+    cursor:pointer; transition:all .18s ease;
+  }
+  button:hover { background:rgba(255,255,255,.11); transform:translateY(-2px); box-shadow:var(--shadow-soft); }
+
+  #btnPlay {
+    background:linear-gradient(135deg,#8fb4ff,#d6e5ff);
+    color:#071225; border-color:transparent;
+  }
+  #btnPlay.paused {
+    background:rgba(255,255,255,.08);
+    border-color:rgba(255,255,255,.16);
+    color:var(--accent2);
+  }
+
+  .panel-note { margin-top:14px; font-size:.8rem; color:var(--muted); line-height:1.6; }
+
+  @media(max-width:980px){
+    html,body{overflow:auto}
+    .page{grid-template-columns:1fr;padding:18px}
+    #panel{justify-self:stretch;max-width:none;max-height:none}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="waveCanvas"></canvas>
+
+<div class="page">
+  <section class="hero">
+    <div class="eyebrow">Fun Zone · Quantum Physics</div>
+    <h1>Quantum Wave Packet.</h1>
+    <p>
+      A 3D Gaussian wave packet propagating through free space. The helix traces the
+      complex amplitude Ψ — the envelope localizes the particle, the phase winds
+      like a corkscrew as the packet travels.
+    </p>
+    <div class="equation">
+      Ψ(x,t) = A exp[−(x−vt)²/(4σ²)] · exp[i(kx−ωt)]<br>
+      |Ψ|² = A² exp[−(x−vt)²/(2σ²)]
+    </div>
+    <div class="hero-links">
+      <a class="back-btn" href="../../index.html">← Back to main site</a>
+      <a class="back-btn" href="../attractors/index.html">→ Strange Attractors</a>
+      <a class="back-btn" href="../lorenz/index.html">→ Lorenz</a>
+    </div>
+  </section>
+
+  <aside id="panel">
+    <h2>Wave Controls</h2>
+    <p class="panel-sub">Tune the packet — rotate, zoom, and explore quantum structure.</p>
+
+    <div id="stats">
+      center x = <span id="centerStat">0.00</span><br>
+      σ = <span id="sigmaStat">1.60</span> &nbsp;·&nbsp; k = <span id="kStat">5.0</span><br>
+      ω = <span id="omegaStat">0.00</span> &nbsp;·&nbsp; zoom = <span id="zoomStat">22.0</span>
+    </div>
+
+    <div class="section-label">Dynamics</div>
+
+    <div class="ctrl">
+      <label>Group Speed <span class="val" id="speedVal">1.0×</span></label>
+      <input id="speed" type="range" min="0" max="3" step="0.05" value="1">
+    </div>
+
+    <div class="ctrl">
+      <label>Phase Speed <span class="val" id="phaseVal">1.0×</span></label>
+      <input id="phaseSpeed" type="range" min="0" max="4" step="0.1" value="1">
+    </div>
+
+    <div class="ctrl">
+      <label>Dispersion β <span class="val" id="dispVal">0.25</span></label>
+      <input id="dispersion" type="range" min="0" max="1.5" step="0.05" value="0.25">
+    </div>
+
+    <div class="section-label">Shape</div>
+
+    <div class="ctrl">
+      <label>Width σ <span class="val" id="sigmaVal">1.60</span></label>
+      <input id="sigma" type="range" min="0.5" max="4" step="0.05" value="1.6">
+    </div>
+
+    <div class="ctrl">
+      <label>Wave Number k <span class="val" id="kVal">5.0</span></label>
+      <input id="waveNumber" type="range" min="1" max="14" step="0.2" value="5">
+    </div>
+
+    <div class="ctrl">
+      <label>Amplitude <span class="val" id="ampVal">1.0×</span></label>
+      <input id="amplitude" type="range" min="0.2" max="2.5" step="0.05" value="1">
+    </div>
+
+    <div class="section-label">Visual</div>
+
+    <div class="ctrl">
+      <label>Color Mode</label>
+      <select id="colorMode">
+        <option value="quantum">Quantum Blue</option>
+        <option value="phase">Phase Rainbow</option>
+        <option value="thermal">Thermal</option>
+        <option value="mono">Monochrome</option>
+      </select>
+    </div>
+
+    <div class="toggle-row" onclick="toggleCheck('envelopeToggle')">
+      <span>Show Envelope Rings</span>
+      <input id="envelopeToggle" type="checkbox" checked onclick="event.stopPropagation()">
+    </div>
+
+    <div class="toggle-row" onclick="toggleCheck('probToggle')">
+      <span>Show |Ψ|² Density</span>
+      <input id="probToggle" type="checkbox" checked onclick="event.stopPropagation()">
+    </div>
+
+    <div class="toggle-row" onclick="toggleCheck('floorToggle')">
+      <span>Show Floor Shadow</span>
+      <input id="floorToggle" type="checkbox" checked onclick="event.stopPropagation()">
+    </div>
+
+    <div class="toggle-row" onclick="toggleCheck('rotateToggle')">
+      <span>Auto Rotate</span>
+      <input id="rotateToggle" type="checkbox" checked onclick="event.stopPropagation()">
+    </div>
+
+    <div class="btn-group">
+      <button id="btnPlay">⏸ Pause</button>
+      <button id="btnReset">↺ Reset View</button>
+    </div>
+
+    <div class="panel-note">
+      Drag to rotate · Scroll to zoom · Double-click to restore auto-rotate
+    </div>
+  </aside>
+</div>
+
+<script>
+// ── helper ──
+function toggleCheck(id) {
+  const el = document.getElementById(id);
+  el.checked = !el.checked;
+  el.dispatchEvent(new Event('change'));
+}
+
+const canvas = document.getElementById('waveCanvas');
+const ctx    = canvas.getContext('2d');
+
+let W = 0, H = 0;
+function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+resize();
+window.addEventListener('resize', resize);
+
+// ── params ──
+const P = {
+  speed:      1,
+  sigma:      1.6,
+  k:          5,
+  amplitude:  1,
+  dispersion: 0.25,
+  phaseSpeed: 1,
+  colorMode:  'quantum',
+  showEnvelope: true,
+  showProb:     true,
+  showFloor:    true,
+  autoRotate:   true,
+};
+
+let running = true;
+let t = 0;
+let rotX = 0.32, rotY = -0.55;
+let zoom = 22;
+let dragging = false, lastX = 0, lastY = 0;
+
+// ── 3D projection (same as Lorenz page — no lighter, no shadowBlur in loop) ──
+function project(x, y, z) {
+  const cy = Math.cos(rotY), sy = Math.sin(rotY);
+  const x1 =  x*cy - z*sy;
+  const z1 =  x*sy + z*cy;
+
+  const cx = Math.cos(rotX), sx = Math.sin(rotX);
+  const y2 = y*cx - z1*sx;
+  const z2 = y*sx + z1*cx;
+
+  const fov = 650;
+  const d   = fov / (fov + z2*zoom*0.55);
+  return { x: W*0.54 + x1*zoom*d, y: H*0.50 + y2*zoom*d, depth: z2 };
+}
+
+// ── physics ──
+function packetState(x) {
+  const travelRange = 7.5;
+  const center      = Math.sin(t * 0.35 * P.speed) * travelRange;
+  const spread      = 1 + P.dispersion * (0.25 + 0.75 * Math.abs(Math.sin(t * 0.18)));
+  const sigmaNow    = P.sigma * spread;
+  const q           = (x - center) / sigmaNow;
+  const envelope    = P.amplitude * Math.exp(-0.25 * q * q);
+  const phase       = P.k * x - t * 3.2 * P.phaseSpeed;
+  const omega       = P.k * P.k / 2; // free-particle dispersion ω = k²/2m
+  return { center, sigmaNow, envelope, phase, omega };
+}
+
+// ── colour (single function, no composite per-segment) ──
+function segColor(phase, envelope, alpha) {
+  const a = alpha * Math.min(1, envelope * 1.4);
+  switch (P.colorMode) {
+    case 'mono':
+      return `rgba(210,225,255,${a})`;
+    case 'phase': {
+      const hue = (((phase * 180 / Math.PI) % 360) + 360) % 360;
+      return `hsla(${hue},90%,70%,${a})`;
+    }
+    case 'thermal': {
+      // cool→warm: blue→cyan→yellow→red
+      const mix = Math.min(1, Math.max(0, (Math.sin(phase) + 1) / 2));
+      const r = Math.round(mix < 0.5 ? mix*2*255 : 255);
+      const g = Math.round(mix < 0.5 ? mix*2*200 : (1-mix)*2*200);
+      const b = Math.round(mix < 0.5 ? 255 : (1-mix)*2*255);
+      return `rgba(${r},${g},${b},${a})`;
+    }
+    default: { // quantum blue
+      const mix = (Math.sin(phase) + 1) / 2;
+      const r   = Math.round(100 + mix * 140);
+      const g   = Math.round(170 + mix * 70);
+      const b   = 255;
+      return `rgba(${r},${g},${b},${a})`;
+    }
+  }
+}
+
+// ── pre-sample the wave (done once per frame, reused by all draw passes) ──
+const SAMPLES = 420;
+let waveCache = [];
+
+function buildCache() {
+  waveCache = [];
+  for (let i = 0; i < SAMPLES; i++) {
+    const x  = -10 + i * (20 / (SAMPLES - 1));
+    const s  = packetState(x);
+    const ry = Math.cos(s.phase) * s.envelope;
+    const rz = Math.sin(s.phase) * s.envelope;
+    waveCache.push({ x, ry, rz, phase: s.phase, env: s.envelope, sigmaNow: s.sigmaNow, center: s.center });
+  }
+}
+
+// ── draw axis ──
+function drawAxis() {
+  const a = project(-11, 0, 0);
+  const b = project( 11, 0, 0);
+  ctx.save();
+  ctx.strokeStyle = 'rgba(220,230,255,0.28)';
+  ctx.lineWidth   = 1.2;
+  ctx.setLineDash([4, 8]);
+  ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // tick marks
+  for (let xi = -10; xi <= 10; xi += 2) {
+    const tp = project(xi, 0, 0);
+    ctx.beginPath();
+    ctx.arc(tp.x, tp.y, 1.5, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(156,192,255,0.25)';
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+// ── floor shadow of Re(Ψ) — flat projection onto y=-amplitude plane ──
+// ★ KEY: single path, no per-segment stroke, very cheap
+function drawFloorShadow() {
+  if (!P.showFloor || waveCache.length < 2) return;
+  const FLOOR_Y = -P.amplitude * 1.6;
+
+  ctx.save();
+  ctx.globalAlpha = 0.18;
+  ctx.strokeStyle = '#7aadff';
+  ctx.lineWidth   = 1.2;
+  ctx.beginPath();
+
+  waveCache.forEach((c, i) => {
+    const rp = project(c.x, FLOOR_Y, Math.cos(c.phase) * c.env);
+    i === 0 ? ctx.moveTo(rp.x, rp.y) : ctx.lineTo(rp.x, rp.y);
+  });
+  ctx.stroke();
+  ctx.restore();
+}
+
+// ── probability density |Ψ|² as a filled ribbon below the axis ──
+// ★ Single filled path — very fast, dramatic effect
+function drawProbDensity() {
+  if (!P.showProb || waveCache.length < 2) return;
+
+  const PROB_SCALE = -1.8; // drop below axis
+  ctx.save();
+
+  // upper edge (positive |Ψ|²)
+  ctx.beginPath();
+  waveCache.forEach((c, i) => {
+    const prob = c.env * c.env;
+    const pp   = project(c.x, prob * PROB_SCALE * 0.5, 0);
+    i === 0 ? ctx.moveTo(pp.x, pp.y) : ctx.lineTo(pp.x, pp.y);
+  });
+  // lower edge (axis) — trace back
+  for (let i = waveCache.length - 1; i >= 0; i--) {
+    const pp = project(waveCache[i].x, 0, 0);
+    ctx.lineTo(pp.x, pp.y);
+  }
+  ctx.closePath();
+
+  // gradient fill
+  const g = ctx.createLinearGradient(0, H * 0.3, 0, H * 0.7);
+  g.addColorStop(0, 'rgba(100,180,255,0.18)');
+  g.addColorStop(1, 'rgba(60,120,220,0.03)');
+  ctx.fillStyle = g;
+  ctx.fill();
+
+  // top edge stroke
+  ctx.globalAlpha = 0.35;
+  ctx.strokeStyle = '#8ac4ff';
+  ctx.lineWidth   = 1.0;
+  ctx.beginPath();
+  waveCache.forEach((c, i) => {
+    const prob = c.env * c.env;
+    const pp   = project(c.x, prob * PROB_SCALE * 0.5, 0);
+    i === 0 ? ctx.moveTo(pp.x, pp.y) : ctx.lineTo(pp.x, pp.y);
+  });
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+// ── envelope rings (cheap: single stroke per ring, no lighter) ──
+function drawEnvelopeRings() {
+  if (!P.showEnvelope || waveCache.length === 0) return;
+  ctx.save();
+  ctx.globalAlpha = 0.12;
+  ctx.strokeStyle = '#9cc0ff';
+  ctx.lineWidth   = 0.7;
+
+  // draw every ~10th sample
+  for (let i = 0; i < waveCache.length; i += 10) {
+    const c = waveCache[i];
+    if (c.env < 0.04) continue;
+
+    // single ellipse path
+    ctx.beginPath();
+    const RING_SEGS = 24;
+    for (let j = 0; j <= RING_SEGS; j++) {
+      const ang = j / RING_SEGS * Math.PI * 2;
+      const rp  = project(c.x, Math.cos(ang) * c.env, Math.sin(ang) * c.env);
+      j === 0 ? ctx.moveTo(rp.x, rp.y) : ctx.lineTo(rp.x, rp.y);
+    }
+    ctx.globalAlpha = 0.06 + 0.22 * c.env * c.env;
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// ── MAIN HELIX — batched by color bucket for performance ──
+// ★ Instead of 600 individual stroke calls, we bucket ~20 color groups
+//   and draw a single continuous path per bucket. Massively faster.
+function drawHelix() {
+  if (waveCache.length < 2) return;
+
+  const BUCKETS = 28; // number of color segments to batch
+  const step    = Math.floor(waveCache.length / BUCKETS);
+
+  ctx.save();
+
+  // ── pass 1: wide soft stroke (the glow) — single path, low alpha ──
+  ctx.lineWidth   = 4.0;
+  ctx.globalAlpha = 0.22;
+  ctx.strokeStyle = '#9cc0ff';
+  ctx.beginPath();
+  waveCache.forEach((c, i) => {
+    const rp = project(c.x, c.ry, c.rz);
+    i === 0 ? ctx.moveTo(rp.x, rp.y) : ctx.lineTo(rp.x, rp.y);
+  });
+  ctx.stroke();
+
+  // ── pass 2: sharp coloured segments in batches ──
+  for (let b = 0; b < BUCKETS; b++) {
+    const iStart = b * step;
+    const iEnd   = Math.min((b + 1) * step + 1, waveCache.length);
+    if (iEnd - iStart < 2) continue;
+
+    // sample colour from middle of bucket
+    const mid   = waveCache[Math.floor((iStart + iEnd) / 2)];
+    const age   = iStart / waveCache.length;
+    const alpha = 0.30 + 0.70 * Math.pow(age, 0.4);
+
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle  = segColor(mid.phase, mid.env, 1);
+
+    // line width tracks envelope amplitude
+    const avgEnv = (waveCache[iStart].env + mid.env) / 2;
+    ctx.lineWidth = 0.8 + 2.8 * avgEnv;
+
+    ctx.beginPath();
+    for (let i = iStart; i < iEnd; i++) {
+      const rp = project(waveCache[i].x, waveCache[i].ry, waveCache[i].rz);
+      i === iStart ? ctx.moveTo(rp.x, rp.y) : ctx.lineTo(rp.x, rp.y);
+    }
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+// ── glowing head dot — single radial gradient (no change) ──
+function drawHead() {
+  if (waveCache.length === 0) return;
+  const last = waveCache[waveCache.length - 1];
+  const hp   = project(last.x, last.ry, last.rz);
+
+  const isPhase = P.colorMode === 'phase';
+  const mid1    = isPhase ? 'rgba(255,180,100,0.65)' : 'rgba(120,210,255,0.70)';
+
+  const g = ctx.createRadialGradient(hp.x, hp.y, 0, hp.x, hp.y, 16);
+  g.addColorStop(0,   'rgba(255,255,255,0.95)');
+  g.addColorStop(0.28, mid1);
+  g.addColorStop(1,   'rgba(80,150,255,0)');
+
+  ctx.beginPath();
+  ctx.arc(hp.x, hp.y, 16, 0, Math.PI * 2);
+  ctx.fillStyle   = g;
+  ctx.globalAlpha = 1;
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(hp.x, hp.y, 3, 0, Math.PI * 2);
+  ctx.fillStyle = '#fff';
+  ctx.fill();
+
+  // also draw a marker at center (packet position on axis)
+  const s  = waveCache[0];
+  const cp = project(s.center, 0, 0);
+  const cg = ctx.createRadialGradient(cp.x, cp.y, 0, cp.x, cp.y, 10);
+  cg.addColorStop(0, 'rgba(156,192,255,0.55)');
+  cg.addColorStop(1, 'rgba(80,140,255,0)');
+  ctx.beginPath();
+  ctx.arc(cp.x, cp.y, 10, 0, Math.PI * 2);
+  ctx.fillStyle = cg;
+  ctx.fill();
+}
+
+// ── main draw ──
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  buildCache();        // compute wave once per frame
+  drawAxis();
+  drawFloorShadow();
+  drawProbDensity();
+  drawEnvelopeRings();
+  drawHelix();
+  drawHead();
+}
+
+// ── stats ──
+function updateStats() {
+  const s = packetState(0);
+  document.getElementById('centerStat').textContent = s.center.toFixed(2);
+  document.getElementById('sigmaStat').textContent  = s.sigmaNow.toFixed(2);
+  document.getElementById('kStat').textContent      = P.k.toFixed(1);
+  document.getElementById('omegaStat').textContent  = (P.k * P.k / 2).toFixed(2);
+  document.getElementById('zoomStat').textContent   = zoom.toFixed(1);
+}
+
+// ── loop ──
+function loop() {
+  requestAnimationFrame(loop);
+  if (running) t += 0.016;
+  if (P.autoRotate && !dragging) rotY += 0.0014;
+  draw();
+  updateStats();
+}
+loop();
+
+// ── control bindings ──
+function bind(id, key, labelId, fmt) {
+  const el  = document.getElementById(id);
+  const lEl = document.getElementById(labelId);
+  el.addEventListener('input', () => {
+    P[key] = parseFloat(el.value);
+    lEl.textContent = fmt(P[key]);
+  });
+}
+
+bind('speed',      'speed',      'speedVal',  v => v.toFixed(1) + '×');
+bind('phaseSpeed', 'phaseSpeed', 'phaseVal',  v => v.toFixed(1) + '×');
+bind('dispersion', 'dispersion', 'dispVal',   v => v.toFixed(2));
+bind('sigma',      'sigma',      'sigmaVal',  v => v.toFixed(2));
+bind('waveNumber', 'k',          'kVal',      v => v.toFixed(1));
+bind('amplitude',  'amplitude',  'ampVal',    v => v.toFixed(1) + '×');
+
+document.getElementById('colorMode').addEventListener('change', e => P.colorMode = e.target.value);
+
+document.getElementById('envelopeToggle').addEventListener('change', e => P.showEnvelope = e.target.checked);
+document.getElementById('probToggle').addEventListener('change',     e => P.showProb     = e.target.checked);
+document.getElementById('floorToggle').addEventListener('change',    e => P.showFloor    = e.target.checked);
+document.getElementById('rotateToggle').addEventListener('change',   e => P.autoRotate   = e.target.checked);
+
+const btnPlay = document.getElementById('btnPlay');
+btnPlay.addEventListener('click', () => {
+  running = !running;
+  btnPlay.textContent = running ? '⏸ Pause' : '▶ Start';
+  btnPlay.classList.toggle('paused', !running);
+});
+
+document.getElementById('btnReset').addEventListener('click', () => {
+  rotX = 0.32; rotY = -0.55; zoom = 22;
+  P.autoRotate = true;
+  document.getElementById('rotateToggle').checked = true;
+});
+
+// ── mouse / touch drag ──
+canvas.addEventListener('mousedown', e => {
+  dragging = true; P.autoRotate = false;
+  document.getElementById('rotateToggle').checked = false;
+  lastX = e.clientX; lastY = e.clientY;
+});
+window.addEventListener('mouseup',  () => { dragging = false; });
+window.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  rotY += (e.clientX - lastX) * 0.007;
+  rotX += (e.clientY - lastY) * 0.007;
+  lastX = e.clientX; lastY = e.clientY;
+});
+
+canvas.addEventListener('touchstart', e => {
+  dragging = true; P.autoRotate = false;
+  lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
+}, { passive: true });
+window.addEventListener('touchend',  () => { dragging = false; });
+window.addEventListener('touchmove', e => {
+  if (!dragging) return;
+  rotY += (e.touches[0].clientX - lastX) * 0.007;
+  rotX += (e.touches[0].clientY - lastY) * 0.007;
+  lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
+}, { passive: true });
+
+canvas.addEventListener('wheel', e => {
+  zoom *= e.deltaY > 0 ? 0.93 : 1.07;
+  zoom = Math.max(8, Math.min(55, zoom));
+  e.preventDefault();
+}, { passive: false });
+
+canvas.addEventListener('dblclick', () => {
+  P.autoRotate = true;
+  document.getElementById('rotateToggle').checked = true;
+});
+</script>
+</body>
+</html>
