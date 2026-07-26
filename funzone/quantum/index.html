@@ -117,6 +117,20 @@
   }
   #stats span { color:var(--accent); font-weight:700; }
 
+  .mode-grid {
+    display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px;
+  }
+  .mode-btn {
+    width:100%; margin:0; padding:10px 12px; border-radius:12px;
+    border:1px solid rgba(255,255,255,.14);
+    background:rgba(255,255,255,.05); color:var(--text);
+    font-size:.82rem; font-weight:700; letter-spacing:.02em; text-transform:none;
+  }
+  .mode-btn.active {
+    background:linear-gradient(135deg,#8fb4ff,#d6e5ff);
+    color:#071225; border-color:transparent;
+  }
+
   .ctrl { display:flex; flex-direction:column; gap:7px; margin-bottom:13px; }
   .ctrl label {
     display:flex; justify-content:space-between; align-items:center;
@@ -220,6 +234,13 @@
       center x = <span id="centerStat">0.00</span><br>
       σ = <span id="sigmaStat">1.60</span> &nbsp;·&nbsp; k = <span id="kStat">5.0</span><br>
       ω = <span id="omegaStat">0.00</span> &nbsp;·&nbsp; zoom = <span id="zoomStat">22.0</span>
+    </div>
+
+    <div class="section-label">Motion Path</div>
+
+    <div class="mode-grid">
+      <button class="mode-btn active" id="straightMode">Straight Motion</button>
+      <button class="mode-btn" id="circularMode">Curved Orbit</button>
     </div>
 
     <div class="section-label">Dynamics</div>
@@ -343,6 +364,7 @@ const P = {
   showProb:     true,
   showFloor:    true,
   autoRotate:   true,
+  motionMode:   'straight',
 };
 
 let running = true;
@@ -368,10 +390,13 @@ function project(x, y, z) {
 
 // ── physics ──
 function packetState(x) {
-  // The packet stays centered in its own local coordinates.
-  const center = 0;
+  let center = 0;
 
-  // Gentle breathing/spreading behavior.
+  if (P.motionMode === 'straight') {
+    // Original behavior: the packet moves back and forth along a straight axis.
+    center = Math.sin(t * 0.35 * P.speed) * 7.5;
+  }
+
   const spread =
     1 +
     P.dispersion *
@@ -379,16 +404,16 @@ function packetState(x) {
     (1 - Math.cos(t * 0.28));
 
   const sigmaNow = P.sigma * spread;
-  const q = x / sigmaNow;
+  const localCoordinate = P.motionMode === 'straight' ? (x - center) : x;
+  const q = localCoordinate / sigmaNow;
 
   const envelope =
     P.amplitude *
     Math.exp(-0.25 * q * q);
 
   const omega = P.k * P.k / 2;
-
   const phase =
-    P.k * x -
+    P.k * localCoordinate -
     omega * t * 0.12 * P.phaseSpeed;
 
   return {
@@ -401,44 +426,36 @@ function packetState(x) {
 }
 
 function packetToWorld(localX, localY, localZ) {
+  if (P.motionMode === 'straight') {
+    // Straight mode uses the original Cartesian wave-packet geometry.
+    return { x: localX, y: localY, z: localZ };
+  }
+
+  // Curved mode: every sample lies on its own point of the circular orbit.
+  // This bends the packet itself instead of merely moving a straight packet.
   const orbitRadius = 6.2;
-  const orbitAngle = t * 0.42 * P.speed;
+  const centerAngle = t * 0.42 * P.speed;
+  const angle = centerAngle + localX / orbitRadius;
 
-  // Center of the packet moving around a circle.
-  const centerX = Math.cos(orbitAngle) * orbitRadius;
-  const centerY = Math.sin(orbitAngle * 0.5) * 0.7;
-  const centerZ = Math.sin(orbitAngle) * orbitRadius;
+  const radialX = Math.cos(angle);
+  const radialZ = Math.sin(angle);
 
-  // Tangent direction to the circular orbit.
-  const tangentX = -Math.sin(orbitAngle);
-  const tangentZ =  Math.cos(orbitAngle);
-
-  // Radial direction.
-  const radialX = Math.cos(orbitAngle);
-  const radialZ = Math.sin(orbitAngle);
+  const centerX = radialX * orbitRadius;
+  const centerZ = radialZ * orbitRadius;
+  const centerY = Math.sin(centerAngle * 0.5) * 0.45;
 
   return {
-    x:
-      centerX +
-      localX * tangentX +
-      localZ * radialX,
-
-    y:
-      centerY +
-      localY,
-
-    z:
-      centerZ +
-      localX * tangentZ +
-      localZ * radialZ
+    x: centerX + localZ * radialX,
+    y: centerY + localY,
+    z: centerZ + localZ * radialZ
   };
 }
 
 function projectPacket(localX, localY, localZ) {
   const world = packetToWorld(localX, localY, localZ);
   return project(world.x, world.y, world.z);
-} 
- 
+}
+
 // ── colour (single function, no composite per-segment) ──
 function segColor(phase, envelope, alpha) {
   const a = alpha * Math.min(1, envelope * 1.4);
@@ -484,34 +501,32 @@ function buildCache() {
 
 // ── draw axis ──
 function drawAxis() {
-  const orbitRadius = 6.2;
-
   ctx.save();
   ctx.strokeStyle = "rgba(220,230,255,0.20)";
   ctx.lineWidth = 1;
   ctx.setLineDash([4, 8]);
-
   ctx.beginPath();
 
-  const segments = 120;
-
-  for (let i = 0; i <= segments; i++) {
-    const a = (i / segments) * Math.PI * 2;
-
-    const p = project(
-      Math.cos(a) * orbitRadius,
-      Math.sin(a * 0.5) * 0.7,
-      Math.sin(a) * orbitRadius
-    );
-
-    if (i === 0) {
-      ctx.moveTo(p.x, p.y);
-    } else {
-      ctx.lineTo(p.x, p.y);
+  if (P.motionMode === 'straight') {
+    const a = project(-11, 0, 0);
+    const b = project(11, 0, 0);
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+  } else {
+    const orbitRadius = 6.2;
+    const segments = 140;
+    for (let i = 0; i <= segments; i++) {
+      const a = (i / segments) * Math.PI * 2;
+      const p = project(
+        Math.cos(a) * orbitRadius,
+        0,
+        Math.sin(a) * orbitRadius
+      );
+      i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
     }
+    ctx.closePath();
   }
 
-  ctx.closePath();
   ctx.stroke();
   ctx.setLineDash([]);
   ctx.restore();
@@ -573,7 +588,7 @@ function drawProbDensity() {
   ctx.beginPath();
   waveCache.forEach((c, i) => {
     const prob = c.env * c.env;
-    const pp   = project(c.x, prob * PROB_SCALE * 0.5, 0);
+    const pp   = projectPacket(c.x, prob * PROB_SCALE * 0.5, 0);
     i === 0 ? ctx.moveTo(pp.x, pp.y) : ctx.lineTo(pp.x, pp.y);
   });
   ctx.stroke();
@@ -668,7 +683,8 @@ function drawHead() {
   if (waveCache.length === 0) return;
 
   // The localized particle marker sits at the Gaussian center.
-  const hp = projectPacket(0, 0, 0);
+  const markerX = P.motionMode === 'straight' ? packetState(0).center : 0;
+  const hp = projectPacket(markerX, 0, 0);
 
   const isPhase = P.colorMode === "phase";
 
@@ -774,6 +790,15 @@ bind('dispersion', 'dispersion', 'dispVal',   v => v.toFixed(2));
 bind('sigma',      'sigma',      'sigmaVal',  v => v.toFixed(2));
 bind('waveNumber', 'k',          'kVal',      v => v.toFixed(1));
 bind('amplitude',  'amplitude',  'ampVal',    v => v.toFixed(1) + '×');
+
+function setMotionMode(mode) {
+  P.motionMode = mode;
+  document.getElementById('straightMode').classList.toggle('active', mode === 'straight');
+  document.getElementById('circularMode').classList.toggle('active', mode === 'circular');
+}
+
+document.getElementById('straightMode').addEventListener('click', () => setMotionMode('straight'));
+document.getElementById('circularMode').addEventListener('click', () => setMotionMode('circular'));
 
 document.getElementById('colorMode').addEventListener('change', e => P.colorMode = e.target.value);
 
