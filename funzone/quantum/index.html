@@ -767,13 +767,6 @@ function drawFullCarrierWave() {
   ctx.lineWidth = 1.15;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
- const proximity = Math.exp(
-  -0.5 *
-  Math.pow(
-    arcDistance / (currentSigma * 2.5),
-    2
-  )
-);
 
   for (let i = 1; i <= segments; i++) {
     const angleA = ((i - 1) / segments) * Math.PI * 2;
@@ -811,7 +804,13 @@ function drawFullCarrierWave() {
       0 far from the packet,
       1 at the packet center.
     */
-
+const proximity = Math.exp(
+  -0.5 *
+  Math.pow(
+    arcDistance / (currentSigma * 2.5),
+    2
+  )
+);
 
     /*
       27% opacity far away,
