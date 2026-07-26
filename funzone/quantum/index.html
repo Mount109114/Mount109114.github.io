@@ -230,30 +230,30 @@
     </div>
 
     <div class="ctrl">
-      <label>Phase Speed <span class="val" id="phaseVal">1.0×</span></label>
+      <label>Phase Speed <span class="val" id="phaseVal">1.1×</span></label>
       <input id="phaseSpeed" type="range" min="0" max="4" step="0.1" value="1">
     </div>
 
     <div class="ctrl">
-      <label>Dispersion β <span class="val" id="dispVal">0.25</span></label>
+      <label>Dispersion β <span class="val" id="dispVal">0.5</span></label>
       <input id="dispersion" type="range" min="0" max="1.5" step="0.05" value="0.25">
     </div>
 
     <div class="section-label">Shape</div>
 
     <div class="ctrl">
-      <label>Width σ <span class="val" id="sigmaVal">1.60</span></label>
+      <label>Width σ <span class="val" id="sigmaVal">1.75</span></label>
       <input id="sigma" type="range" min="0.5" max="4" step="0.05" value="1.6">
     </div>
 
     <div class="ctrl">
-      <label>Wave Number k <span class="val" id="kVal">5.0</span></label>
-      <input id="waveNumber" type="range" min="1" max="14" step="0.2" value="5">
+      <label>Wave Number k <span class="val" id="kVal">13.0</span></label>
+      <input id="waveNumber" type="range" min="1" max="14" step="0.2" value="13">
     </div>
 
     <div class="ctrl">
-      <label>Amplitude <span class="val" id="ampVal">1.0×</span></label>
-      <input id="amplitude" type="range" min="0.2" max="2.5" step="0.05" value="1">
+      <label>Amplitude <span class="val" id="ampVal">1.3×</span></label>
+      <input id="amplitude" type="range" min="0.2" max="2.5" step="0.05" value="1.3">
     </div>
 
     <div class="section-label">Visual</div>
@@ -310,19 +310,34 @@ function toggleCheck(id) {
 const canvas = document.getElementById('waveCanvas');
 const ctx    = canvas.getContext('2d');
 
-let W = 0, H = 0;
-function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+let W = 0;
+let H = 0;
+
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+  W = window.innerWidth;
+  H = window.innerHeight;
+
+  canvas.width = Math.round(W * dpr);
+  canvas.height = Math.round(H * dpr);
+
+  canvas.style.width = W + "px";
+  canvas.style.height = H + "px";
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
 resize();
 window.addEventListener('resize', resize);
 
 // ── params ──
 const P = {
-  speed:      1,
-  sigma:      1.6,
-  k:          5,
-  amplitude:  1,
-  dispersion: 0.25,
-  phaseSpeed: 1,
+  speed:      0.7,
+  sigma:      0.75,
+  k:          13.4,
+  amplitude:  1.3,
+  dispersion: 0.50,
+  phaseSpeed: 1.1,
   colorMode:  'quantum',
   showEnvelope: true,
   showProb:     true,
@@ -333,7 +348,7 @@ const P = {
 let running = true;
 let t = 0;
 let rotX = 0.32, rotY = -0.55;
-let zoom = 22;
+let zoom = 53;
 let dragging = false, lastX = 0, lastY = 0;
 
 // ── 3D projection (same as Lorenz page — no lighter, no shadowBlur in loop) ──
@@ -353,17 +368,77 @@ function project(x, y, z) {
 
 // ── physics ──
 function packetState(x) {
-  const travelRange = 7.5;
-  const center      = Math.sin(t * 0.35 * P.speed) * travelRange;
-  const spread      = 1 + P.dispersion * (0.25 + 0.75 * Math.abs(Math.sin(t * 0.18)));
-  const sigmaNow    = P.sigma * spread;
-  const q           = (x - center) / sigmaNow;
-  const envelope    = P.amplitude * Math.exp(-0.25 * q * q);
-  const phase       = P.k * x - t * 3.2 * P.phaseSpeed;
-  const omega       = P.k * P.k / 2; // free-particle dispersion ω = k²/2m
-  return { center, sigmaNow, envelope, phase, omega };
+  // The packet stays centered in its own local coordinates.
+  const center = 0;
+
+  // Gentle breathing/spreading behavior.
+  const spread =
+    1 +
+    P.dispersion *
+    0.35 *
+    (1 - Math.cos(t * 0.28));
+
+  const sigmaNow = P.sigma * spread;
+  const q = x / sigmaNow;
+
+  const envelope =
+    P.amplitude *
+    Math.exp(-0.25 * q * q);
+
+  const omega = P.k * P.k / 2;
+
+  const phase =
+    P.k * x -
+    omega * t * 0.12 * P.phaseSpeed;
+
+  return {
+    center,
+    sigmaNow,
+    envelope,
+    phase,
+    omega
+  };
 }
 
+function packetToWorld(localX, localY, localZ) {
+  const orbitRadius = 6.2;
+  const orbitAngle = t * 0.42 * P.speed;
+
+  // Center of the packet moving around a circle.
+  const centerX = Math.cos(orbitAngle) * orbitRadius;
+  const centerY = Math.sin(orbitAngle * 0.5) * 0.7;
+  const centerZ = Math.sin(orbitAngle) * orbitRadius;
+
+  // Tangent direction to the circular orbit.
+  const tangentX = -Math.sin(orbitAngle);
+  const tangentZ =  Math.cos(orbitAngle);
+
+  // Radial direction.
+  const radialX = Math.cos(orbitAngle);
+  const radialZ = Math.sin(orbitAngle);
+
+  return {
+    x:
+      centerX +
+      localX * tangentX +
+      localZ * radialX,
+
+    y:
+      centerY +
+      localY,
+
+    z:
+      centerZ +
+      localX * tangentZ +
+      localZ * radialZ
+  };
+}
+
+function projectPacket(localX, localY, localZ) {
+  const world = packetToWorld(localX, localY, localZ);
+  return project(world.x, world.y, world.z);
+} 
+ 
 // ── colour (single function, no composite per-segment) ──
 function segColor(phase, envelope, alpha) {
   const a = alpha * Math.min(1, envelope * 1.4);
@@ -409,23 +484,36 @@ function buildCache() {
 
 // ── draw axis ──
 function drawAxis() {
-  const a = project(-11, 0, 0);
-  const b = project( 11, 0, 0);
-  ctx.save();
-  ctx.strokeStyle = 'rgba(220,230,255,0.28)';
-  ctx.lineWidth   = 1.2;
-  ctx.setLineDash([4, 8]);
-  ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
-  ctx.setLineDash([]);
+  const orbitRadius = 6.2;
 
-  // tick marks
-  for (let xi = -10; xi <= 10; xi += 2) {
-    const tp = project(xi, 0, 0);
-    ctx.beginPath();
-    ctx.arc(tp.x, tp.y, 1.5, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(156,192,255,0.25)';
-    ctx.fill();
+  ctx.save();
+  ctx.strokeStyle = "rgba(220,230,255,0.20)";
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 8]);
+
+  ctx.beginPath();
+
+  const segments = 120;
+
+  for (let i = 0; i <= segments; i++) {
+    const a = (i / segments) * Math.PI * 2;
+
+    const p = project(
+      Math.cos(a) * orbitRadius,
+      Math.sin(a * 0.5) * 0.7,
+      Math.sin(a) * orbitRadius
+    );
+
+    if (i === 0) {
+      ctx.moveTo(p.x, p.y);
+    } else {
+      ctx.lineTo(p.x, p.y);
+    }
   }
+
+  ctx.closePath();
+  ctx.stroke();
+  ctx.setLineDash([]);
   ctx.restore();
 }
 
@@ -442,7 +530,7 @@ function drawFloorShadow() {
   ctx.beginPath();
 
   waveCache.forEach((c, i) => {
-    const rp = project(c.x, FLOOR_Y, Math.cos(c.phase) * c.env);
+    const rp = projectPacket(c.x, FLOOR_Y, Math.cos(c.phase) * c.env);
     i === 0 ? ctx.moveTo(rp.x, rp.y) : ctx.lineTo(rp.x, rp.y);
   });
   ctx.stroke();
@@ -461,12 +549,12 @@ function drawProbDensity() {
   ctx.beginPath();
   waveCache.forEach((c, i) => {
     const prob = c.env * c.env;
-    const pp   = project(c.x, prob * PROB_SCALE * 0.5, 0);
+    const pp   = projectPacket(c.x, prob * PROB_SCALE * 0.5, 0);
     i === 0 ? ctx.moveTo(pp.x, pp.y) : ctx.lineTo(pp.x, pp.y);
   });
   // lower edge (axis) — trace back
   for (let i = waveCache.length - 1; i >= 0; i--) {
-    const pp = project(waveCache[i].x, 0, 0);
+    const pp = projectPacket(waveCache[i].x, 0, 0);
     ctx.lineTo(pp.x, pp.y);
   }
   ctx.closePath();
@@ -511,7 +599,11 @@ function drawEnvelopeRings() {
     const RING_SEGS = 24;
     for (let j = 0; j <= RING_SEGS; j++) {
       const ang = j / RING_SEGS * Math.PI * 2;
-      const rp  = project(c.x, Math.cos(ang) * c.env, Math.sin(ang) * c.env);
+      const rp = projectPacket(
+  c.x,
+  Math.cos(ang) * c.env,
+  Math.sin(ang) * c.env
+);
       j === 0 ? ctx.moveTo(rp.x, rp.y) : ctx.lineTo(rp.x, rp.y);
     }
     ctx.globalAlpha = 0.06 + 0.22 * c.env * c.env;
@@ -537,7 +629,7 @@ function drawHelix() {
   ctx.strokeStyle = '#9cc0ff';
   ctx.beginPath();
   waveCache.forEach((c, i) => {
-    const rp = project(c.x, c.ry, c.rz);
+    const rp = projectPacket(c.x, c.ry, c.rz);
     i === 0 ? ctx.moveTo(rp.x, rp.y) : ctx.lineTo(rp.x, rp.y);
   });
   ctx.stroke();
@@ -562,7 +654,7 @@ function drawHelix() {
 
     ctx.beginPath();
     for (let i = iStart; i < iEnd; i++) {
-      const rp = project(waveCache[i].x, waveCache[i].ry, waveCache[i].rz);
+      const rp = projectPacket(waveCache[i].x, waveCache[i].ry, waveCache[i].rz);
       i === iStart ? ctx.moveTo(rp.x, rp.y) : ctx.lineTo(rp.x, rp.y);
     }
     ctx.stroke();
@@ -574,37 +666,63 @@ function drawHelix() {
 // ── glowing head dot — single radial gradient (no change) ──
 function drawHead() {
   if (waveCache.length === 0) return;
-  const last = waveCache[waveCache.length - 1];
-  const hp   = project(last.x, last.ry, last.rz);
 
-  const isPhase = P.colorMode === 'phase';
-  const mid1    = isPhase ? 'rgba(255,180,100,0.65)' : 'rgba(120,210,255,0.70)';
+  // The localized particle marker sits at the Gaussian center.
+  const hp = projectPacket(0, 0, 0);
 
-  const g = ctx.createRadialGradient(hp.x, hp.y, 0, hp.x, hp.y, 16);
-  g.addColorStop(0,   'rgba(255,255,255,0.95)');
-  g.addColorStop(0.28, mid1);
-  g.addColorStop(1,   'rgba(80,150,255,0)');
+  const isPhase = P.colorMode === "phase";
+
+  const middleColor = isPhase
+    ? "rgba(255,180,100,0.75)"
+    : "rgba(120,210,255,0.78)";
+
+  const glow = ctx.createRadialGradient(
+    hp.x,
+    hp.y,
+    0,
+    hp.x,
+    hp.y,
+    20
+  );
+
+  glow.addColorStop(
+    0,
+    "rgba(255,255,255,1)"
+  );
+
+  glow.addColorStop(
+    0.22,
+    middleColor
+  );
+
+  glow.addColorStop(
+    1,
+    "rgba(80,150,255,0)"
+  );
 
   ctx.beginPath();
-  ctx.arc(hp.x, hp.y, 16, 0, Math.PI * 2);
-  ctx.fillStyle   = g;
+  ctx.arc(
+    hp.x,
+    hp.y,
+    20,
+    0,
+    Math.PI * 2
+  );
+
+  ctx.fillStyle = glow;
   ctx.globalAlpha = 1;
   ctx.fill();
 
   ctx.beginPath();
-  ctx.arc(hp.x, hp.y, 3, 0, Math.PI * 2);
-  ctx.fillStyle = '#fff';
-  ctx.fill();
+  ctx.arc(
+    hp.x,
+    hp.y,
+    3.5,
+    0,
+    Math.PI * 2
+  );
 
-  // also draw a marker at center (packet position on axis)
-  const s  = waveCache[0];
-  const cp = project(s.center, 0, 0);
-  const cg = ctx.createRadialGradient(cp.x, cp.y, 0, cp.x, cp.y, 10);
-  cg.addColorStop(0, 'rgba(156,192,255,0.55)');
-  cg.addColorStop(1, 'rgba(80,140,255,0)');
-  ctx.beginPath();
-  ctx.arc(cp.x, cp.y, 10, 0, Math.PI * 2);
-  ctx.fillStyle = cg;
+  ctx.fillStyle = "#ffffff";
   ctx.fill();
 }
 
@@ -672,7 +790,7 @@ btnPlay.addEventListener('click', () => {
 });
 
 document.getElementById('btnReset').addEventListener('click', () => {
-  rotX = 0.32; rotY = -0.55; zoom = 22;
+  rotX = 0.32; rotY = -0.55; zoom = 53;
   P.autoRotate = true;
   document.getElementById('rotateToggle').checked = true;
 });
