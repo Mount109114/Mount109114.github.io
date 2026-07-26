@@ -692,6 +692,144 @@ function drawHelix() {
   ctx.restore();
 }
 
+function carrierPoint(
+  angle,
+  packetAngle,
+  orbitRadius,
+  carrierAmplitude,
+  omega
+) {
+  /*
+    Signed angular distance measured from
+    the packet center.
+  */
+  const relativeAngle = Math.atan2(
+    Math.sin(angle - packetAngle),
+    Math.cos(angle - packetAngle)
+  );
+
+  /*
+    Convert angular distance into distance
+    along the circular orbit.
+  */
+  const arcLength =
+    relativeAngle * orbitRadius;
+
+  const phase =
+    P.k * arcLength -
+    omega * t * 0.12 * P.phaseSpeed;
+
+  /*
+    Small continuous wave around the orbit.
+  */
+  const verticalOffset =
+    Math.cos(phase) * carrierAmplitude;
+
+  const radialOffset =
+    Math.sin(phase) * carrierAmplitude;
+
+  const effectiveRadius =
+    orbitRadius + radialOffset;
+
+  const worldX =
+    Math.cos(angle) * effectiveRadius;
+
+  const worldY =
+    Math.sin(angle * 0.5) * 0.7 +
+    verticalOffset;
+
+  const worldZ =
+    Math.sin(angle) * effectiveRadius;
+
+  return project(
+    worldX,
+    worldY,
+    worldZ
+  );
+}
+ 
+function drawFullCarrierWave() {
+  if (currentMode !== "curved") return;
+
+  const orbitRadius = P.orbitRadius;
+  const packetAngle = t * 0.42 * P.speed;
+
+  const segments = 800;
+  const carrierAmplitude = 0.09;
+
+  const omega = P.k * P.k / 2;
+
+  ctx.save();
+  ctx.globalCompositeOperation = "source-over";
+  ctx.lineWidth = 1.15;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+
+  for (let i = 1; i <= segments; i++) {
+    const angleA = ((i - 1) / segments) * Math.PI * 2;
+    const angleB = (i / segments) * Math.PI * 2;
+
+    const pointA = carrierPoint(
+      angleA,
+      packetAngle,
+      orbitRadius,
+      carrierAmplitude,
+      omega
+    );
+
+    const pointB = carrierPoint(
+      angleB,
+      packetAngle,
+      orbitRadius,
+      carrierAmplitude,
+      omega
+    );
+
+    /*
+      Angular distance from this carrier segment
+      to the center of the Gaussian packet.
+    */
+    const angleDifference = Math.atan2(
+      Math.sin(angleB - packetAngle),
+      Math.cos(angleB - packetAngle)
+    );
+
+    const arcDistance =
+      Math.abs(angleDifference) * orbitRadius;
+
+    /*
+      0 far from the packet,
+      1 at the packet center.
+    */
+    const proximity = Math.exp(
+      -0.5 *
+      Math.pow(
+        arcDistance / (P.sigma * 2.5),
+        2
+      )
+    );
+
+    /*
+      27% opacity far away,
+      smoothly increasing toward 100%.
+    */
+    const alpha =
+      0.27 +
+      0.73 * proximity;
+
+    ctx.beginPath();
+    ctx.moveTo(pointA.x, pointA.y);
+    ctx.lineTo(pointB.x, pointB.y);
+
+    ctx.strokeStyle =
+      `rgba(205,225,255,${alpha})`;
+
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+ 
 // ── glowing head dot — single radial gradient (no change) ──
 function drawHead() {
   if (waveCache.length === 0) return;
@@ -759,8 +897,15 @@ function drawHead() {
 // ── main draw ──
 function draw() {
   ctx.clearRect(0, 0, W, H);
-  buildCache();        // compute wave once per frame
+
+  buildCache();
+
   drawAxis();
+
+  // Faint carrier continuing around the full circle
+  drawFullCarrierWave();
+
+  // Existing localized Gaussian visualization
   drawFloorShadow();
   drawProbDensity();
   drawEnvelopeRings();
