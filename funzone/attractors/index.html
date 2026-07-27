@@ -577,15 +577,72 @@ const ATTRACTORS = {
     })
   },
 
+chua: {
+  name: 'Chua',
+
+  desc:
+    'The classic double-scroll attractor from Chua’s nonlinear circuit. ' +
+    'Its piecewise-linear response repeatedly folds the trajectory between two chaotic lobes.',
+
+  equation:
+    'dx/dt = α(y − x − f(x))\n' +
+    'dy/dt = x − y + z\n' +
+    'dz/dt = −βy\n' +
+    'f(x) = m₁x + ½(m₀−m₁)(|x+1|−|x−1|)',
+
+  init: {
+    x: 0.1,
+    y: 0,
+    z: 0
+  },
+
+  dt: 0.005,
+
+  zoom: 105,
+
+  rotX: 0.42,
+  rotY: -0.65,
+
+  params: {
+    alpha: 15.6,
+    beta: 28,
+    m0: -1.143,
+    m1: -0.714
+  },
+
+  step: (p, s) => {
+    /*
+      Chua's piecewise-linear nonlinear function.
+      m0 = inner slope
+      m1 = outer slope
+    */
+    const fx =
+      s.m1 * p.x +
+      0.5 *
+      (s.m0 - s.m1) *
+      (
+        Math.abs(p.x + 1) -
+        Math.abs(p.x - 1)
+      );
+
+    return {
+      x: s.alpha * (p.y - p.x - fx),
+      y: p.x - p.y + p.z,
+      z: -s.beta * p.y
+    };
+  }
+},
+
+ 
   dequan: {
     name:     'Dequan Li',
     desc:     'A high-energy attractor with tight inner coils and wide outer arcs — resembling a supernova remnant.',
     equation: 'dx/dt = a(y−x) + dxz\ndy/dt = ky + fxz\ndz/dt = cx + eyz',
     init: { x: 0.349, y: 0, z: -0.16 },
-    dt:   0.0008,
-    zoom: 3.8,
-    rotX: 0.30,
-    rotY: -0.55,
+    dt: 0.005,
+    zoom: 105,
+    rotX: 0.42,
+    rotY: -0.65,
     params: { a:40, c:-55, d:11, e:3, f:22, k:2 },
     step: (p, s) => ({
       x: s.a*(p.y - p.x) + s.d*p.x*p.z,
