@@ -568,41 +568,33 @@ function field(x,y,t){
     mag=.8+.4/(1+.8*Math.hypot(dx,dy));
   }
   else if(P.mode==="blackhole"){
+
   /*
-    Accretion-disk-inspired vector field.
-
-    Tangential velocity creates orbital motion.
-    Radial velocity slowly pulls particles inward.
+    Flattened accretion-disk coordinates
   */
+  const diskY = Y * 2.7;
 
-  const diskY =
-  Y * 2.7;
-
-const r =
-  Math.hypot(
-    X,
-    diskY
-  ) +
-  0.0001;
-
-const angle =
-  Math.atan2(
-    diskY,
-    X
-  );
+  const r =
+    Math.hypot(
+      X,
+      diskY
+    ) + 0.0001;
 
   const angle =
-    Math.atan2(Y,X);
+    Math.atan2(
+      diskY,
+      X
+    );
 
   /*
-    Strong orbital velocity near the center.
+    Stronger orbital motion near the center
   */
   const swirl =
     1.15 +
     1.15 / (0.35 + r);
 
   /*
-    Slow inward accretion.
+    Gentle inward accretion
   */
   const inward =
     0.18 +
@@ -614,39 +606,43 @@ const angle =
   const rx = -Math.cos(angle);
   const ry = -Math.sin(angle);
 
-  vx =
+  /*
+    IMPORTANT:
+    use directVX/directVY here,
+    not vx/vy
+  */
+  directVX =
     tx * swirl +
     rx * inward;
 
-  vy =
+  directVY =
     ty * swirl +
     ry * inward;
 
   /*
-    Slight irregularity makes the disk look gaseous
-    instead of perfectly mathematical.
+    Small gaseous irregularity
   */
-  vx +=
+  directVX +=
     0.18 *
     Math.sin(
-      6*r -
-      t*1.2 +
-      angle*3
+      6 * r -
+      t * 1.2 +
+      angle * 3
     );
 
-  vy +=
+  directVY +=
     0.18 *
     Math.cos(
-      5*r -
+      5 * r -
       t +
-      angle*2
+      angle * 2
     );
 
   mag =
     Math.min(
       2.7,
       0.65 +
-      1.1/(0.35+r)
+      1.1 / (0.35 + r)
     );
 }
   else if(P.mode==="einstein"){
