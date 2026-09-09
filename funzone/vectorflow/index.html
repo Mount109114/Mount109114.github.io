@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Vector Flow | Muntasir's Fun Lab</title>
+
+<style>
+:root{
+  --bg:#071225;
+  --bg2:#0c1830;
+  --text:#eef3ff;
+  --muted:#b8c4e0;
+  --accent:#9cc0ff;
+  --accent2:#dce8ff;
+  --panel:rgba(255,255,255,0.07);
+  --border:rgba(255,255,255,0.12);
+  --shadow:0 18px 50px rgba(0,0,0,0.28);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+html,body{
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  font-family:Arial,Helvetica,sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(circle at top left,rgba(112,160,255,.16),transparent 28%),
+    radial-gradient(circle at bottom right,rgba(196,220,255,.10),transparent 25%),
+    linear-gradient(135deg,var(--bg),var(--bg2));
+}
+
+body::before,body::after{
+  content:"";
+  position:fixed;
+  width:320px;height:320px;
+  border-radius:50%;
+  filter:blur(110px);
+  opacity:.30;
+  z-index:0;
+  pointer-events:none;
+}
+body::before{top:-90px;left:-70px;background:#5f8dff}
+body::after{right:-80px;bottom:-110px;background:#9dc0ff}
+
+canvas{
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100%;
+  display:block;
+  z-index:1;
+  cursor:crosshair;
+}
+
+.page{
+  position:relative;
+  z-index:5;
+  min-height:100vh;
+  display:grid;
+  grid-template-columns:1fr 360px;
+  gap:24px;
+  padding:28px;
+  pointer-events:none;
+}
+
+.hero{
+  align-self:center;
+  max-width:760px;
+  padding:24px;
+  pointer-events:none;
+}
+
+.eyebrow{
+  display:inline-block;
+  padding:8px 14px;
+  border-radius:999px;
+  background:rgba(255,255,255,.08);
+  border:1px solid var(--border);
+  color:var(--accent);
+  margin-bottom:16px;
+  backdrop-filter:blur(10px);
+  font-size:.95rem;
+  font-weight:600;
+}
+
+.hero h1{
+  margin:0 0 14px;
+  font-size:clamp(2.6rem,6vw,5.2rem);
+  line-height:1.02;
+  letter-spacing:-.04em;
+  max-width:9ch;
+}
+
+.hero p{
+  color:var(--muted);
+  line-height:1.7;
+  max-width:58ch;
+  font-size:1.05rem;
+}
+
+.equation{
+  margin-top:14px;
+  color:rgba(238,243,255,.84);
+  font-family:"Times New Roman",serif;
+  font-size:1rem;
+  line-height:1.55;
+}
+
+.hero-links{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-top:18px;
+  pointer-events:auto;
+}
+
+.back-btn{
+  display:inline-block;
+  padding:12px 18px;
+  text-decoration:none;
+  color:var(--text);
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:14px;
+  background:rgba(255,255,255,.06);
+  backdrop-filter:blur(10px);
+  font-weight:600;
+  pointer-events:auto;
+}
+.back-btn:hover{background:rgba(255,255,255,.10);transform:translateY(-2px)}
+
+#panel{
+  align-self:center;
+  justify-self:end;
+  width:100%;
+  max-width:360px;
+  max-height:calc(100vh - 56px);
+  overflow-y:auto;
+  padding:22px;
+  border-radius:24px;
+  background:var(--panel);
+  border:1px solid var(--border);
+  backdrop-filter:blur(16px);
+  box-shadow:var(--shadow);
+  position:relative;
+  z-index:10;
+  pointer-events:auto;
+}
+
+#panel::-webkit-scrollbar{width:4px}
+#panel::-webkit-scrollbar-thumb{background:rgba(156,192,255,.25);border-radius:999px}
+#panel h2{margin:0 0 8px;font-size:1.5rem}
+
+.panel-sub{
+  margin:0 0 14px;
+  color:var(--muted);
+  font-size:.95rem;
+  line-height:1.6;
+}
+
+.section-label{
+  font-size:.68rem;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:rgba(156,192,255,.44);
+  margin:14px 0 8px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.section-label::after{
+  content:"";
+  flex:1;
+  height:1px;
+  background:rgba(156,192,255,.11);
+}
+
+.preset-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+  margin-bottom:12px;
+}
+
+.preset-btn{
+  width:100%;
+  margin:0;
+  padding:9px 10px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.05);
+  color:var(--text);
+  font-size:.80rem;
+  font-weight:700;
+  cursor:pointer;
+  text-transform:none;
+}
+.preset-btn.active{
+  background:linear-gradient(135deg,#8fb4ff,#d6e5ff);
+  color:#071225;
+  border-color:transparent;
+}
+
+#stats{
+  margin-bottom:12px;
+  padding:10px 12px;
+  border-radius:14px;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.08);
+  color:var(--muted);
+  font-size:.84rem;
+  line-height:1.7;
+  font-family:"Courier New",monospace;
+}
+#stats span{color:var(--accent);font-weight:700}
+
+.ctrl{
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+  margin-bottom:12px;
+}
+
+.ctrl label{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:.90rem;
+  font-weight:700;
+}
+
+.ctrl .val{color:var(--accent)}
+
+input[type="range"]{
+  -webkit-appearance:none;
+  width:100%;
+  height:4px;
+  background:rgba(255,255,255,.14);
+  border-radius:999px;
+  outline:none;
+  cursor:pointer;
+}
+input[type="range"]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:15px;height:15px;
+  border-radius:50%;
+  background:var(--accent);
+  cursor:pointer;
+}
+
+input[type="color"]{
+  width:100%;
+  height:34px;
+  border:none;
+  border-radius:10px;
+  background:transparent;
+  cursor:pointer;
+}
+
+.toggle-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:9px 12px;
+  border-radius:12px;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.07);
+  margin-bottom:8px;
+  color:var(--muted);
+  font-size:.9rem;
+}
+
+button{
+  width:100%;
+  padding:11px 16px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.06);
+  color:var(--text);
+  font-weight:700;
+  cursor:pointer;
+}
+button:hover{background:rgba(255,255,255,.11)}
+
+#btnPause{
+  background:linear-gradient(135deg,#8fb4ff,#d6e5ff);
+  color:#071225;
+}
+
+.panel-note{
+  margin-top:14px;
+  font-size:.8rem;
+  color:var(--muted);
+  line-height:1.6;
+}
+
+@media(max-width:980px){
+  html,body{overflow:auto}
+  .page{grid-template-columns:1fr;padding:18px}
+  #panel{justify-self:stretch;max-width:none;max-height:none}
+}
+</style>
+</head>
+
+<body>
+<canvas id="flowCanvas"></canvas>
+
+<div class="page">
+  <section class="hero">
+    <div class="eyebrow">Fun Zone · Vector Fields</div>
+    <h1>Vector Flow.</h1>
+    <p>
+      Thousands of tiny particles drift through a time-varying vector field, leaving
+      soft trails that reveal the invisible direction of the flow. Slow it down, change
+      the field, or simply leave it moving in the background.
+    </p>
+
+    <div class="equation">
+      F(x,y,t) = s(x,y,t) [ cos θ(x,y,t), sin θ(x,y,t) ]<br>
+      particle motion:  ṗ = F(p,t)
+    </div>
+
+    <div class="hero-links">
+      <a class="back-btn" href="../../index.html">← Back to main site</a>
+      <a class="back-btn" href="../funformula/index.html">→ FunFormula</a>
+      <a class="back-btn" href="../colorsmotion/index.html">→ Colors in Motion</a>
+    </div>
+  </section>
+
+  <aside id="panel">
+    <h2>Flow Controls</h2>
+    <p class="panel-sub">Tune the field until the motion feels exactly right.</p>
+
+    <div class="section-label">Flow Presets</div>
+    <div class="preset-grid">
+      <button class="preset-btn active" data-mode="zen">Zen Flow</button>
+      <button class="preset-btn" data-mode="vortex">Vortex Garden</button>
+      <button class="preset-btn" data-mode="waves">Wave Current</button>
+      <button class="preset-btn" data-mode="cells">Flow Cells</button>
+      <button class="preset-btn" data-mode="shear">Shear Drift</button>
+      <button class="preset-btn" data-mode="orbit">Orbital Flow</button>
+    </div>
+
+    <div id="stats">
+      particles <span id="statCount">12000</span><br>
+      mean speed <span id="statSpeed">0.00</span><br>
+      field <span id="statMode">Zen Flow</span>
+    </div>
+
+    <div class="section-label">Motion</div>
+
+    <div class="ctrl">
+      <label>Particle Count <span class="val" id="countVal">12k</span></label>
+      <input id="count" type="range" min="2000" max="24000" step="1000" value="12000">
+    </div>
+
+    <div class="ctrl">
+      <label>Flow Speed <span class="val" id="speedVal">1.00×</span></label>
+      <input id="speed" type="range" min="0.15" max="2.5" step="0.05" value="1">
+    </div>
+
+    <div class="ctrl">
+      <label>Field Scale <span class="val" id="scaleVal">1.00</span></label>
+      <input id="scale" type="range" min="0.25" max="3" step="0.05" value="1">
+    </div>
+
+    <div class="ctrl">
+      <label>Turbulence <span class="val" id="turbVal">0.35</span></label>
+      <input id="turbulence" type="range" min="0" max="1.5" step="0.05" value="0.35">
+    </div>
+
+    <div class="section-label">Trails</div>
+
+    <div class="ctrl">
+      <label>Trail Length <span class="val" id="trailVal">0.955</span></label>
+      <input id="trail" type="range" min="0.88" max="0.992" step="0.001" value="0.955">
+    </div>
+
+    <div class="ctrl">
+      <label>Line Width <span class="val" id="widthVal">0.70</span></label>
+      <input id="lineWidth" type="range" min="0.2" max="1.8" step="0.05" value="0.7">
+    </div>
+
+    <div class="ctrl">
+      <label>Brightness <span class="val" id="brightVal">0.42</span></label>
+      <input id="brightness" type="range" min="0.08" max="0.9" step="0.02" value="0.42">
+    </div>
+
+    <div class="ctrl">
+      <label>Flow Color</label>
+      <input id="flowColor" type="color" value="#8ec7ff">
+    </div>
+
+    <div class="section-label">Interaction</div>
+
+    <div class="ctrl">
+      <label>Mouse Influence <span class="val" id="mouseVal">0.80</span></label>
+      <input id="mouseInfluence" type="range" min="0" max="2" step="0.05" value="0.8">
+    </div>
+
+    <div class="toggle-row">
+      <span>Rainbow Velocity</span>
+      <input id="rainbow" type="checkbox">
+    </div>
+
+    <div class="toggle-row">
+      <span>Show Direction Arrows</span>
+      <input id="arrows" type="checkbox">
+    </div>
+
+    <button id="btnPause">⏸ Pause Flow</button>
+    <button id="btnShuffle">✨ Reseed Particles</button>
+    <button id="btnClear">↺ Clear Trails</button>
+
+    <div class="panel-note">
+      Move the mouse across the field to gently bend the flow. The particles themselves are tiny; the visible structure is mostly their fading motion history.
+    </div>
+  </aside>
+</div>
+
+<script>
+const canvas=document.getElementById("flowCanvas");
+const ctx=canvas.getContext("2d",{alpha:true});
+
+let W=0,H=0,DPR=1;
+function resize(){
+  DPR=Math.min(window.devicePixelRatio||1,2);
+  W=window.innerWidth;
+  H=window.innerHeight;
+
+  canvas.width=Math.round(W*DPR);
+  canvas.height=Math.round(H*DPR);
+  canvas.style.width=W+"px";
+  canvas.style.height=H+"px";
+
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  clearCanvas();
+  seedParticles();
+}
+window.addEventListener("resize",resize);
+
+const P={
+  count:12000,
+  speed:1,
+  scale:1,
+  turbulence:.35,
+  trail:.955,
+  lineWidth:.7,
+  brightness:.42,
+  color:"#8ec7ff",
+  mouseInfluence:.8,
+  rainbow:false,
+  arrows:false,
+  mode:"zen"
+};
+
+let particles=[];
+let running=true;
+let time=0;
+
+let mouse={
+  x:-9999,
+  y:-9999,
+  active:false
+};
+
+function seedParticles(){
+  particles=new Array(P.count);
+  for(let i=0;i<P.count;i++){
+    particles[i]={
+      x:Math.random()*W,
+      y:Math.random()*H,
+      px:0,
+      py:0,
+      age:Math.random()*250,
+      life:120+Math.random()*500
+    };
+    particles[i].px=particles[i].x;
+    particles[i].py=particles[i].y;
+  }
+  document.getElementById("statCount").textContent=P.count;
+}
+
+function resetParticle(p){
+  p.x=Math.random()*W;
+  p.y=Math.random()*H;
+  p.px=p.x;
+  p.py=p.y;
+  p.age=0;
+  p.life=140+Math.random()*520;
+}
+
+function normalizedXY(x,y){
+  const aspect=W/H;
+  return {
+    x:(x/W-.5)*2*aspect,
+    y:(y/H-.5)*2
+  };
+}
+
+function field(x,y,t){
+  const n=normalizedXY(x,y);
+  const X=n.x*P.scale;
+  const Y=n.y*P.scale;
+
+  let theta=0;
+  let mag=1;
+
+  if(P.mode==="zen"){
+    theta=
+      1.45*Math.sin(1.25*X+.30*t)+
+      .90*Math.cos(.92*Y-.24*t)+
+      .75*Math.cos(.78*X-.20*t)-
+      .75*Math.sin(1.10*Y+.30*t)+
+      .35*Math.sin(.22*t);
+
+    mag=
+      .78+
+      .28*Math.sin(.72*X*Y+.34*t);
+  }
+
+  else if(P.mode==="vortex"){
+    const r=Math.hypot(X,Y)+1e-5;
+    theta=Math.atan2(Y,X)+Math.PI/2+
+      .8*Math.sin(1.7*r-.28*t)+
+      .28*Math.sin(2.2*X+.2*t);
+    mag=.7+.55*Math.exp(-.25*r*r);
+  }
+
+  else if(P.mode==="waves"){
+    theta=
+      .75*Math.sin(2.2*Y+.45*t)+
+      .55*Math.cos(1.7*X-.25*t)+
+      .25*Math.sin(1.8*(X+Y));
+    mag=.85+.25*Math.sin(2.6*Y-.35*t);
+  }
+
+  else if(P.mode==="cells"){
+    const fx=Math.sin(1.8*Y+.18*t);
+    const fy=Math.sin(1.8*X-.21*t);
+    theta=Math.atan2(fy,fx);
+    mag=.75+.35*Math.abs(Math.sin(X*Y+t*.16));
+  }
+
+  else if(P.mode==="shear"){
+    theta=
+      .25*Math.sin(3*Y+.25*t)+
+      .35*Math.sin(1.2*X-.18*t);
+    mag=.8+.45*(.5+.5*Math.sin(2*Y));
+  }
+
+  else if(P.mode==="orbit"){
+    const cx=.35*Math.sin(t*.12);
+    const cy=.25*Math.cos(t*.10);
+    const dx=X-cx;
+    const dy=Y-cy;
+    theta=Math.atan2(dy,dx)+Math.PI/2+
+      .35*Math.sin(2.5*Math.hypot(dx,dy));
+    mag=.8+.4/(1+.8*Math.hypot(dx,dy));
+  }
+
+  theta+=P.turbulence*
+    (
+      .48*Math.sin(3.2*X+1.4*Y+.8*t)+
+      .32*Math.cos(2.1*Y-1.5*X-.55*t)
+    );
+
+  let vx=Math.cos(theta)*mag;
+  let vy=Math.sin(theta)*mag;
+
+  if(mouse.active && P.mouseInfluence>0){
+    const dx=x-mouse.x;
+    const dy=y-mouse.y;
+    const d2=dx*dx+dy*dy;
+    const radius=170;
+
+    if(d2<radius*radius && d2>1){
+      const d=Math.sqrt(d2);
+      const f=(1-d/radius)*P.mouseInfluence;
+      const tx=-dy/d;
+      const ty=dx/d;
+      vx+=tx*f*1.7;
+      vy+=ty*f*1.7;
+    }
+  }
+
+  return {vx,vy,mag};
+}
+
+function hexToRgb(hex){
+  const n=parseInt(hex.slice(1),16);
+  return {
+    r:(n>>16)&255,
+    g:(n>>8)&255,
+    b:n&255
+  };
+}
+
+function clearCanvas(){
+  ctx.clearRect(0,0,W,H);
+}
+
+function fadeTrails(){
+  ctx.save();
+  ctx.globalCompositeOperation="source-over";
+  ctx.fillStyle=`rgba(7,18,37,${1-P.trail})`;
+  ctx.fillRect(0,0,W,H);
+  ctx.restore();
+}
+
+function drawParticles(){
+  const rgb=hexToRgb(P.color);
+  let mean=0;
+
+  ctx.save();
+  ctx.lineCap="round";
+  ctx.lineJoin="round";
+  ctx.lineWidth=P.lineWidth;
+  ctx.globalCompositeOperation="source-over";
+
+  for(let i=0;i<particles.length;i++){
+    const p=particles[i];
+
+    p.px=p.x;
+    p.py=p.y;
+
+    const f=field(p.x,p.y,time);
+
+    const step=1.55*P.speed;
+    p.x+=f.vx*step;
+    p.y+=f.vy*step;
+    p.age++;
+    mean+=Math.hypot(f.vx,f.vy);
+
+    if(
+      p.x<0||p.x>W||
+      p.y<0||p.y>H||
+      p.age>p.life
+    ){
+      resetParticle(p);
+      continue;
+    }
+
+    ctx.beginPath();
+    ctx.moveTo(p.px,p.py);
+    ctx.lineTo(p.x,p.y);
+
+    if(P.rainbow){
+      const hue=(205+70*Math.min(1,f.mag)+i*.011+time*4)%360;
+      ctx.strokeStyle=`hsla(${hue},85%,72%,${P.brightness})`;
+    }else{
+      ctx.strokeStyle=`rgba(${rgb.r},${rgb.g},${rgb.b},${P.brightness})`;
+    }
+    ctx.stroke();
+  }
+
+  ctx.restore();
+
+  document.getElementById("statSpeed").textContent=
+    (mean/Math.max(1,particles.length)).toFixed(2);
+}
+
+function drawArrows(){
+  if(!P.arrows)return;
+
+  const step=70;
+  ctx.save();
+  ctx.lineWidth=1;
+  ctx.strokeStyle="rgba(210,230,255,.24)";
+  ctx.fillStyle="rgba(210,230,255,.30)";
+
+  for(let y=35;y<H;y+=step){
+    for(let x=35;x<W;x+=step){
+      const f=field(x,y,time);
+      const len=15;
+      const ex=x+f.vx*len;
+      const ey=y+f.vy*len;
+
+      ctx.beginPath();
+      ctx.moveTo(x,y);
+      ctx.lineTo(ex,ey);
+      ctx.stroke();
+
+      const a=Math.atan2(ey-y,ex-x);
+      ctx.beginPath();
+      ctx.moveTo(ex,ey);
+      ctx.lineTo(
+        ex-Math.cos(a-.55)*5,
+        ey-Math.sin(a-.55)*5
+      );
+      ctx.lineTo(
+        ex-Math.cos(a+.55)*5,
+        ey-Math.sin(a+.55)*5
+      );
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  ctx.restore();
+}
+
+function frame(){
+  requestAnimationFrame(frame);
+
+  if(running){
+    time+=.016;
+    fadeTrails();
+    drawParticles();
+  }
+
+  drawArrows();
+}
+frame();
+
+canvas.addEventListener("mousemove",e=>{
+  mouse.x=e.clientX;
+  mouse.y=e.clientY;
+  mouse.active=true;
+});
+canvas.addEventListener("mouseleave",()=>mouse.active=false);
+canvas.addEventListener("touchmove",e=>{
+  const t=e.touches[0];
+  mouse.x=t.clientX;
+  mouse.y=t.clientY;
+  mouse.active=true;
+},{passive:true});
+canvas.addEventListener("touchend",()=>mouse.active=false);
+
+const modeNames={
+  zen:"Zen Flow",
+  vortex:"Vortex Garden",
+  waves:"Wave Current",
+  cells:"Flow Cells",
+  shear:"Shear Drift",
+  orbit:"Orbital Flow"
+};
+
+document.querySelectorAll(".preset-btn").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    P.mode=btn.dataset.mode;
+    document.querySelectorAll(".preset-btn").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("statMode").textContent=modeNames[P.mode];
+    clearCanvas();
+    seedParticles();
+  });
+});
+
+function bindRange(id,key,label,format,reseed=false){
+  const el=document.getElementById(id);
+  el.addEventListener("input",()=>{
+    P[key]=parseFloat(el.value);
+    document.getElementById(label).textContent=format(P[key]);
+    if(reseed)seedParticles();
+  });
+}
+
+bindRange("count","count","countVal",v=>Math.round(v/1000)+"k",true);
+bindRange("speed","speed","speedVal",v=>v.toFixed(2)+"×");
+bindRange("scale","scale","scaleVal",v=>v.toFixed(2));
+bindRange("turbulence","turbulence","turbVal",v=>v.toFixed(2));
+bindRange("trail","trail","trailVal",v=>v.toFixed(3));
+bindRange("lineWidth","lineWidth","widthVal",v=>v.toFixed(2));
+bindRange("brightness","brightness","brightVal",v=>v.toFixed(2));
+bindRange("mouseInfluence","mouseInfluence","mouseVal",v=>v.toFixed(2));
+
+document.getElementById("flowColor").addEventListener("input",e=>{
+  P.color=e.target.value;
+});
+
+document.getElementById("rainbow").addEventListener("change",e=>{
+  P.rainbow=e.target.checked;
+});
+
+document.getElementById("arrows").addEventListener("change",e=>{
+  P.arrows=e.target.checked;
+});
+
+document.getElementById("btnPause").addEventListener("click",()=>{
+  running=!running;
+  document.getElementById("btnPause").textContent=
+    running?"⏸ Pause Flow":"▶ Resume Flow";
+});
+
+document.getElementById("btnShuffle").addEventListener("click",()=>{
+  seedParticles();
+});
+
+document.getElementById("btnClear").addEventListener("click",()=>{
+  clearCanvas();
+});
+
+resize();
+seedParticles();
+</script>
+</body>
+</html>
