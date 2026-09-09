@@ -572,7 +572,7 @@ function field(x,y,t){
   /*
     Flattened accretion-disk coordinates
   */
-  const diskY = Y * 2.7;
+  const diskY = Y * 4.8;
 
   const r =
     Math.hypot(
@@ -657,21 +657,10 @@ function field(x,y,t){
     Mostly orbital motion.
     Much less inward drift than Black Hole Swirl.
   */
-  const ringRadius = 0.72;
-
-  const radialError =
-    r - ringRadius;
-
-  const tangentStrength =
-    1.0 +
-    0.50 /
-    (0.4 + r);
-
-  /*
-    Pull particles toward an orbital ring.
-  */
-  const ringPull =
-    -radialError * 1.25;
+const ringRadius = 0.63;
+const radialError = r - ringRadius;
+const tangentStrength = 1.0 + 0.65 / (0.35 + r);
+const ringPull = -radialError * 2.8;
 
   const tx = -Math.sin(angle);
   const ty =  Math.cos(angle);
@@ -806,8 +795,13 @@ function drawParticles(){
     ctx.lineTo(p.x,p.y);
 
     if(P.rainbow){
-      const hue=(205+70*Math.min(1,f.mag)+i*.011+time*4)%360;
-      ctx.strokeStyle=`hsla(${hue},85%,72%,${P.brightness})`;
+    let hue;
+    if(P.mode==='blackhole'){
+      hue = 195 + (p.y/H)*95; // cyan at top → purple at bottom
+    } else {
+      hue = (205+70*Math.min(1,f.mag)+i*.011+time*4)%360;
+    }
+    ctx.strokeStyle=`hsla(${hue},90%,74%,${P.brightness})`;
     }else{
       ctx.strokeStyle=`rgba(${rgb.r},${rgb.g},${rgb.b},${P.brightness})`;
     }
@@ -902,20 +896,12 @@ function drawBlackHole(){
     "rgba(0,0,0,1)"
   );
 
-  glow.addColorStop(
-    .72,
-    "rgba(255,170,105,.24)"
-  );
-
-  glow.addColorStop(
-    .86,
-    "rgba(255,215,165,.11)"
-  );
-
-  glow.addColorStop(
-    1,
-    "rgba(255,220,190,0)"
-  );
+glow.addColorStop(.72, P.mode==="einstein"
+  ? "rgba(220,235,255,.38)" : "rgba(255,170,105,.24)");
+glow.addColorStop(.86, P.mode==="einstein"
+  ? "rgba(200,220,255,.14)" : "rgba(255,215,165,.11)");
+glow.addColorStop(1,   P.mode==="einstein"
+  ? "rgba(180,210,255,0)"  : "rgba(255,220,190,0)");
 
   ctx.save();
 
@@ -960,19 +946,61 @@ function drawBlackHole(){
     Math.PI*2
   );
 
-  ctx.strokeStyle =
-    "rgba(255,215,170,.78)";
+ctx.strokeStyle = P.mode==="einstein"
+  ? "rgba(255,255,255,.95)" : "rgba(255,215,170,.78)";
 
   ctx.lineWidth=1.5;
 
   ctx.shadowBlur=10;
 
-  ctx.shadowColor =
-    "rgba(255,180,100,.65)";
+ctx.shadowColor = P.mode==="einstein"
+  ? "rgba(210,230,255,.85)" : "rgba(255,180,100,.65)";
 
   ctx.stroke();
 
   ctx.restore();
+  // Relativistic jet (einstein only)
+if(P.mode==="einstein"){
+  ctx.save();
+  const jg=ctx.createLinearGradient(0,cy,W,cy);
+  jg.addColorStop(0,    'rgba(255,255,255,0)');
+  jg.addColorStop(.22,  'rgba(210,228,255,.18)');
+  jg.addColorStop(.46,  'rgba(255,255,255,.85)');
+  jg.addColorStop(.50,  'rgba(255,255,255,1.0)');
+  jg.addColorStop(.54,  'rgba(255,255,255,.85)');
+  jg.addColorStop(.78,  'rgba(210,228,255,.18)');
+  jg.addColorStop(1,    'rgba(255,255,255,0)');
+  ctx.fillStyle=jg;
+  ctx.fillRect(0,cy-1.2,W,2.5);
+
+  const jh=ctx.createLinearGradient(0,cy-16,0,cy+16);
+  jh.addColorStop(0,  'rgba(180,210,255,0)');
+  jh.addColorStop(.5, 'rgba(180,210,255,.07)');
+  jh.addColorStop(1,  'rgba(180,210,255,0)');
+  ctx.fillStyle=jh;
+  ctx.fillRect(0,cy-16,W,32);
+  ctx.restore();
+}
+  // Tilted disk illusion (blackhole only)
+if(P.mode==="blackhole"){
+  ctx.save();
+  ctx.translate(cx,cy);
+  ctx.rotate(-0.06);
+  ctx.scale(1,0.09);
+  const dg=ctx.createLinearGradient(0,-H*.35,0,H*.35);
+  dg.addColorStop(0,   'rgba(60,140,255,0)');
+  dg.addColorStop(.38, 'rgba(80,180,255,0.06)');
+  dg.addColorStop(.48, 'rgba(200,235,255,0.13)');
+  dg.addColorStop(.50, 'rgba(255,255,255,0.20)');
+  dg.addColorStop(.52, 'rgba(200,200,255,0.13)');
+  dg.addColorStop(.62, 'rgba(150,70,220,0.06)');
+  dg.addColorStop(1,   'rgba(100,40,180,0)');
+  ctx.beginPath();
+  ctx.arc(0,0,Math.min(W,H)*.58,0,Math.PI*2);
+  ctx.fillStyle=dg;
+  ctx.fill();
+  ctx.restore();
+}
 }
 function frame(){
   requestAnimationFrame(frame);
@@ -1025,22 +1053,19 @@ document.querySelectorAll(".preset-btn").forEach(btn=>{
   btn.addEventListener("click",()=>{
     P.mode=btn.dataset.mode;
     if(P.mode==="blackhole"){
-  P.color="#ffc08a";
-
-  document.getElementById(
-    "flowColor"
-  ).value=P.color;
-
-  P.trail=.978;
-
-  document.getElementById(
-    "trail"
-  ).value=P.trail;
-
-  document.getElementById(
-    "trailVal"
-  ).textContent=
-    P.trail.toFixed(3);
+  P.color="#60aaff";
+  document.getElementById("flowColor").value=P.color;
+  P.trail=.987;
+  document.getElementById("trail").value=P.trail;
+  document.getElementById("trailVal").textContent=P.trail.toFixed(3);
+  P.rainbow=true;
+  document.getElementById("rainbow").checked=true;
+  P.turbulence=.14;
+  document.getElementById("turbulence").value=P.turbulence;
+  document.getElementById("turbVal").textContent=P.turbulence.toFixed(2);
+  P.brightness=.38;
+  document.getElementById("brightness").value=P.brightness;
+  document.getElementById("brightVal").textContent=P.brightness.toFixed(2);
 }
     if(P.mode==="einstein"){
   P.color="#ffe0b0";
