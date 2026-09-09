@@ -336,10 +336,15 @@ button:hover{background:rgba(255,255,255,.11)}
     <div class="preset-grid">
       <button class="preset-btn active" data-mode="zen">Zen Flow</button>
       <button class="preset-btn" data-mode="vortex">Vortex Garden</button>
+    
       <button class="preset-btn" data-mode="waves">Wave Current</button>
       <button class="preset-btn" data-mode="cells">Flow Cells</button>
+    
       <button class="preset-btn" data-mode="shear">Shear Drift</button>
       <button class="preset-btn" data-mode="orbit">Orbital Flow</button>
+    
+      <button class="preset-btn" data-mode="blackhole">Black Hole Swirl</button>
+      <button class="preset-btn" data-mode="einstein">Einstein Ring</button>
     </div>
 
     <div id="stats">
@@ -506,6 +511,9 @@ function field(x,y,t){
 
   let theta=0;
   let mag=1;
+  
+  let directVX=null;
+  let directVY=null;
 
   if(P.mode==="zen"){
     theta=
@@ -559,6 +567,154 @@ function field(x,y,t){
       .35*Math.sin(2.5*Math.hypot(dx,dy));
     mag=.8+.4/(1+.8*Math.hypot(dx,dy));
   }
+  else if(P.mode==="blackhole"){
+  /*
+    Accretion-disk-inspired vector field.
+
+    Tangential velocity creates orbital motion.
+    Radial velocity slowly pulls particles inward.
+  */
+
+  const diskY =
+  Y * 2.7;
+
+const r =
+  Math.hypot(
+    X,
+    diskY
+  ) +
+  0.0001;
+
+const angle =
+  Math.atan2(
+    diskY,
+    X
+  );
+
+  const angle =
+    Math.atan2(Y,X);
+
+  /*
+    Strong orbital velocity near the center.
+  */
+  const swirl =
+    1.15 +
+    1.15 / (0.35 + r);
+
+  /*
+    Slow inward accretion.
+  */
+  const inward =
+    0.18 +
+    0.30 / (0.45 + r);
+
+  const tx = -Math.sin(angle);
+  const ty =  Math.cos(angle);
+
+  const rx = -Math.cos(angle);
+  const ry = -Math.sin(angle);
+
+  vx =
+    tx * swirl +
+    rx * inward;
+
+  vy =
+    ty * swirl +
+    ry * inward;
+
+  /*
+    Slight irregularity makes the disk look gaseous
+    instead of perfectly mathematical.
+  */
+  vx +=
+    0.18 *
+    Math.sin(
+      6*r -
+      t*1.2 +
+      angle*3
+    );
+
+  vy +=
+    0.18 *
+    Math.cos(
+      5*r -
+      t +
+      angle*2
+    );
+
+  mag =
+    Math.min(
+      2.7,
+      0.65 +
+      1.1/(0.35+r)
+    );
+}
+  else if(P.mode==="einstein"){
+  const r =
+    Math.hypot(X,Y) +
+    0.0001;
+
+  const angle =
+    Math.atan2(Y,X);
+
+  /*
+    Mostly orbital motion.
+    Much less inward drift than Black Hole Swirl.
+  */
+  const ringRadius = 0.72;
+
+  const radialError =
+    r - ringRadius;
+
+  const tangentStrength =
+    1.0 +
+    0.50 /
+    (0.4 + r);
+
+  /*
+    Pull particles toward an orbital ring.
+  */
+  const ringPull =
+    -radialError * 1.25;
+
+  const tx = -Math.sin(angle);
+  const ty =  Math.cos(angle);
+
+  const rx = Math.cos(angle);
+  const ry = Math.sin(angle);
+
+  directVX =
+    tx*tangentStrength +
+    rx*ringPull;
+
+  directVY =
+    ty*tangentStrength +
+    ry*ringPull;
+
+  /*
+    Tiny waviness avoids a mathematically perfect ring.
+  */
+  directVX +=
+    0.06 *
+    Math.sin(
+      angle*8 +
+      t*0.65
+    );
+
+  directVY +=
+    0.06 *
+    Math.cos(
+      angle*8 +
+      t*0.65
+    );
+
+  mag =
+    Math.min(
+      2.2,
+      0.7 +
+      0.8/(0.45+r)
+    );
+}
 
   theta+=P.turbulence*
     (
@@ -566,8 +722,15 @@ function field(x,y,t){
       .32*Math.cos(2.1*Y-1.5*X-.55*t)
     );
 
-  let vx=Math.cos(theta)*mag;
-  let vy=Math.sin(theta)*mag;
+  let vx =
+    directVX !== null
+      ? directVX
+      : Math.cos(theta)*mag;
+  
+  let vy =
+    directVY !== null
+      ? directVY
+      : Math.sin(theta)*mag;
 
   if(mouse.active && P.mouseInfluence>0){
     const dx=x-mouse.x;
@@ -701,14 +864,136 @@ function drawArrows(){
   ctx.restore();
 }
 
+function drawBlackHole(){
+  if(
+    P.mode !== "blackhole" &&
+    P.mode !== "einstein"
+  ){
+    return;
+  }
+
+  const cx = W/2;
+  const cy = H/2;
+
+  const base =
+    Math.min(W,H);
+
+  const horizon =
+    P.mode === "einstein"
+      ? base*0.105
+      : base*0.085;
+
+  /*
+    Outer gravitational glow.
+  */
+  const glow =
+    ctx.createRadialGradient(
+      cx,
+      cy,
+      horizon*.55,
+      cx,
+      cy,
+      horizon*1.75
+    );
+
+  glow.addColorStop(
+    0,
+    "rgba(0,0,0,1)"
+  );
+
+  glow.addColorStop(
+    .55,
+    "rgba(0,0,0,1)"
+  );
+
+  glow.addColorStop(
+    .72,
+    "rgba(255,170,105,.24)"
+  );
+
+  glow.addColorStop(
+    .86,
+    "rgba(255,215,165,.11)"
+  );
+
+  glow.addColorStop(
+    1,
+    "rgba(255,220,190,0)"
+  );
+
+  ctx.save();
+
+  ctx.beginPath();
+  ctx.arc(
+    cx,
+    cy,
+    horizon*1.75,
+    0,
+    Math.PI*2
+  );
+
+  ctx.fillStyle=glow;
+  ctx.fill();
+
+  /*
+    Event horizon.
+  */
+  ctx.beginPath();
+
+  ctx.arc(
+    cx,
+    cy,
+    horizon,
+    0,
+    Math.PI*2
+  );
+
+  ctx.fillStyle="#000";
+  ctx.fill();
+
+  /*
+    Photon ring.
+  */
+  ctx.beginPath();
+
+  ctx.arc(
+    cx,
+    cy,
+    horizon*1.07,
+    0,
+    Math.PI*2
+  );
+
+  ctx.strokeStyle =
+    "rgba(255,215,170,.78)";
+
+  ctx.lineWidth=1.5;
+
+  ctx.shadowBlur=10;
+
+  ctx.shadowColor =
+    "rgba(255,180,100,.65)";
+
+  ctx.stroke();
+
+  ctx.restore();
+}
 function frame(){
   requestAnimationFrame(frame);
 
   if(running){
     time+=.016;
+
     fadeTrails();
+
     drawParticles();
   }
+
+  /*
+    Draw event horizon after particles,
+    so trails disappear behind it.
+  */
+  drawBlackHole();
 
   drawArrows();
 }
@@ -734,12 +1019,51 @@ const modeNames={
   waves:"Wave Current",
   cells:"Flow Cells",
   shear:"Shear Drift",
-  orbit:"Orbital Flow"
+  orbit:"Orbital Flow",
+
+  blackhole:"Black Hole Swirl",
+  einstein:"Einstein Ring"
 };
 
 document.querySelectorAll(".preset-btn").forEach(btn=>{
   btn.addEventListener("click",()=>{
     P.mode=btn.dataset.mode;
+    if(P.mode==="blackhole"){
+  P.color="#ffc08a";
+
+  document.getElementById(
+    "flowColor"
+  ).value=P.color;
+
+  P.trail=.978;
+
+  document.getElementById(
+    "trail"
+  ).value=P.trail;
+
+  document.getElementById(
+    "trailVal"
+  ).textContent=
+    P.trail.toFixed(3);
+}
+    if(P.mode==="einstein"){
+  P.color="#ffe0b0";
+
+  document.getElementById(
+    "flowColor"
+  ).value=P.color;
+
+  P.trail=.982;
+
+  document.getElementById(
+    "trail"
+  ).value=P.trail;
+
+  document.getElementById(
+    "trailVal"
+  ).textContent=
+    P.trail.toFixed(3);
+}
     document.querySelectorAll(".preset-btn").forEach(b=>b.classList.remove("active"));
     btn.classList.add("active");
     document.getElementById("statMode").textContent=modeNames[P.mode];
