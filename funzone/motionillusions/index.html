@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#071225" />
+<title>Motion Illusions | Muntasir's Fun Lab</title>
+<style>
+:root {--bg:#071225;--bg2:#0c1830;--text:#eef3ff;--muted:#b8c4e0;--accent:#9cc0ff;--border:rgba(255,255,255,.12);--panel:rgba(255,255,255,.07);--shadow:0 18px 50px rgba(0,0,0,.28)}
+* {box-sizing:border-box}
+html,body {margin:0;width:100%;height:100%;overflow:hidden;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:radial-gradient(circle at top left,rgba(112,160,255,.16),transparent 28%),radial-gradient(circle at bottom right,rgba(196,220,255,.10),transparent 25%),linear-gradient(135deg,var(--bg),var(--bg2))}
+body::before,body::after {content:"";position:fixed;width:320px;height:320px;border-radius:50%;filter:blur(110px);opacity:.3;pointer-events:none;z-index:0}
+body::before {top:-90px;left:-70px;background:#5f8dff} body::after {right:-80px;bottom:-110px;background:#9dc0ff}
+#illusionCanvas {position:fixed;inset:0;width:100%;height:100%;display:block;z-index:1;cursor:grab;touch-action:none} #illusionCanvas:active {cursor:grabbing}
+.page {position:relative;z-index:5;min-height:100vh;display:grid;grid-template-columns:1fr 355px;gap:24px;padding:28px;pointer-events:none}
+.hero {align-self:center;max-width:760px;padding:24px;pointer-events:none}
+.eyebrow {display:inline-block;padding:8px 14px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid var(--border);color:var(--accent);margin-bottom:16px;backdrop-filter:blur(10px);font-size:.95rem;font-weight:600}
+.hero h1 {margin:0 0 14px;font-size:clamp(2.6rem,6vw,5.2rem);line-height:1.02;letter-spacing:-.04em;max-width:9ch}
+.hero h1 span {color:var(--text)}
+.hero p {color:var(--muted);line-height:1.7;max-width:52ch;font-size:1.05rem}
+.hero .observation {margin-top:16px;font-size:.93rem;max-width:48ch;color:#9cc0ff;line-height:1.6}
+.hero-links {display:flex;gap:12px;flex-wrap:wrap;margin-top:18px;pointer-events:auto}
+.back-btn {display:inline-block;padding:12px 18px;text-decoration:none;color:var(--text);border:1px solid rgba(255,255,255,.16);border-radius:14px;background:rgba(255,255,255,.06);backdrop-filter:blur(10px);font-weight:600;pointer-events:auto;transition:background .15s,transform .15s}
+.back-btn:hover {background:rgba(255,255,255,.1);transform:translateY(-2px)}
+#panel {align-self:center;justify-self:end;width:100%;max-width:355px;max-height:calc(100vh - 56px);overflow-y:auto;overflow-x:hidden;padding:22px;border-radius:24px;background:var(--panel);border:1px solid var(--border);backdrop-filter:blur(16px);box-shadow:var(--shadow);position:relative;z-index:10;pointer-events:auto}
+#panel::-webkit-scrollbar {width:4px} #panel::-webkit-scrollbar-thumb {background:rgba(156,192,255,.32);border-radius:99px}
+#panel h2 {margin:0 0 8px;font-size:1.5rem} .panel-sub {margin:0 0 15px;color:var(--muted);font-size:.95rem;line-height:1.6}
+.section-label {font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(156,192,255,.55);margin:16px 0 9px;display:flex;align-items:center;gap:10px}
+.section-label::after {content:"";flex:1;height:1px;background:rgba(156,192,255,.15)}
+.preset-grid {display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px}
+.preset-btn {width:100%;margin:0;padding:10px 8px;border-radius:11px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.045);color:var(--text);font-size:.79rem;font-weight:700;cursor:pointer;letter-spacing:0;white-space:normal;min-height:36px}
+.preset-btn.active {background:linear-gradient(135deg,#8fb4ff,#d6e5ff);color:#071225;border-color:transparent}
+#stats {margin-bottom:12px;padding:11px 12px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:var(--muted);font-size:.84rem;line-height:1.85;font-family:"Courier New",monospace}
+#stats span {color:var(--accent);font-weight:700}
+.ctrl {display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.ctrl label {display:flex;justify-content:space-between;align-items:center;font-size:.9rem;font-weight:700}
+.ctrl .val {color:var(--accent)}
+input[type=range] {-webkit-appearance:none;appearance:none;width:100%;height:4px;background:rgba(255,255,255,.15);border-radius:999px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb {-webkit-appearance:none;appearance:none;width:15px;height:15px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 0 10px rgba(156,192,255,.3)}
+input[type=range]::-moz-range-thumb {width:15px;height:15px;border:0;border-radius:50%;background:var(--accent);cursor:pointer}
+select {width:100%;padding:10px 12px;background:rgba(255,255,255,.08);color:var(--text);border:1px solid rgba(255,255,255,.13);border-radius:12px;cursor:pointer} select option {background:#17263e;color:#eef3ff}
+.toggle-row {display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:13px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.07);margin-bottom:9px;font-size:.9rem;color:var(--muted);cursor:pointer}
+input[type=checkbox] {accent-color:#9cc0ff;cursor:pointer;width:15px;height:15px}
+button {font-family:inherit}
+.action-btn {width:100%;margin-top:9px;padding:12px 16px;border-radius:13px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07);color:var(--text);font-size:.85rem;font-weight:700;cursor:pointer}
+.action-btn:hover {background:rgba(255,255,255,.13)} .action-btn.primary {background:linear-gradient(135deg,#8fb4ff,#d6e5ff);color:#071225;border:0}
+.panel-note {margin-top:15px;font-size:.82rem;color:var(--muted);line-height:1.6}
+#focusExit {display:none;position:fixed;right:20px;top:20px;z-index:30;width:auto;padding:11px 17px;border-radius:14px;background:rgba(15,27,48,.87);border:1px solid var(--border);color:white;cursor:pointer}
+body.focus-mode .page {display:none} body.focus-mode #focusExit {display:block}
+@media (max-width:980px) {html,body{overflow:auto}.page{grid-template-columns:1fr;padding:18px}.hero{padding:16px 6px}#panel{justify-self:stretch;max-width:none;max-height:none}.hero h1{font-size:clamp(2.5rem,10vw,4.4rem)}}
+@media (prefers-reduced-motion:reduce) {.back-btn{transition:none}}
+</style>
+</head>
+<body>
+<canvas id="illusionCanvas" aria-label="Animated ambiguous rotation optical illusion"></canvas>
+<button id="focusExit" type="button" aria-label="Exit immersive view">Exit immersive view · Esc</button>
+<div class="page">
+  <section class="hero">
+    <div class="eyebrow">Fun Zone · Perception Lab</div>
+    <h1>Motion <span>Illusions.</span></h1>
+    <p>Which way is it turning? Stare at the floating particles, then try to make your brain reverse the spin. The motion can look different even when the programmed rotation stays the same.</p>
+    <div class="observation" id="heroObservation">Try looking away from the center, blinking, or imagining the opposite side as the front.</div>
+    <div class="hero-links">
+      <a class="back-btn" href="../../index.html">← Back to main site</a>
+      <a class="back-btn" href="../crafts/index.html">→ Handmade Works</a>
+    </div>
+  </section>
+  <aside id="panel">
+    <h2>Illusion Controls</h2>
+    <p class="panel-sub">Choose an illusion, adjust the depth cues, or deliberately reverse its real rotation.</p>
+    <div class="section-label">Illusion Gallery</div>
+    <div class="preset-grid" id="presetGrid">
+      <button class="preset-btn active" data-mode="arrows">Three Arrows</button>
+      <button class="preset-btn" data-mode="cone">Reversing Cone</button>
+      <button class="preset-btn" data-mode="cylinder">Particle Cylinder</button>
+      <button class="preset-btn" data-mode="mask">Turning Mask</button>
+      <button class="preset-btn" data-mode="rings">Double Halo</button>
+      <button class="preset-btn" data-mode="crescents">Twin Crescents</button>
+      <button class="preset-btn" data-mode="cat">Ghost Cat</button>
+      <button class="preset-btn" data-mode="cube">Necker Cube</button>
+      <button class="preset-btn" data-mode="spiral">Spiral Hypnosis</button>
+      <button class="preset-btn" data-mode="pinwheel">Color Pinwheel</button>
+    </div>
+    <div id="stats">
+      illusion <span id="statMode">Three Arrows</span><br>
+      actual direction <span id="statDir">Clockwise</span><br>
+      particles <span id="statCount">3,200</span>
+    </div>
+    <div class="section-label">Motion</div>
+    <div class="ctrl"><label for="speed">Rotation Speed <span class="val" id="speedVal">0.80×</span></label><input type="range" id="speed" min="0" max="2.4" step="0.05" value="0.8"></div>
+    <div class="ctrl"><label for="density">Particle Density <span class="val" id="densityVal">3,200</span></label><input type="range" id="density" min="700" max="8000" step="100" value="3200"></div>
+    <div class="ctrl"><label for="size">Particle Size <span class="val" id="sizeVal">1.45</span></label><input type="range" id="size" min="0.6" max="3.4" step="0.05" value="1.45"></div>
+    <div class="section-label">Perception</div>
+    <div class="ctrl"><label for="depth">Depth Cues <span class="val" id="depthVal">0.05</span></label><input type="range" id="depth" min="0" max="1" step="0.05" value="0.05"></div>
+    <div class="ctrl"><label for="perspective">Perspective <span class="val" id="perspectiveVal">0.25</span></label><input type="range" id="perspective" min="0" max="1" step="0.05" value="0.25"></div>
+    <div class="ctrl"><label for="tilt">Viewing Tilt <span class="val" id="tiltVal">12°</span></label><input type="range" id="tilt" min="-65" max="65" step="1" value="12"></div>
+    <div class="ctrl"><label for="zoom">Object Zoom <span class="val" id="zoomVal">1.00×</span></label><input type="range" id="zoom" min="0.5" max="1.7" step="0.05" value="1"></div>
+    <div class="section-label">Appearance</div>
+    <div class="ctrl"><label for="palette">Color Palette</label><select id="palette"><option value="neon" selected>Neon Particles</option><option value="ice">Ice Blue</option><option value="ember">Solar Ember</option><option value="mono">Soft White</option><option value="rainbow">Spectral Rainbow</option></select></div>
+    <div class="ctrl"><label for="glow">Particle Glow <span class="val" id="glowVal">0.35</span></label><input type="range" id="glow" min="0" max="1.2" step="0.05" value="0.35"></div>
+    <div class="toggle-row"><label for="autoRotate">Auto Rotate</label><input id="autoRotate" type="checkbox" checked></div>
+    <div class="toggle-row"><label for="showAxis">Show Rotation Axis</label><input id="showAxis" type="checkbox"></div>
+    <button class="action-btn primary" id="pauseBtn" type="button">⏸ Pause Rotation</button>
+    <button class="action-btn" id="reverseBtn" type="button">↻ Reverse Actual Spin</button>
+    <button class="action-btn" id="resetBtn" type="button">↺ Reset View</button>
+    <button class="action-btn" id="focusBtn" type="button">✧ Immersive View</button>
+    <div class="panel-note">Drag the canvas to change viewpoint · Scroll to zoom · Double-click to reset the view. Perceived reversal is different from pressing Reverse Actual Spin. The clockwise label is only a reference: apparent direction depends on viewpoint.</div>
+  </aside>
+</div>
+<script>
+(() => {
+'use strict';
+const canvas=document.getElementById('illusionCanvas');
+const ctx=canvas.getContext('2d',{alpha:true,desynchronized:true});
+const $=id=>document.getElementById(id);
+const TAU=Math.PI*2, clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const P={mode:'arrows',speed:.8,density:3200,size:1.45,depth:.05,perspective:.25,tilt:12,zoom:1,palette:'neon',glow:.35,autoRotate:true,showAxis:false,direction:1};
+let W=0,H=0,DPR=1,points=[],angle=0,camYaw=-.2,camPitch=0,pointerDown=false,pointerX=0,pointerY=0,lastTime=0;
+const modeInfo={
+  arrows:['Three Arrows','Three curved colored ribbons seem to swap front and back. Try mentally reversing their order.','y'],
+  cone:['Reversing Cone','The cone rotates through profiles that can look like an upright or inverted funnel.','x'],
+  cylinder:['Particle Cylinder','A transparent dotted cylinder offers very few clues about which wall is nearer.','x'],
+  mask:['Turning Mask','The face-like surface can seem convex or hollow when depth information is reduced.','y'],
+  rings:['Double Halo','Two dotted rings cross and overlap. Which one seems to pass in front?','x'],
+  crescents:['Twin Crescents','Two luminous curved ribbons fold over each other during rotation.','y'],
+  cat:['Ghost Cat','This point-cloud mask plays with the hollow-face effect and ambiguous rotation.','y'],
+  cube:['Necker Cube','The classic reversible wire cube: try swapping the apparent front and back faces.','y'],
+  spiral:['Spiral Hypnosis','A rotating spiral can feel like it expands or contracts depending on your focus.','z'],
+  pinwheel:['Color Pinwheel','Curving blades create a lively rotational illusion with motion and color contrast.','z']
+};
+const palette={
+  neon:['#a0ee3a','#627bff','#ff52bc','#ffca77'],
+  ice:['#76d6ff','#b8ecff','#689dff','#d4f8ff'],
+  ember:['#ffcb74','#f28b59','#ffd9ac','#ec5f6d'],
+  mono:['#f1f4ff','#c4d5ee','#ebf2ff','#a9c4e5'],
+  rainbow:['#ff4e92','#fae56e','#4df0bc','#68a4ff']
+};
+function rngFactory(seed){let s=seed>>>0;return()=>{s=(Math.imul(1664525,s)+1013904223)>>>0;return s/4294967296;};}
+function add(list,x,y,z,c=0){if(Number.isFinite(x)&&Number.isFinite(y)&&Number.isFinite(z))list.push({x,y,z,c});}
+function makePoints(){
+  const rand=rngFactory(1011);const N=P.density;const out=[];
+  switch(P.mode){
+  case 'arrows':{
+    for(let i=0;i<N;i++){
+      const arm=i%3;const t=rand(),q=rand()*2-1;
+      const theta=arm*TAU/3-0.85+1.7*t;
+      const head=t>.76?(.45+.14*Math.sin((t-.76)/.24*Math.PI)):.22;
+      const lat=q*head+0.28*Math.sin(t*Math.PI*1.4+arm);
+      const r=1.27+.12*Math.cos(t*Math.PI);
+      add(out,r*Math.cos(theta)*Math.cos(lat),r*Math.sin(lat),r*Math.sin(theta)*Math.cos(lat),arm);
+    }
+    break;
+  }
+  case 'cone':{
+    for(let i=0;i<N;i++){
+      const t=rand(),theta=TAU*rand();const radius=.08+1.12*t;
+      add(out,radius*Math.cos(theta),1.37-2.74*t,radius*Math.sin(theta),0);
+    }
+    break;
+  }
+  case 'cylinder':{
+    for(let i=0;i<N;i++){
+      const t=rand(),theta=TAU*rand();
+      add(out,1.05*Math.cos(theta),2.9*t-1.45,1.05*Math.sin(theta),0);
+    }
+    break;
+  }
+  case 'mask':{
+    for(let i=0;i<N*2 && out.length<N;i++){
+      const y=(rand()*2-1)*1.48;const w=1.03*Math.sqrt(Math.max(.006,1-(y/1.6)**2));const x=(rand()*2-1)*w;
+      const eyes=(((x-.4)/.19)**2+((y-.30)/.13)**2<1) || (((x+.4)/.19)**2+((y-.30)/.13)**2<1);
+      const mouth=(Math.abs(y+.76)<.06 && Math.abs(x)<.43);
+      if(eyes||mouth)continue;
+      const cheek=.45*Math.sqrt(Math.max(.0,1-(x/w)**2));
+      const nose=.35*Math.exp(-((x/.19)**2+(y/.44)**2));
+      add(out,x,y,cheek+nose-.12,Math.abs(x)<.25?1:0);
+    }
+    break;
+  }
+  case 'rings':{
+    for(let i=0;i<N;i++){
+      const arm=i%2, t=TAU*rand(),u=TAU*rand();
+      const rr=.75+.105*Math.cos(u), side=arm===0?1:-1;
+      const x=rr*Math.cos(t),y=rr*Math.sin(t),z=.11*Math.sin(u);
+      const tilt=side*.50;
+      add(out,x,y*Math.cos(tilt)-z*Math.sin(tilt)+side*.77,y*Math.sin(tilt)+z*Math.cos(tilt),arm);
+    }
+    break;
+  }
+  case 'crescents':{
+    for(let i=0;i<N;i++){
+      const arm=i%2,t=rand(),v=rand()*2-1,theta=arm*Math.PI-.9+1.9*t;
+      const band=.17+.31*Math.sin(t*Math.PI);
+      const y=(arm===0?.22:-.22)+v*band+.10*Math.sin(theta*2);
+      const r=1.15+.12*v;
+      add(out,r*Math.cos(theta),y,r*Math.sin(theta),arm===0?1:2);
+    }
+    break;
+  }
+  case 'cat':{
+    for(let i=0;i<N*3&&out.length<N;i++){
+      const x=(rand()*2-1)*1.17,y=(rand()*2-1)*1.44;
+      const inHead=(x/1.04)**2+((y+.1)/1.21)**2<1;
+      const inEarL=y>.55 && x<-.35 && x>-1.18 && y<1.62-1.7*Math.abs(x+.8);
+      const inEarR=y>.55 && x>.35 && x<1.18 && y<1.62-1.7*Math.abs(x-.8);
+      if(!(inHead||inEarL||inEarR))continue;
+      const eyeL=((x+.43)/.18)**2+((y-.19)/.16)**2<1;
+      const eyeR=((x-.43)/.18)**2+((y-.19)/.16)**2<1;
+      if(eyeL||eyeR)continue;
+      const nose=.23*Math.exp(-((x/.25)**2+((y+.3)/.28)**2));
+      const z=inHead?.35*Math.sqrt(Math.max(0,1-(x/1.1)**2))+nose:.025;
+      add(out,x,y,z,x<0?2:0);
+    }
+    break;
+  }
+  case 'cube':{
+    const verts=[];for(let x of [-1,1])for(let y of [-1,1])for(let z of [-1,1])verts.push([x,y,z]);
+    const edges=[];for(let i=0;i<verts.length;i++)for(let j=i+1;j<verts.length;j++)if(verts[i].filter((v,k)=>v!==verts[j][k]).length===1)edges.push([verts[i],verts[j]]);
+    for(let i=0;i<N;i++){
+      const [a,b]=edges[i%edges.length],t=rand();const jitter=(rand()-.5)*.01;
+      add(out,a[0]+t*(b[0]-a[0])+jitter,a[1]+t*(b[1]-a[1])+jitter,a[2]+t*(b[2]-a[2])+jitter,i%4);
+    }
+    break;
+  }
+  case 'spiral':{
+    for(let i=0;i<N;i++){
+      const arm=i%3,t=rand(),theta=arm*TAU/3+t*TAU*3.3;
+      const r=.05+1.55*t,scatter=.055*(rand()-.5);
+      add(out,(r+scatter)*Math.cos(theta),.08*Math.sin(theta*3.2), (r+scatter)*Math.sin(theta),arm);
+    }
+    break;
+  }
+  case 'pinwheel':{
+    for(let i=0;i<N;i++){
+      const arm=i%6,t=rand(),q=rand()*2-1;
+      const r=.13+1.34*t,theta=arm*TAU/6+.7*t+q*.26*(1-t);
+      add(out,r*Math.cos(theta),.10*q,r*Math.sin(theta),arm%4);
+    }
+    break;
+  }
+  }
+  points=out;
+  $('statCount').textContent=out.length.toLocaleString();
+}
+function resize(){
+  DPR=Math.min(window.devicePixelRatio||1,1.8);W=window.innerWidth;H=window.innerHeight;
+  canvas.width=Math.round(W*DPR);canvas.height=Math.round(H*DPR);
+  canvas.style.width=W+'px';canvas.style.height=H+'px';ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+function positionPoint(p,a){
+  let x=p.x,y=p.y,z=p.z;
+  const [modeName,,axis]=modeInfo[P.mode];
+  const ca=Math.cos(a),sa=Math.sin(a);
+  if(axis==='x'){const yy=y*ca-z*sa;z=y*sa+z*ca;y=yy;}
+  else if(axis==='z'){const xx=x*ca-y*sa;y=x*sa+y*ca;x=xx;}
+  else {const xx=x*ca+z*sa;z=-x*sa+z*ca;x=xx;}
+  const cy=Math.cos(camYaw),sy=Math.sin(camYaw);
+  const xx=x*cy+z*sy;z=-x*sy+z*cy;x=xx;
+  const tilt=camPitch+P.tilt*Math.PI/180,ct=Math.cos(tilt),st=Math.sin(tilt);
+  const yy=y*ct-z*st;z=y*st+z*ct;y=yy;
+  const s=1/(1+z*P.perspective*.22);
+  const base=Math.min(H*.66,W*.52)*P.zoom/3;
+  const centerX=W*(W>1180?.55:.52),centerY=H*.51;
+  return {x:centerX+x*base*s,y:centerY-y*base*s,z,scale:s};
+}
+function drawAxis(){
+  if(!P.showAxis)return;
+  const axis=modeInfo[P.mode][2];
+  const a=axis==='x'?{x:-1.9,y:0,z:0}:axis==='z'?{x:0,y:0,z:-1.9}:{x:0,y:-1.9,z:0};
+  const b=axis==='x'?{x:1.9,y:0,z:0}:axis==='z'?{x:0,y:0,z:1.9}:{x:0,y:1.9,z:0};
+  const q1=positionPoint(a,angle),q2=positionPoint(b,angle);
+  ctx.save();ctx.setLineDash([4,7]);ctx.lineWidth=1;ctx.strokeStyle='rgba(190,215,255,.36)';ctx.beginPath();ctx.moveTo(q1.x,q1.y);ctx.lineTo(q2.x,q2.y);ctx.stroke();ctx.restore();
+}
+function paintCloud(atAngle,alpha=1,ghost=false){
+  const colors=palette[P.palette],baseSize=P.size*(ghost?.85:1);
+  // Pixel-square particles deliberately preserve ambiguous front/back depth cues.
+  const shown=points;
+  for(let i=0;i<shown.length;i++){
+    const p=shown[i],q=positionPoint(p,atAngle);
+    if(q.x<0||q.x>W||q.y<0||q.y>H)continue;
+    const depthFactor=(1-P.depth)+P.depth*clamp((q.z+2.3)/4.6,.12,1);
+    const size=clamp(baseSize*q.scale*(1+P.depth*.16*q.z),.45,6.5);
+    ctx.globalAlpha=alpha*depthFactor;
+    ctx.fillStyle=colors[p.c%colors.length];
+    ctx.fillRect(q.x-size*.5,q.y-size*.5,size,size);
+  }
+  ctx.globalAlpha=1;
+}
+function render(){
+  ctx.clearRect(0,0,W,H);
+  if(P.glow>0){
+    // Canvas shadow costs more than regular point rendering, so keep it modest.
+    ctx.save();ctx.globalAlpha=clamp(P.glow*.15,0,.23);
+    ctx.shadowBlur=clamp(P.glow*8,0,11);
+    ctx.shadowColor=palette[P.palette][0];
+    // Glow emphasis from a small sample, not a second full draw pass.
+    const colors=palette[P.palette];const step=Math.max(3,Math.round(points.length/650));
+    for(let i=0;i<points.length;i+=step){const q=positionPoint(points[i],angle);ctx.fillStyle=colors[points[i].c%colors.length];ctx.fillRect(q.x-1,q.y-1,2.6,2.6);}
+    ctx.restore();
+  }
+  paintCloud(angle,1,false);
+  drawAxis();
+}
+function animate(ts){
+  requestAnimationFrame(animate);
+  let dt=lastTime?Math.min((ts-lastTime)/1000,.05):.016;lastTime=ts;
+  if(P.autoRotate)angle+=dt*P.speed*.78*P.direction;
+  render();
+}
+function modeSelect(mode){
+  if(!modeInfo[mode])return;
+  P.mode=mode;angle=0;camYaw=-.2;camPitch=0;
+  $('statMode').textContent=modeInfo[mode][0];
+  $('heroObservation').textContent=modeInfo[mode][1];
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));
+  makePoints();
+}
+function syncControls(){
+  for(const [id,v,f] of [
+    ['speed',P.speed,v=>v.toFixed(2)+'×'],['density',P.density,v=>Math.round(v).toLocaleString()],
+    ['size',P.size,v=>v.toFixed(2)],['depth',P.depth,v=>v.toFixed(2)],
+    ['perspective',P.perspective,v=>v.toFixed(2)],['tilt',P.tilt,v=>Math.round(v)+'°'],
+    ['zoom',P.zoom,v=>v.toFixed(2)+'×'],['glow',P.glow,v=>v.toFixed(2)]
+  ]){ $(id).value=v;$(id+'Val').textContent=f(v); }
+  $('palette').value=P.palette;$('autoRotate').checked=P.autoRotate;
+  $('showAxis').checked=P.showAxis;
+  $('statDir').textContent=P.direction>0?'Clockwise*':'Counterclockwise*';
+  $('pauseBtn').textContent=P.autoRotate?'⏸ Pause Rotation':'▶ Resume Rotation';
+}
+function bindSlider(id,key,fmt,regen=false){
+  $(id).addEventListener('input',e=>{
+    P[key]=Number(e.target.value);$(id+'Val').textContent=fmt(P[key]);
+    if(regen)makePoints();
+  });
+}
+bindSlider('speed','speed',v=>v.toFixed(2)+'×');
+bindSlider('density','density',v=>Math.round(v).toLocaleString(),true);
+bindSlider('size','size',v=>v.toFixed(2));
+bindSlider('depth','depth',v=>v.toFixed(2));
+bindSlider('perspective','perspective',v=>v.toFixed(2));
+bindSlider('tilt','tilt',v=>Math.round(v)+'°');
+bindSlider('zoom','zoom',v=>v.toFixed(2)+'×');
+bindSlider('glow','glow',v=>v.toFixed(2));
+$('palette').addEventListener('change',e=>P.palette=e.target.value);
+$('autoRotate').addEventListener('change',e=>{P.autoRotate=e.target.checked;syncControls();});
+$('showAxis').addEventListener('change',e=>P.showAxis=e.target.checked);
+$('pauseBtn').addEventListener('click',()=>{P.autoRotate=!P.autoRotate;syncControls();});
+$('reverseBtn').addEventListener('click',()=>{P.direction*=-1;syncControls();});
+$('resetBtn').addEventListener('click',()=>{angle=0;camYaw=-.2;camPitch=0;P.tilt=12;P.zoom=1;P.autoRotate=true;syncControls();});
+document.querySelectorAll('.preset-btn').forEach(btn=>btn.addEventListener('click',()=>modeSelect(btn.dataset.mode)));
+let pointerId=null;
+canvas.addEventListener('pointerdown',e=>{pointerDown=true;pointerId=e.pointerId;pointerX=e.clientX;pointerY=e.clientY;canvas.setPointerCapture(e.pointerId);});
+canvas.addEventListener('pointermove',e=>{if(!pointerDown)return;let dx=e.clientX-pointerX,dy=e.clientY-pointerY;camYaw+=dx*.006;camPitch=clamp(camPitch+dy*.005,-1.4,1.4);pointerX=e.clientX;pointerY=e.clientY;});
+function endPointer(e){if(e.pointerId!==pointerId)return;pointerDown=false;pointerId=null;}
+canvas.addEventListener('pointerup',endPointer);canvas.addEventListener('pointercancel',endPointer);
+canvas.addEventListener('wheel',e=>{P.zoom=clamp(P.zoom*(e.deltaY>0?.94:1.06),.5,1.7);$('zoom').value=P.zoom;$('zoomVal').textContent=P.zoom.toFixed(2)+'×';e.preventDefault();},{passive:false});
+canvas.addEventListener('dblclick',()=>{camYaw=-.2;camPitch=0;P.zoom=1;$('zoom').value=1;$('zoomVal').textContent='1.00×';});
+function focus(on){document.body.classList.toggle('focus-mode',on);}
+$('focusBtn').addEventListener('click',()=>focus(true));$('focusExit').addEventListener('click',()=>focus(false));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')focus(false);if(e.key===' '&&!['INPUT','SELECT','BUTTON'].includes(document.activeElement.tagName)){e.preventDefault();P.autoRotate=!P.autoRotate;syncControls();}});
+window.addEventListener('resize',resize);
+resize();makePoints();syncControls();requestAnimationFrame(animate);
+})();
+</script>
+</body>
+</html>
