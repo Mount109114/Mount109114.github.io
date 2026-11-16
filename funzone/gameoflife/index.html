@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="theme-color" content="#071225"/>
+<title>Game of Life | Muntasir's Fun Lab</title>
+<style>
+:root{--bg:#071225;--bg2:#0c1830;--text:#eef3ff;--muted:#b8c4e0;--accent:#9cc0ff;--border:rgba(255,255,255,.13);--panel:rgba(27,39,61,.86)}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text);font-family:Arial,Helvetica,sans-serif}
+body:before,body:after{content:"";position:fixed;pointer-events:none;width:320px;height:320px;border-radius:50%;filter:blur(110px);opacity:.24;z-index:0}body:before{left:-100px;top:-70px;background:#5f8dff}body:after{bottom:-110px;right:-100px;background:#96b8ed}
+#lifeCanvas{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:1;touch-action:none;cursor:crosshair}
+.page{position:fixed;inset:0;z-index:3;pointer-events:none}.hero{position:absolute;left:clamp(14px,3.1vw,48px);top:50%;transform:translateY(-50%);width:min(330px,28vw);pointer-events:none;text-shadow:0 2px 22px #030812}
+.eyebrow{display:inline-block;padding:7px 13px;border:1px solid var(--border);background:rgba(255,255,255,.075);border-radius:99px;color:var(--accent);font-weight:700;font-size:13px;backdrop-filter:blur(12px)}
+h1{margin:18px 0 14px;font-size:clamp(40px,4.15vw,70px);line-height:1.05;letter-spacing:-.045em}.hero p{font-size:14px;line-height:1.8;color:var(--muted);max-width:310px}.hero .math{font-family:Georgia,serif;margin-top:13px;color:#d6e2fc;font-size:14px;line-height:1.7}
+.hero-links{display:flex;flex-wrap:wrap;gap:9px;margin-top:18px;pointer-events:auto}.hero-links a{border-radius:12px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.075);backdrop-filter:blur(12px);color:#eef3ff;padding:11px 13px;text-decoration:none;font-weight:700;font-size:12px}.hero-links a:hover{background:rgba(255,255,255,.15)}
+#panel{position:absolute;right:clamp(12px,2vw,30px);top:50%;transform:translateY(-50%);width:347px;max-height:calc(100vh - 38px);overflow:auto;overscroll-behavior:contain;pointer-events:auto;background:var(--panel);border:1px solid rgba(255,255,255,.14);box-shadow:0 20px 66px rgba(0,0,0,.3);border-radius:22px;padding:21px;backdrop-filter:blur(24px);scrollbar-width:thin;scrollbar-color:#596f8c transparent}
+#panel h2{margin:0 0 7px;font-size:22px;letter-spacing:-.02em}.sub{font-size:12px;line-height:1.65;color:var(--muted);margin:0 0 12px}
+.small-stats{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.075);border-radius:13px;padding:11px;font:12px/1.8 Consolas,"Courier New",monospace;color:#c6d3ea;display:grid;grid-template-columns:1fr 1fr;gap:0 10px}.small-stats strong{color:#e6c88f;font-weight:700}
+.section-label{display:flex;gap:9px;align-items:center;margin:16px 0 9px;font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#809bc8}.section-label:after{content:"";flex:1;height:1px;background:rgba(255,255,255,.105)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:7px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.btn,.pattern,.preset{border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.055);color:var(--text);border-radius:10px;min-height:34px;padding:8px 6px;cursor:pointer;font:700 11.5px Arial,sans-serif;transition:background .14s,border-color .14s}.btn:hover,.pattern:hover,.preset:hover{background:rgba(255,255,255,.13)}.active,.preset.active,.pattern.active{background:linear-gradient(110deg,#acc9ff,#d9e8ff);border-color:transparent;color:#101b31}
+.primary{background:linear-gradient(110deg,#a5c6ff,#d6e6ff);color:#0d1a31;border-color:transparent}.danger{color:#f4b7b8}.wide{width:100%;margin-top:7px}
+.control{margin:0 0 12px}.control label{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:8px;font-size:12px;font-weight:700}.control output{color:var(--accent);font-variant-numeric:tabular-nums;font-size:11px}input[type=range]{appearance:none;-webkit-appearance:none;width:100%;height:4px;border-radius:10px;background:rgba(255,255,255,.17);cursor:pointer;outline:none;display:block}input[type=range]::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:14px;height:14px;background:#a8c9ff;border-radius:50%;box-shadow:0 0 10px rgba(160,195,255,.35)}
+select{width:100%;border:1px solid rgba(255,255,255,.15);background:#35445d;color:white;border-radius:10px;padding:9px 10px;font-size:12px;cursor:pointer}
+.switch{display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.08);border-radius:11px;margin:6px 0;padding:8px 11px;font-size:12px;color:#d9e2f5;cursor:pointer}.switch input{accent-color:#acc9ff;width:15px;height:15px;cursor:pointer}
+.pattern{padding:8px 5px;text-align:center}.pattern small{display:block;opacity:.55;font-size:9px;margin-top:3px;font-weight:500}.panel-note{margin:11px 0 0;color:#adbfdb;font-size:11px;line-height:1.65}
+#statusToast{position:fixed;bottom:23px;left:50%;transform:translate(-50%,14px);z-index:20;border:1px solid #ffffff30;background:#101c32e6;padding:10px 16px;color:#eaf1ff;border-radius:12px;opacity:0;pointer-events:none;font-size:12px;transition:opacity .25s,transform .25s;box-shadow:0 14px 36px #0006}#statusToast.show{opacity:1;transform:translate(-50%,0)}
+#mobileControls{display:none;position:fixed;right:14px;bottom:14px;z-index:12;border:1px solid #fff4;border-radius:14px;background:#a8c7ff;color:#0c1a2f;padding:12px 15px;font-size:13px;font-weight:800;box-shadow:0 8px 30px #0005;cursor:pointer}
+#immersiveExit{display:none;position:fixed;bottom:17px;right:17px;z-index:20;background:#1d2a40cb;color:#e6efff;border:1px solid #ffffff33;border-radius:999px;font-weight:700;padding:11px 15px;cursor:pointer;font-size:12px;backdrop-filter:blur(12px)}
+body.immersive .hero,body.immersive #panel,body.immersive #mobileControls{display:none!important}body.immersive #immersiveExit{display:block}
+@media(max-width:1060px){.hero{width:260px}h1{font-size:44px}#panel{width:315px;padding:17px}}
+@media(max-width:800px){.hero{left:16px;top:17px;transform:none;width:min(245px,70vw);background:linear-gradient(90deg,#071225dd,#07122504);padding:6px 8px 12px 3px;border-radius:10px}.hero h1{font-size:32px;margin:8px 0}.hero p{font-size:11px;line-height:1.5;max-width:200px}.hero .math{display:none}.hero-links{margin-top:9px;gap:5px}.hero-links a{font-size:10px;padding:8px}.eyebrow{font-size:10px;padding:5px 9px}#panel{top:64px;bottom:67px;right:10px;transform:none;width:min(350px,calc(100vw - 20px));max-height:none;border-radius:18px;transition:transform .24s,opacity .24s}#panel.collapsed{opacity:0;pointer-events:none;transform:translateX(calc(100% + 30px))}#mobileControls{display:block}}
+@media(prefers-reduced-motion:reduce){.btn,.pattern,.preset{transition:none}}
+</style>
+</head>
+<body>
+<canvas id="lifeCanvas" aria-label="Interactive infinite Conway Game of Life grid"></canvas>
+<div class="page">
+  <section class="hero" id="hero">
+    <div class="eyebrow">Fun Zone · Cellular Automata</div>
+    <h1>Game<br>of Life.</h1>
+    <p>No players. No randomness after the initial state. Just four local rules creating spaceships, oscillators, beautiful patterns, and surprises.</p>
+    <div class="math">Conway's Life · B3/S23<br>Birth: 3 neighbors · Survival: 2 or 3</div>
+    <nav class="hero-links"><a href="../../index.html">← Main Site</a><a class="back-btn" href="../crafts/index.html">→ Handmade Works</a></nav>
+  </section>
+  <aside id="panel">
+    <h2>Life Controls</h2>
+    <p class="sub">Paint your universe, stamp legendary patterns, or load an entire experiment. Every square in the viewport is editable.</p>
+    <div class="small-stats">
+      <div>generation <strong id="genStat">0</strong></div><div>population <strong id="popStat">0</strong></div>
+      <div>births <strong id="birthStat">0</strong></div><div>deaths <strong id="deathStat">0</strong></div>
+      <div>status <strong id="runStat">RUNNING</strong></div><div>rule <strong>B3/S23</strong></div>
+    </div>
+    <div class="section-label">Play / Edit</div>
+    <div class="grid2"><button class="btn primary" id="playBtn">Ⅱ Pause</button><button class="btn" id="stepBtn">→ Single Step</button></div>
+    <div class="grid3" style="margin-top:8px"><button class="btn" data-tool="draw">✎ Draw</button><button class="btn" data-tool="erase">⌫ Erase</button><button class="btn" data-tool="pan">✥ Pan</button></div>
+    <div class="grid2" style="margin-top:7px"><button class="btn" id="rotateBtn">↻ Rotate Stamp</button><button class="btn" id="mirrorBtn">⇄ Mirror Stamp</button></div>
+    <div class="section-label">Scene Gallery</div>
+    <div class="grid2" id="scenes">
+      <button class="preset active" data-scene="garden">Constellation Garden</button>
+      <button class="preset" data-scene="gun">Gosper Foundry</button>
+      <button class="preset" data-scene="twogun">Twin Gun Lab</button>
+      <button class="preset" data-scene="fleet">Spaceship Fleet</button>
+      <button class="preset" data-scene="pulsars">Oscillator Gallery</button>
+      <button class="preset" data-scene="soup">Primordial Soup</button>
+      <button class="preset" data-scene="blank">Empty Universe</button>
+      <button class="preset" id="randomizeBtn">✧ New Random Soup</button>
+    </div>
+    <div class="section-label">Stamp Library · Tap pattern then tap grid</div>
+    <div class="grid3" id="patterns"></div>
+    <div class="panel-note" id="stampHint">Selected: Glider · Tap anywhere to place. Rotate or mirror before stamping.</div>
+    <div class="section-label">Simulation</div>
+    <div class="control"><label>Generations / Second <output id="speedOut">10</output></label><input id="speed" type="range" min="1" max="30" step="1" value="10"></div>
+    <div class="control"><label>Cell Size / Zoom <output id="zoomOut">14 px</output></label><input id="zoom" type="range" min="5" max="34" step="1" value="14"></div>
+    <div class="control"><label>Drawing Brush <output id="brushOut">1 cell</output></label><input id="brush" type="range" min="1" max="6" step="1" value="1"></div>
+    <div class="control"><label>Random Soup Density <output id="densityOut">29%</output></label><input id="density" type="range" min="5" max="55" step="1" value="29"></div>
+    <div class="section-label">Luxury Color Studio</div>
+    <div class="control"><label>Grid Palette</label><select id="palette">
+      <option value="gold">Imperial Gold · Champagne</option><option value="jade">Jade Dynasty · Emerald</option>
+      <option value="amethyst">Amethyst Velvet</option><option value="ruby">Ruby Noir</option><option value="sapphire">Sapphire Frost</option>
+      <option value="copper">Copper Dusk</option><option value="ivory">Moonlit Ivory</option>
+    </select></div>
+    <div class="control"><label>Cell Glow <output id="glowOut">30%</output></label><input id="glow" type="range" min="0" max="100" step="5" value="30"></div>
+    <div class="control"><label>Grid Visibility <output id="gridOut">33%</output></label><input id="gridOpacity" type="range" min="0" max="100" step="1" value="33"></div>
+    <label class="switch">Age-based cell colors <input id="ageColor" type="checkbox" checked></label>
+    <label class="switch">Fading ghost cells <input id="ghost" type="checkbox" checked></label>
+    <label class="switch">Stamp preview <input id="preview" type="checkbox" checked></label>
+    <div class="section-label">Universe Tools</div>
+    <div class="grid2"><button class="btn" id="fitBtn">◎ Fit to Life</button><button class="btn" id="centerBtn">⊕ Center View</button></div>
+    <div class="grid2" style="margin-top:7px"><button class="btn" id="clearBtn">⌧ Clear All</button><button class="btn" id="exportBtn">⇩ Save RLE</button></div>
+    <button class="btn wide" id="immersiveBtn">⛶ Immersive View</button>
+    <p class="panel-note">Draw or stamp by dragging / tapping. Right-drag or choose Pan to move the board. Scroll or pinch to zoom. Space pause · N step · I immersive · R rotate stamp · Esc exit.</p>
+  </aside>
+</div>
+<button id="mobileControls" aria-label="Open controls">⚙ Controls</button>
+<button id="immersiveExit" aria-label="Exit immersive view">✕ Exit Immersive (Esc)</button>
+<div id="statusToast" aria-live="polite"></div>
+<script>
+(() => {
+'use strict';
+const $=id=>document.getElementById(id);
+const canvas=$('lifeCanvas'),ctx=canvas.getContext('2d',{alpha:false});
+const palettes={
+ gold:{bg:'#080d19',grid:'#5d5764',major:'#786949',stops:['#fff5d5','#f9d795','#e2b55c','#ba8643','#ddbb77'],glow:'#f7d78b'},
+ jade:{bg:'#061711',grid:'#466659',major:'#548778',stops:['#e6ffed','#9cf5c5','#51d6a4','#168f7a','#86cba9'],glow:'#53d8a3'},
+ amethyst:{bg:'#100a20',grid:'#604b76',major:'#7b5ca8',stops:['#fff0ff','#eab8ff','#c483f6','#854dc3','#bf9cea'],glow:'#c79eff'},
+ ruby:{bg:'#160c17',grid:'#67404b',major:'#824c5c',stops:['#ffe8da','#ffb5b1','#eb798b','#ae355a','#dc8b9b'],glow:'#f58ea8'},
+ sapphire:{bg:'#081427',grid:'#395778',major:'#4778a1',stops:['#e7fcff','#b5e8ff','#75c4f2','#3684c9','#9abfdc'],glow:'#8acbff'},
+ copper:{bg:'#1b100d',grid:'#745145',major:'#9b6247',stops:['#fff0c9','#eec18a','#db8f58','#a6573b','#deb27a'],glow:'#ffbb76'},
+ ivory:{bg:'#0d1119',grid:'#4c5a6b',major:'#697d8d',stops:['#ffffff','#e5e9eb','#c7d3d8','#90a4b0','#d7e2e4'],glow:'#dfe9f5'}
+};
+const rawPatterns=[
+ ['glider','Glider','Ship','bo$2bo$3o!'],
+ ['lwss','LWSS','Ship','bo2bo$o$o3bo$4o!'],
+ ['mwss','MWSS','Ship','3bo$bo3bo$o$o4bo$5o!'],
+ ['hwss','HWSS','Ship','3b2o$bo4bo$o$o5bo$6o!'],
+ ['gosper','Gosper Gun','Gun','24bo11b$22bobo11b$12b2o6b2o12b2o$11bo3bo4b2o12b2o$2o8bo5bo3b2o14b$2o8bo3bob2o4bobo11b$10bo5bo7bo11b$11bo3bo20b$12b2o!'],
+ ['twogun','Twin Guns','Gun',null],
+ ['pulsar','Pulsar','Osc','..OOO...OOO..\n.............\nO....O.O....O\nO....O.O....O\nO....O.O....O\n..OOO...OOO..\n.............\n..OOO...OOO..\nO....O.O....O\nO....O.O....O\nO....O.O....O\n.............\n..OOO...OOO..'],
+ ['penta','Pentadecathlon','Osc','10o!'],
+ ['beacon','Beacon','Osc','2o2b$2o2b$2b2o$2b2o!'],
+ ['toad','Toad','Osc','b3o$3o!'],
+ ['blinker','Blinker','Osc','3o!'],
+ ['rpent','R-pentomino','Seed','b2o$2o$bo!'],
+ ['acorn','Acorn','Seed','bo$3bo$2o2b3o!'],
+ ['diehard','Diehard','Seed','6bo$2o$bo3b3o!'],
+ ['block','Block','Still','2o$2o!'],
+ ['beehive','Beehive','Still','b2o$o2bo$b2o!']
+];
+function parseRLE(rle){
+ if(rle.includes('\n') && !rle.includes('$')){
+  const rows=rle.split('\n'),p=[];rows.forEach((row,y)=>[...row].forEach((c,x)=>{if(c==='O')p.push([x,y])}));return p;
+ }
+ let x=0,y=0,num='',pts=[];
+ for(const c of rle.replace(/\s+/g,'')){
+  if(c==='!')break;if(c>='0'&&c<='9'){num+=c;continue}
+  const n=num?Number(num):1;num='';
+  if(c==='o'){for(let i=0;i<n;i++)pts.push([x+i,y]);x+=n}
+  else if(c==='b')x+=n;
+  else if(c==='$'){y+=n;x=0}
+ }return pts;
+}
+const patterns=Object.fromEntries(rawPatterns.filter(p=>p[3]).map(p=>[p[0],{id:p[0],name:p[1],category:p[2],cells:parseRLE(p[3])}]));
+function transform(points,rotation=0,mirror=false){
+ const a=points.map(([px,py])=>{let x=mirror?-px:px,y=py;for(let i=0;i<rotation;i++)[x,y]=[-y,x];return [x,y]});
+ const minX=Math.min(...a.map(p=>p[0])),minY=Math.min(...a.map(p=>p[1]));
+ return a.map(([x,y])=>[x-minX,y-minY]);
+}
+const base=patterns.gosper.cells;
+const flipped=transform(base,2,false);
+patterns.twogun={id:'twogun',name:'Twin Guns',category:'Gun',cells:[...base,...flipped.map(([x,y])=>[x+1,y+25])]};
+const state={cells:new Set(),ages:new Map(),ghosts:new Map(),generation:0,births:0,deaths:0,running:true,speed:10,
+ scene:'garden',tool:'stamp',pattern:'glider',rotation:0,mirror:false,brush:1,theme:'gold',glow:.3,grid:.33,ageColor:true,ghost:true,preview:true,density:.29};
+let view={x:0,y:0,size:14},W=0,H=0,dpr=1,dirty=true;
+const pointers=new Map();let hovering=null,gesture=null,painting=false,lastPaint=null,spaceHeld=false,lastTick=performance.now(),acc=0;
+let toastTimeout=null;
+const key=(x,y)=>x+','+y;
+function unpack(k){const i=k.indexOf(',');return [+k.slice(0,i),+k.slice(i+1)]}
+function toast(message){const e=$('statusToast');e.textContent=message;e.classList.add('show');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>e.classList.remove('show'),2100)}
+function setAlive(x,y,on=true){x=Math.trunc(x);y=Math.trunc(y);const k=key(x,y);if(on){state.cells.add(k);if(!state.ages.has(k))state.ages.set(k,1);state.ghosts.delete(k)}else{state.cells.delete(k);state.ages.delete(k);state.ghosts.delete(k)}dirty=true}
+function stampCells(points,cx,cy){const tx=Math.round(cx),ty=Math.round(cy);for(const [x,y] of points)setAlive(tx+x,ty+y,true);updateStats();dirty=true}
+function patternBounds(points){let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;for(const [x,y] of points){minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y)}return {w:maxX-minX+1,h:maxY-minY+1}}
+function selectedCells(){return transform(patterns[state.pattern].cells,state.rotation,state.mirror)}
+function fillRandomBox(w=62,h=44,density=state.density){for(let y=-Math.floor(h/2);y<h/2;y++)for(let x=-Math.floor(w/2);x<w/2;x++)if(Math.random()<density)setAlive(x,y)}
+function clearWorld(){state.cells.clear();state.ages.clear();state.ghosts.clear();state.generation=0;state.births=0;state.deaths=0;updateStats();dirty=true}
+function loadScene(name){clearWorld();state.scene=name;view.x=0;view.y=0;state.running=true;
+ switch(name){
+  case 'garden':stampCells(patterns.pulsar.cells,-15,-8);stampCells(patterns.glider.cells,24,-19);stampCells(transform(patterns.glider.cells,2),-39,17);stampCells(patterns.beacon.cells,18,18);stampCells(patterns.acorn.cells,5,25);break;
+  case 'gun':stampCells(patterns.gosper.cells,-21,-5);view.size=Math.min(view.size,16);break;
+  case 'twogun':stampCells(patterns.twogun.cells,-20,-20);view.size=Math.min(view.size,12);break;
+  case 'fleet':stampCells(patterns.lwss.cells,-30,-18);stampCells(patterns.mwss.cells,-30,-3);stampCells(patterns.hwss.cells,-30,14);stampCells(patterns.glider.cells,15,-25);stampCells(transform(patterns.glider.cells,1),22,20);break;
+  case 'pulsars':stampCells(patterns.pulsar.cells,-28,-19);stampCells(patterns.pulsar.cells,16,-19);stampCells(patterns.penta.cells,-16,18);stampCells(patterns.beacon.cells,26,22);stampCells(patterns.toad.cells,8,24);break;
+  case 'soup':fillRandomBox(69,46);break;
+  case 'blank':state.running=false;break;
+ }
+ view.size=name==='twogun'?11:Math.min(16,Math.max(view.size,12));state.rotation=0;state.mirror=false;updateStampHint();updateButtons();updateStats();dirty=true;
+}
+function updateStats(){$('genStat').textContent=state.generation.toLocaleString();$('popStat').textContent=state.cells.size.toLocaleString();$('birthStat').textContent=state.births.toLocaleString();$('deathStat').textContent=state.deaths.toLocaleString();$('runStat').textContent=state.running?'RUNNING':'PAUSED';$('playBtn').textContent=state.running?'Ⅱ Pause':'▶ Resume'}
+function step(){if(!state.cells.size){state.running=false;updateStats();return}
+ const neighbors=new Map();for(const k of state.cells){const [x,y]=unpack(k);for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){if(i===0&&j===0)continue;const nk=key(x+i,y+j);neighbors.set(nk,(neighbors.get(nk)||0)+1)}}
+ const next=new Set(),newAges=new Map();let births=0;for(const [k,n] of neighbors){const alive=state.cells.has(k);if(n===3||(alive&&n===2)){next.add(k);newAges.set(k,alive?(state.ages.get(k)||1)+1:1);if(!alive)births++}}
+ const deaths=state.cells.size-(next.size-births);if(state.ghost){for(const k of state.cells){if(!next.has(k))state.ghosts.set(k,state.generation+9)}for(const [k,expire] of state.ghosts)if(expire<=state.generation||next.has(k))state.ghosts.delete(k)}else state.ghosts.clear();
+ state.cells=next;state.ages=newAges;state.births=births;state.deaths=deaths;state.generation++;
+ if(next.size>105000){state.running=false;toast('Large population safeguard: simulation paused')}if(!next.size)state.running=false;
+ updateStats();dirty=true;
+}
+function resize(){W=window.innerWidth;H=window.innerHeight;dpr=Math.min(2,window.devicePixelRatio||1);canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);canvas.style.width=W+'px';canvas.style.height=H+'px';ctx.setTransform(dpr,0,0,dpr,0,0);dirty=true}
+function worldAt(sx,sy){return {x:Math.floor(view.x+(sx-W/2)/view.size),y:Math.floor(view.y+(sy-H/2)/view.size)}}
+function screenAt(x,y){return {x:Math.round((x-view.x)*view.size+W/2),y:Math.round((y-view.y)*view.size+H/2)}}
+function zoomAt(factor,sx=W/2,sy=H/2){const wx=view.x+(sx-W/2)/view.size,wy=view.y+(sy-H/2)/view.size;view.size=Math.min(42,Math.max(3.8,view.size*factor));view.x=wx-(sx-W/2)/view.size;view.y=wy-(sy-H/2)/view.size;$('zoom').value=Math.max(5,Math.min(34,view.size));$('zoomOut').textContent=Math.round(view.size)+' px';dirty=true}
+function fitLife(){if(!state.cells.size){view.x=0;view.y=0;dirty=true;return}let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;for(const k of state.cells){const [x,y]=unpack(k);minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y)}view.x=(minX+maxX+1)/2;view.y=(minY+maxY+1)/2;view.size=Math.max(3.8,Math.min(30,Math.min(W*.70/(maxX-minX+10),H*.72/(maxY-minY+10))));$('zoom').value=view.size;$('zoomOut').textContent=view.size.toFixed(1)+' px';dirty=true}
+function drawGrid(p){if(state.grid<=0||view.size<5.8)return;const step=view.size,firstX=Math.floor(view.x-W/2/step),lastX=Math.ceil(view.x+W/2/step),firstY=Math.floor(view.y-H/2/step),lastY=Math.ceil(view.y+H/2/step);
+ for(let strong=0;strong<=1;strong++){
+ ctx.beginPath();for(let c=firstX;c<=lastX;c++){if((c%10===0?1:0)!==strong)continue;const px=Math.round((c-view.x)*step+W/2)+.5;ctx.moveTo(px,0);ctx.lineTo(px,H)}for(let r=firstY;r<=lastY;r++){if((r%10===0?1:0)!==strong)continue;const py=Math.round((r-view.y)*step+H/2)+.5;ctx.moveTo(0,py);ctx.lineTo(W,py)}
+ ctx.strokeStyle=strong?p.major:p.grid;ctx.lineWidth=strong?1.05:.55;ctx.globalAlpha=state.grid*(strong?.6:.21);ctx.stroke();
+ }
+ ctx.globalAlpha=1;
+}
+function drawCell(x,y,color,alpha=1,glow=false){const a=screenAt(x,y);const s=view.size;if(a.x+s<0||a.y+s<0||a.x>W||a.y>H)return;const pad=s>=10?Math.min(1.5,s*.085):.24;ctx.globalAlpha=alpha;ctx.fillStyle=color;
+ if(glow&&s>=10){ctx.shadowColor=palettes[state.theme].glow;ctx.shadowBlur=5+state.glow*16}
+ ctx.fillRect(a.x+pad,a.y+pad,Math.max(1,s-pad*2),Math.max(1,s-pad*2));ctx.shadowBlur=0;
+ if(s>=15&&alpha>.4){ctx.globalAlpha=alpha*.22;ctx.fillStyle='#ffffff';ctx.fillRect(a.x+pad+1,a.y+pad+1,Math.max(0,s-pad*2-2),Math.max(1,s*.09))}
+ ctx.globalAlpha=1;
+}
+function paintBoard(){const p=palettes[state.theme];ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;ctx.shadowBlur=0;ctx.fillStyle=p.bg;ctx.fillRect(0,0,W,H);
+ const vignette=ctx.createRadialGradient(W*.5,H*.40,Math.min(W,H)*.03,W*.5,H*.48,Math.max(W,H)*.85);vignette.addColorStop(0,'rgba(150,166,190,.048)');vignette.addColorStop(1,'rgba(0,0,0,.24)');ctx.fillStyle=vignette;ctx.fillRect(0,0,W,H);
+ drawGrid(p);
+ if(state.ghost)for(const [k,expiry] of state.ghosts){const [x,y]=unpack(k);drawCell(x,y,p.stops[3],Math.max(0,.17*(expiry-state.generation)/9),false)}
+ const glow=state.glow>.05&&state.cells.size<3500&&view.size>=9;
+ for(const k of state.cells){const [x,y]=unpack(k);const age=state.ages.get(k)||1;const tier=state.ageColor?Math.min(4,Math.floor((age-1)/5)):1;drawCell(x,y,p.stops[tier],1,glow)}
+ if(state.preview&&hovering&&!painting&&(state.tool==='stamp'||state.tool==='draw')){const point=worldAt(hovering.x,hovering.y);ctx.globalAlpha=.4;
+ if(state.tool==='stamp'){const pts=selectedCells(),b=patternBounds(pts),ox=point.x-Math.floor(b.w/2),oy=point.y-Math.floor(b.h/2);for(const [x,y] of pts)drawCell(ox+x,oy+y,p.stops[0],.42)}else drawCell(point.x,point.y,p.stops[0],.52);
+ ctx.globalAlpha=1}
+}
+function brushAt(wx,wy,erase=false){const r=Math.max(0,state.brush-1);for(let y=-r;y<=r;y++)for(let x=-r;x<=r;x++){if(x*x+y*y>r*r+.5)continue;setAlive(wx+x,wy+y,!erase)}updateStats()}
+function paintAt(sx,sy){const w=worldAt(sx,sy);if(state.tool==='stamp'){const pts=selectedCells(),b=patternBounds(pts);stampCells(pts,w.x-Math.floor(b.w/2),w.y-Math.floor(b.h/2));return}if(state.tool==='draw'||state.tool==='erase'){
+ if(lastPaint){const dx=w.x-lastPaint.x,dy=w.y-lastPaint.y,len=Math.max(Math.abs(dx),Math.abs(dy),1);for(let i=0;i<=len;i++)brushAt(Math.round(lastPaint.x+dx*i/len),Math.round(lastPaint.y+dy*i/len),state.tool==='erase')}
+ else brushAt(w.x,w.y,state.tool==='erase');lastPaint=w;
+ }}
+function pointerDown(e){canvas.setPointerCapture(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});hovering={x:e.clientX,y:e.clientY};
+ if(pointers.size>1){gesture={x:(Array.from(pointers.values())[0].x+Array.from(pointers.values())[1].x)/2,y:(Array.from(pointers.values())[0].y+Array.from(pointers.values())[1].y)/2,d:Math.hypot(Array.from(pointers.values())[0].x-Array.from(pointers.values())[1].x,Array.from(pointers.values())[0].y-Array.from(pointers.values())[1].y)};painting=false;return}
+ painting=true;lastPaint=null;
+ gesture={pan:e.button===2||state.tool==='pan'||spaceHeld,x:e.clientX,y:e.clientY};
+ if(!gesture.pan){if(state.running){state.running=false;updateStats()}paintAt(e.clientX,e.clientY)}dirty=true;
+}
+function pointerMove(e){hovering={x:e.clientX,y:e.clientY};const old=pointers.get(e.pointerId);if(old)pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(pointers.size>=2){const pts=Array.from(pointers.values());const middle={x:(pts[0].x+pts[1].x)/2,y:(pts[0].y+pts[1].y)/2,d:Math.max(1,Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y))};if(gesture&&gesture.d){zoomAt(middle.d/gesture.d,gesture.x,gesture.y);view.x-=(middle.x-gesture.x)/view.size;view.y-=(middle.y-gesture.y)/view.size}gesture=middle;dirty=true;return}
+ if(painting&&old){if(gesture?.pan){view.x-=(e.clientX-old.x)/view.size;view.y-=(e.clientY-old.y)/view.size}else if(state.tool!=='stamp')paintAt(e.clientX,e.clientY)}dirty=true;
+}
+function pointerUp(e){pointers.delete(e.pointerId);if(!pointers.size){painting=false;lastPaint=null;gesture=null}else gesture=null;dirty=true}
+canvas.addEventListener('pointerdown',pointerDown);canvas.addEventListener('pointermove',pointerMove);canvas.addEventListener('pointerup',pointerUp);canvas.addEventListener('pointercancel',pointerUp);canvas.addEventListener('pointerleave',()=>{if(!painting){hovering=null;dirty=true}});canvas.addEventListener('contextmenu',e=>e.preventDefault());canvas.addEventListener('wheel',e=>{e.preventDefault();zoomAt(Math.exp(-e.deltaY*.0012),e.clientX,e.clientY)},{passive:false});
+function setTool(tool){state.tool=tool;for(const b of document.querySelectorAll('[data-tool]'))b.classList.toggle('active',b.dataset.tool===tool);updateStampHint();dirty=true}
+function updateStampHint(){$('stampHint').textContent=state.tool==='stamp'?'Selected: '+patterns[state.pattern].name+' · Rotate / mirror, then tap the grid.':state.tool==='pan'?'Pan mode · drag to move across the infinite universe.':'Edit mode: '+state.tool+' · drag across the grid.'}
+function updateButtons(){document.querySelectorAll('[data-scene]').forEach(e=>e.classList.toggle('active',e.dataset.scene===state.scene));document.querySelectorAll('[data-pattern]').forEach(e=>e.classList.toggle('active',e.dataset.pattern===state.pattern));document.querySelectorAll('[data-tool]').forEach(e=>e.classList.toggle('active',e.dataset.tool===state.tool));updateStats()}
+const patHolder=$('patterns');rawPatterns.forEach(p=>{const b=document.createElement('button');b.className='pattern';b.dataset.pattern=p[0];b.innerHTML=p[1]+'<small>'+p[2]+'</small>';b.addEventListener('click',()=>{state.pattern=p[0];setTool('stamp');updateButtons();toast('Stamp armed: '+p[1]);dirty=true});patHolder.appendChild(b)});
+document.querySelectorAll('[data-tool]').forEach(e=>e.addEventListener('click',()=>setTool(e.dataset.tool)));
+document.querySelectorAll('[data-scene]').forEach(e=>e.addEventListener('click',()=>{loadScene(e.dataset.scene);toast('Loaded: '+e.textContent)}));
+$('playBtn').addEventListener('click',()=>{state.running=!state.running;lastTick=performance.now();acc=0;updateStats()});$('stepBtn').addEventListener('click',()=>{state.running=false;step();updateStats()});
+$('rotateBtn').addEventListener('click',()=>{state.rotation=(state.rotation+1)%4;dirty=true;toast('Stamp rotated 90°')});$('mirrorBtn').addEventListener('click',()=>{state.mirror=!state.mirror;dirty=true;toast(state.mirror?'Stamp mirrored':'Mirror reset')});
+$('clearBtn').addEventListener('click',()=>{clearWorld();state.running=false;updateStats();toast('Empty universe')});
+$('randomizeBtn').addEventListener('click',()=>{loadScene('soup');toast('New random soup')});$('fitBtn').addEventListener('click',()=>fitLife());$('centerBtn').addEventListener('click',()=>{view.x=0;view.y=0;dirty=true});
+function bindSlider(id,output,callback,fmt){const i=$(id);i.addEventListener('input',()=>{callback(+i.value);$(output).textContent=fmt(+i.value);dirty=true})}
+bindSlider('speed','speedOut',n=>state.speed=n,n=>n);
+bindSlider('zoom','zoomOut',n=>zoomAt(n/view.size),n=>n+' px');
+bindSlider('brush','brushOut',n=>state.brush=n,n=>n+(n===1?' cell':' cells'));
+bindSlider('density','densityOut',n=>state.density=n/100,n=>n+'%');
+bindSlider('glow','glowOut',n=>state.glow=n/100,n=>n+'%');
+bindSlider('gridOpacity','gridOut',n=>state.grid=n/100,n=>n+'%');
+$('palette').addEventListener('change',e=>{state.theme=e.target.value;dirty=true});$('ageColor').addEventListener('change',e=>{state.ageColor=e.target.checked;dirty=true});$('ghost').addEventListener('change',e=>{state.ghost=e.target.checked;state.ghosts.clear();dirty=true});$('preview').addEventListener('change',e=>{state.preview=e.target.checked;dirty=true});
+function toggleImmersive(on){document.body.classList.toggle('immersive',on);toast(on?'Immersive on · press Esc or use Exit button':'Immersive off')}
+$('immersiveBtn').addEventListener('click',()=>toggleImmersive(true));$('immersiveExit').addEventListener('click',()=>toggleImmersive(false));
+$('mobileControls').addEventListener('click',()=>{const p=$('panel'),closed=p.classList.toggle('collapsed');$('mobileControls').textContent=closed?'⚙ Controls':'✕ Close Panel'});
+function exportRLE(){if(!state.cells.size){toast('No living cells to export');return}let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;for(const k of state.cells){const [x,y]=unpack(k);minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y)}const width=maxX-minX+1,height=maxY-minY+1;if(width*height>700000){toast('Pattern too wide for a compact RLE export');return}
+ let body='';for(let y=minY;y<=maxY;y++){let line='',run=0,prev='';function flush(){if(run)line+=(run>1?run:'')+prev;run=0}let lastX=-1;for(let x=minX;x<=maxX;x++)if(state.cells.has(key(x,y)))lastX=x;for(let x=minX;x<=minX+lastX-minX;x++){const c=state.cells.has(key(x,y))?'o':'b';if(c!==prev){flush();prev=c}run++}flush();body+=line;if(y!==maxY)body+='$'}const rle='#N Fun Lab Game of Life\n#C Conway B3/S23\nx = '+width+', y = '+height+', rule = B3/S23\n'+body+'!\n';const blob=new Blob([rle],{type:'text/plain'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='funlab-life-pattern.rle';a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);toast('RLE pattern saved')}
+$('exportBtn').addEventListener('click',exportRLE);
+window.addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(k==='escape'){toggleImmersive(false);if(window.innerWidth<=800){$('panel').classList.add('collapsed');$('mobileControls').textContent='⚙ Controls'}return}const t=e.target;if(t instanceof HTMLElement&&['INPUT','SELECT','TEXTAREA','BUTTON'].includes(t.tagName))return;if(k===' '){e.preventDefault();if(!e.repeat){state.running=!state.running;updateStats()}spaceHeld=true}else if(k==='n'){state.running=false;step();updateStats()}else if(k==='i')toggleImmersive(!document.body.classList.contains('immersive'));else if(k==='r'){state.rotation=(state.rotation+1)%4;dirty=true}else if(k==='g'){$('gridOpacity').value=state.grid>0?0:33;state.grid=state.grid>0?0:.33;$('gridOut').textContent=Math.round(state.grid*100)+'%';dirty=true}else if(k==='+'||k==='=')zoomAt(1.13);else if(k==='-')zoomAt(.87)});
+window.addEventListener('keyup',e=>{if(e.key===' ')spaceHeld=false});window.addEventListener('blur',()=>spaceHeld=false);
+let lastFrame=performance.now();function frame(now){requestAnimationFrame(frame);const dt=Math.min(.1,(now-lastFrame)/1000);lastFrame=now;if(state.running){acc+=dt;const interval=1/state.speed;let loops=0;while(acc>=interval&&loops<4){acc-=interval;step();loops++}if(loops===4)acc=0}if(dirty){paintBoard();dirty=false}};
+window.addEventListener('resize',resize);resize();
+if(window.matchMedia('(max-width:800px)').matches)$('panel').classList.add('collapsed');
+view.size=window.innerWidth<700?10:14;$('zoom').value=view.size;$('zoomOut').textContent=view.size+' px';
+loadScene('garden');setTool('stamp');updateButtons();requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
