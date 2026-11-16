@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Traffic Chaos Lab | Muntasir's Fun Lab</title>
+<style>
+:root{
+  --bg:#071225; --bg2:#0c1830; --text:#eef3ff; --muted:#b8c4e0;
+  --accent:#9cc0ff; --panel:rgba(255,255,255,.07); --border:rgba(255,255,255,.12);
+  --red:#ff9b98; --blue:#83cfff; --shadow:0 18px 50px rgba(0,0,0,.28)
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif;color:var(--text);overflow:hidden;
+  background:radial-gradient(circle at top left,rgba(112,160,255,.16),transparent 28%),
+    radial-gradient(circle at bottom right,rgba(196,220,255,.1),transparent 25%),
+    linear-gradient(135deg,var(--bg),var(--bg2))}
+body::before,body::after{content:"";position:fixed;width:300px;height:300px;border-radius:50%;filter:blur(110px);opacity:.3;z-index:0;pointer-events:none}
+body::before{top:-90px;left:-70px;background:#5f8dff}body::after{right:-80px;bottom:-110px;background:#9dc0ff}
+#simCanvas{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:1;cursor:grab;touch-action:none}
+#simCanvas:active{cursor:grabbing}
+.page{position:relative;z-index:5;min-height:100vh;display:grid;grid-template-columns:1fr 360px;gap:24px;padding:28px;pointer-events:none;transition:opacity .25s}
+.hero{align-self:center;max-width:750px;padding:24px;pointer-events:none;position:relative}
+.hero::before{content:"";position:absolute;z-index:-1;inset:-15px -25px -15px -10px;background:linear-gradient(90deg,rgba(7,18,37,.49),rgba(7,18,37,.22) 72%,transparent);pointer-events:none}
+.eyebrow{display:inline-block;padding:8px 14px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid var(--border);
+ color:var(--accent);margin-bottom:16px;backdrop-filter:blur(10px);font-size:.95rem;font-weight:600}
+.hero h1{font-size:clamp(2.7rem,5.6vw,5.2rem);line-height:1.02;letter-spacing:-.04em;max-width:9ch;margin:0 0 14px}
+.hero p{color:var(--muted);line-height:1.7;max-width:53ch;font-size:1.05rem;margin:0}
+.hero .equation{font-size:.93rem;font-family:ui-monospace,Consolas,monospace;line-height:1.75;color:rgba(220,235,255,.8);margin-top:15px}
+.hero-links{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;pointer-events:auto}
+.back-btn{display:inline-block;padding:12px 16px;text-decoration:none;color:var(--text);border:1px solid rgba(255,255,255,.16);
+ border-radius:14px;background:rgba(255,255,255,.06);backdrop-filter:blur(10px);font-size:.93rem;font-weight:600}
+.back-btn:hover{background:rgba(255,255,255,.12)}
+#panel{align-self:center;justify-self:end;width:100%;max-width:360px;max-height:calc(100vh - 56px);overflow-y:auto;
+ padding:20px;border-radius:24px;background:var(--panel);border:1px solid var(--border);backdrop-filter:blur(16px);box-shadow:var(--shadow);
+ position:relative;z-index:10;pointer-events:auto;scrollbar-width:thin;scrollbar-color:rgba(156,192,255,.32) transparent}
+#panel h2{font-size:1.45rem;margin:0 0 8px}
+.panel-sub{font-size:.9rem;color:var(--muted);line-height:1.55;margin:0 0 14px}
+.section-label{font-size:.68rem;letter-spacing:.13em;text-transform:uppercase;color:rgba(156,192,255,.65);
+ margin:14px 0 9px;display:flex;align-items:center;gap:9px}
+.section-label::after{content:"";height:1px;flex:1;background:rgba(156,192,255,.13)}
+.preset-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:11px}
+button{font-family:inherit;cursor:pointer;transition:background .18s,border-color .18s}
+.preset-btn{padding:10px 7px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);
+ color:var(--text);font-size:.78rem;font-weight:700}
+.preset-btn.active{background:linear-gradient(135deg,#8fb4ff,#d6e5ff);color:#071225;border-color:transparent}
+.stats{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:11px 12px;
+ font-family:ui-monospace,Consolas,monospace;font-size:.81rem;line-height:1.7;color:var(--muted)}
+.stats strong{color:var(--accent)}
+#trendCanvas{display:block;width:100%;height:74px;border:1px solid rgba(255,255,255,.07);border-radius:10px;
+ background:rgba(4,14,31,.3);margin:11px 0 2px}
+.ctrl{margin-bottom:12px;display:flex;flex-direction:column;gap:7px}
+.ctrl label{display:flex;align-items:center;justify-content:space-between;font-size:.88rem;font-weight:700}
+.val{color:var(--accent);font-variant-numeric:tabular-nums}
+input[type="range"]{appearance:none;-webkit-appearance:none;width:100%;height:4px;border-radius:999px;
+ background:rgba(255,255,255,.16);outline:none;cursor:pointer}
+input[type="range"]::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:#9cc0ff;
+ box-shadow:0 0 6px rgba(156,192,255,.35)}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;border-radius:12px;padding:9px 12px;
+ background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.065);margin-bottom:8px;font-size:.85rem;color:var(--muted)}
+input[type="checkbox"]{width:16px;height:16px;accent-color:#9cc0ff;cursor:pointer}
+.buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.control-button{padding:11px 8px;border:1px solid rgba(255,255,255,.15);border-radius:12px;background:rgba(255,255,255,.065);
+ color:var(--text);font-size:.77rem;font-weight:700}
+.control-button:hover{background:rgba(255,255,255,.12)}
+.control-button.primary{background:linear-gradient(135deg,#8fb4ff,#d6e5ff);color:#071225;border-color:transparent}
+.wide{grid-column:span 2}
+.panel-note{font-size:.79rem;color:var(--muted);line-height:1.55;margin:14px 0 0}
+#exitImmersive{display:none;position:fixed;z-index:25;right:24px;top:22px;border:1px solid rgba(255,255,255,.22);
+ border-radius:12px;background:rgba(14,28,48,.75);backdrop-filter:blur(10px);color:#eef3ff;padding:11px 15px;font-weight:700;cursor:pointer}
+.immersive .page{opacity:0;visibility:hidden;pointer-events:none}
+.immersive #exitImmersive{display:block}
+@media(max-width:980px){html,body{overflow:auto}.page{grid-template-columns:1fr;padding:18px;min-height:100vh}
+ .hero{padding:12px 5px;align-self:start}#panel{max-width:none;width:100%;justify-self:stretch;max-height:none}
+ .hero h1{font-size:3.15rem}.page{gap:20px}}
+</style>
+</head>
+<body>
+<canvas id="simCanvas" aria-label="Traffic flow cellular-automaton visualization"></canvas>
+<div class="page">
+ <section class="hero">
+  <div class="eyebrow">Fun Zone · Emergent Systems</div>
+  <h1>Traffic Chaos Lab.</h1>
+  <p>Thousands of cars, two directions, and one simple rule: move only when the next space is empty. Watch a flowing city organize into diagonal streams—or lock itself into a silent traffic jam.</p>
+  <div class="equation">Red cars: east → &nbsp;·&nbsp; Blue cars: north ↑<br>One move per phase · no overtaking · periodic boundaries</div>
+  <div class="hero-links">
+   <a class="back-btn" href="../../index.html">← Back to main site</a>
+   <a class="back-btn" href="../lorenz/indexclaude.html">→ Lorenz Playground</a>
+  </div>
+ </section>
+ <aside id="panel">
+  <h2>Traffic Controls</h2>
+  <p class="panel-sub">Inspired by the Biham–Middleton–Levine model. Add just a few cars and see whether the whole city keeps moving.</p>
+  <div class="section-label">City Conditions</div>
+  <div class="preset-grid">
+   <button class="preset-btn" data-preset="free">Open Streets</button>
+   <button class="preset-btn active" data-preset="stripes">Flowing City</button>
+   <button class="preset-btn" data-preset="edge">Near Gridlock</button>
+   <button class="preset-btn" data-preset="packed">Packed City</button>
+  </div>
+  <div class="stats">
+   cars <strong id="carsStat">1,555</strong> · density <strong id="densityStat">30.0%</strong><br>
+   moving <strong id="movingStat">—</strong> · tick <strong id="ticksStat">0</strong><br>
+   state <strong id="stateStat">Starting simulation</strong>
+  </div>
+  <canvas id="trendCanvas" width="320" height="74" aria-label="History of fraction of moving cars"></canvas>
+  <div class="section-label">Simulation</div>
+  <div class="ctrl"><label>City Size <span class="val" id="sizeVal">72 × 72</span></label><input id="size" type="range" min="40" max="104" step="4" value="72"></div>
+  <div class="ctrl"><label>Traffic Density <span class="val" id="densityVal">30%</span></label><input id="density" type="range" min="5" max="60" step="1" value="30"></div>
+  <div class="ctrl"><label>Eastbound Cars <span class="val" id="eastVal">50%</span></label><input id="eastShare" type="range" min="10" max="90" step="5" value="50"></div>
+  <div class="ctrl"><label>Traffic Speed <span class="val" id="speedVal">7 ticks/s</span></label><input id="speed" type="range" min="1" max="22" step="1" value="7"></div>
+  <div class="section-label">Display</div>
+  <div class="ctrl"><label>Car Size <span class="val" id="carSizeVal">0.72</span></label><input id="carSize" type="range" min="0.4" max=".98" step=".02" value=".72"></div>
+  <div class="ctrl"><label>View Zoom <span class="val" id="zoomVal">1.00×</span></label><input id="zoom" type="range" min=".65" max="1.6" step=".05" value="1"></div>
+  <label class="toggle-row"><span>Show City Grid</span><input id="showGrid" type="checkbox"></label>
+  <label class="toggle-row"><span>Highlight Moving Cars</span><input id="highlight" type="checkbox" checked></label>
+  <label class="toggle-row"><span>Wraparound Boundaries</span><input id="wrap" type="checkbox" checked></label>
+  <div class="section-label">Experiment</div>
+  <div class="buttons">
+   <button class="control-button primary wide" id="playBtn">⏸ Pause Traffic</button>
+   <button class="control-button" id="addBtn">+52 Cars</button>
+   <button class="control-button" id="removeBtn">−52 Cars</button>
+   <button class="control-button" id="stepBtn">→ Single Tick</button>
+   <button class="control-button" id="newCityBtn">↺ New City</button>
+   <button class="control-button wide" id="immersiveBtn">⛶ Immersive View</button>
+  </div>
+  <p class="panel-note">Drag to reposition · Scroll to zoom · Click an empty cell to add a car · Shift-click a car to remove it. Density changes create a new randomized city. There is no universal fixed congestion threshold.</p>
+ </aside>
+</div>
+<button id="exitImmersive">✕ Exit Immersive · Esc</button>
+<script>
+(() => {
+  'use strict';
+  const canvas=document.getElementById('simCanvas');
+  const ctx=canvas.getContext('2d',{alpha:true});
+  const trend=document.getElementById('trendCanvas');
+  const tc=trend.getContext('2d');
+  const $=id=>document.getElementById(id);
+  const P={size:72,density:30,eastShare:50,speed:7,carSize:.72,zoom:1,showGrid:false,highlight:true,wrap:true};
+  const PRESETS={free:{density:19,size:72},stripes:{density:30,size:72},edge:{density:38,size:72},packed:{density:48,size:72}};
+  const state={cars:[],grid:null,phase:'east',progress:0,ticks:0,moving:0,lastMoving:0,movingHistory:[],stoppedTicks:0,
+    running:true,seed:4716,preset:'stripes',W:0,H:0,scale:1,panX:0,panY:0,layout:null,dragging:false,dragStart:null};
+  let rng=()=>Math.random();
+  function makeRng(seed){let x=seed>>>0;return ()=>{x+=0x6D2B79F5;let t=x;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296};}
+  function carCount(){return state.cars.length;}
+  function syncControls(){
+    for(const k of ['size','density','eastShare','speed','carSize','zoom']) $(k).value=P[k];
+    for(const k of ['showGrid','highlight','wrap']) $(k).checked=P[k];
+    $('sizeVal').textContent=`${P.size} × ${P.size}`;
+    $('densityVal').textContent=`${P.density}%`;
+    $('eastVal').textContent=`${P.eastShare}%`;
+    $('speedVal').textContent=`${P.speed} ticks/s`;
+    $('carSizeVal').textContent=P.carSize.toFixed(2);
+    $('zoomVal').textContent=P.zoom.toFixed(2)+'×';
+  }
+  function updateDensityDisplay(){
+    const actual=100*carCount()/(P.size*P.size);
+    $('carsStat').textContent=carCount().toLocaleString();
+    $('densityStat').textContent=actual.toFixed(1)+'%';
+  }
+  function updateStats(){
+    $('ticksStat').textContent=state.ticks.toLocaleString();
+    $('movingStat').textContent=state.ticks?`${(state.lastMoving*100).toFixed(1)}%`:'—';
+    $('stateStat').textContent=state.ticks===0?'Warming up':state.stoppedTicks>=3?'FROZEN / GRIDLOCK':
+      state.lastMoving<.15?'Nearly jammed':state.lastMoving<.62?'Congested':'Flowing';
+    $('stateStat').style.color=state.stoppedTicks>=3?'#ff9b98':state.lastMoving<.62?'#ffd49a':'#9ee9ca';
+    updateDensityDisplay();
+    drawTrend();
+  }
+  function drawTrend(){
+    const width=trend.clientWidth||320,height=74,dpr=Math.min(window.devicePixelRatio||1,2);
+    if(trend.width!==Math.round(width*dpr)||trend.height!==Math.round(height*dpr)){
+      trend.width=Math.round(width*dpr);trend.height=Math.round(height*dpr);
+    }
+    tc.setTransform(dpr,0,0,dpr,0,0);tc.clearRect(0,0,width,height);
+    tc.strokeStyle='rgba(255,255,255,.08)';tc.lineWidth=1;
+    for(let i=1;i<=3;i++){tc.beginPath();tc.moveTo(4,height*i/4);tc.lineTo(width-4,height*i/4);tc.stroke();}
+    const arr=state.movingHistory;
+    if(arr.length>1){tc.beginPath();arr.forEach((p,i)=>{const x=4+i/(Math.max(1,arr.length-1))*(width-8), y=height-5-p*(height-10);i===0?tc.moveTo(x,y):tc.lineTo(x,y)});
+      tc.strokeStyle=state.stoppedTicks>=3?'#ff9b98':'#83cfff';tc.lineWidth=1.9;tc.stroke();}
+    tc.font='10px Arial';tc.fillStyle='rgba(184,196,224,.72)';tc.fillText('MOVING % · LAST 120 TICKS',9,13);
+    tc.textAlign='right';tc.fillText('100%',width-10,13);tc.fillText('0%',width-10,height-7);tc.textAlign='left';
+  }
+  function rebuildGrid(){
+    const n=P.size; state.grid=new Int32Array(n*n);
+    state.cars.forEach((c,i)=>{c.id=i+1;state.grid[c.y*n+c.x]=c.id;});
+  }
+  function randomCity(increment=false){
+    if(increment)state.seed=(state.seed+9973)>>>0;
+    rng=makeRng(state.seed);const n=P.size; const max=n*n;const amount=Math.round(max*P.density/100);
+    const positions=Array.from({length:max},(_,i)=>i);
+    for(let i=0;i<amount;i++){const j=i+Math.floor(rng()*(max-i));[positions[i],positions[j]]=[positions[j],positions[i]];}
+    state.cars=[];
+    for(let i=0;i<amount;i++){
+      const p=positions[i],x=p%n,y=Math.floor(p/n),type=rng()<P.eastShare/100?1:2;
+      state.cars.push({id:i+1,x,y,type,fromX:x,fromY:y,moving:false});
+    }
+    rebuildGrid();state.ticks=0;state.moving=0;state.lastMoving=0;state.stoppedTicks=0;state.movingHistory=[];state.progress=0;
+    startPhase('east');updateStats();
+  }
+  function startPhase(phase){
+    state.phase=phase;
+    const n=P.size; const old=state.grid; const moves=[];
+    for(const c of state.cars){
+      c.moving=false;c.fromX=c.x;c.fromY=c.y;
+      if((phase==='east'&&c.type!==1)||(phase==='north'&&c.type!==2))continue;
+      let nx=c.x,ny=c.y;
+      if(c.type===1){nx=c.x+1;if(nx>=n){if(!P.wrap)continue;nx=0}}
+      else{ny=c.y-1;if(ny<0){if(!P.wrap)continue;ny=n-1}}
+      if(old[ny*n+nx]===0)moves.push([c,nx,ny]);
+    }
+    // These target cells were empty in the same phase snapshot: genuinely simultaneous movement.
+    for(const [c] of moves)old[c.y*n+c.x]=0;
+    for(const [c,nx,ny] of moves){c.x=nx;c.y=ny;c.moving=true;old[ny*n+nx]=c.id;}
+    state.moving+=moves.length;
+  }
+  function finishPhase(){
+    if(state.phase==='east')startPhase('north');
+    else{
+      state.ticks++;
+      state.lastMoving=state.moving/Math.max(1,carCount());
+      if(state.moving===0)state.stoppedTicks++;else state.stoppedTicks=0;
+      state.movingHistory.push(state.lastMoving);
+      if(state.movingHistory.length>120)state.movingHistory.shift();
+      state.moving=0;updateStats();startPhase('east');
+    }
+  }
+  function fullTick(){
+    // Complete the currently underway phase then continue until a full tick is complete.
+    const initial=state.ticks;let safety=0;
+    while(state.ticks===initial&&safety++<3)finishPhase();
+    state.progress=0;
+  }
+  function editCars(num){
+    if(!num)return;
+    if(num>0){
+      const free=[];for(let i=0;i<state.grid.length;i++)if(state.grid[i]===0)free.push(i);
+      for(let k=0;k<Math.min(num,free.length);k++){
+        const pick=k+Math.floor(Math.random()*(free.length-k));[free[k],free[pick]]=[free[pick],free[k]];
+        const p=free[k],x=p%P.size,y=Math.floor(p/P.size);
+        const id=state.cars.length+1;
+        state.cars.push({id,x,y,type:Math.random()<P.eastShare/100?1:2,fromX:x,fromY:y,moving:false});state.grid[p]=id;
+      }
+    }else{
+      const k=Math.min(-num,state.cars.length);
+      for(let i=0;i<k;i++){const j=Math.floor(Math.random()*state.cars.length);state.cars[j]=state.cars[state.cars.length-1];state.cars.pop();}
+      rebuildGrid();
+    }
+    state.progress=0;state.moving=0;state.stoppedTicks=0;startPhase('east');updateDensityDisplay();
+  }
+  function resize(){
+    const dpr=Math.min(window.devicePixelRatio||1,2);
+    state.W=window.innerWidth;state.H=window.innerHeight;
+    canvas.width=Math.round(state.W*dpr);canvas.height=Math.round(state.H*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    drawTrend();
+  }
+  function sceneLayout(){
+    const w=state.W,h=state.H;const immersive=document.body.classList.contains('immersive');
+    const base=Math.min(h*.74,w*(w<1000?.83:.46),770);
+    const size=base*P.zoom;
+    const cx=(immersive||w<1000?w*.5:w*.565)+state.panX;
+    const cy=h*.5+state.panY;
+    return {x:cx-size/2,y:cy-size/2,size,cell:size/P.size,cx,cy};
+  }
+  function drawCar(c,l,alpha=1){
+    const n=P.size;let x=c.x,y=c.y;
+    const isNow=c.moving && ((state.phase==='east'&&c.type===1)||(state.phase==='north'&&c.type===2));
+    if(isNow){
+      if(c.type===1){x=c.fromX+state.progress;if(c.fromX===n-1&&c.x===0){drawCell(x-n,y,c,l,alpha)}}
+      else{y=c.fromY-state.progress;if(c.fromY===0&&c.y===n-1){drawCell(x,y+n,c,l,alpha)}}
+    }
+    drawCell(x,y,c,l,alpha,isNow);
+  }
+  function drawCell(x,y,c,l,alpha=1,moving=false){
+    const sz=l.cell*P.carSize; const margin=(l.cell-sz)/2;
+    const px=l.x+x*l.cell+margin,py=l.y+y*l.cell+margin;
+    ctx.globalAlpha=alpha;
+    ctx.fillStyle=c.type===1?'#ff9e99':'#87d0ff';
+    if(P.highlight&&moving){ctx.fillStyle=c.type===1?'#ffd0c5':'#c4edff';}
+    const s=Math.max(.7,sz);
+    ctx.fillRect(px,py,s,s);
+    if(moving&&P.highlight&&l.cell>=6){
+      ctx.fillStyle=c.type===1?'rgba(255,130,114,.18)':'rgba(120,207,255,.20)';
+      if(c.type===1)ctx.fillRect(px-s*.6,py,s*.65,s);
+      else ctx.fillRect(px,py,s,s*.6);
+    }
+  }
+  function render(){
+    const w=state.W,h=state.H;
+    ctx.clearRect(0,0,w,h);
+    const l=sceneLayout();state.layout=l;
+    const x=l.x,y=l.y,s=l.size,cell=l.cell;
+    ctx.fillStyle='rgba(2,11,24,.52)';ctx.fillRect(x-9,y-9,s+18,s+18);
+    ctx.strokeStyle='rgba(150,198,252,.20)';ctx.lineWidth=1;ctx.strokeRect(x-.5,y-.5,s+1,s+1);
+    ctx.save();ctx.beginPath();ctx.rect(x,y,s,s);ctx.clip();
+    if(P.showGrid&&cell>=4){ctx.strokeStyle='rgba(140,172,215,.09)';ctx.lineWidth=.65;ctx.beginPath();
+      for(let i=0;i<=P.size;i++){const xx=x+i*cell,yy=y+i*cell;ctx.moveTo(xx,y);ctx.lineTo(xx,y+s);ctx.moveTo(x,yy);ctx.lineTo(x+s,yy)}ctx.stroke();}
+    for(const c of state.cars)drawCar(c,l);
+    ctx.restore();ctx.globalAlpha=1;
+    ctx.font='11px ui-monospace,Consolas,monospace';ctx.textAlign='left';ctx.fillStyle='rgba(184,196,224,.68)';
+    ctx.fillText('EAST →',x+2,y-18);ctx.fillStyle='#ff9b98';ctx.fillRect(x+49,y-26,7,7);
+    ctx.fillStyle='rgba(184,196,224,.68)';ctx.fillText('NORTH ↑',x+68,y-18);ctx.fillStyle='#83cfff';ctx.fillRect(x+126,y-26,7,7);
+    ctx.textAlign='right';ctx.fillStyle='rgba(184,196,224,.60)';
+    ctx.fillText(`TICK ${state.ticks}  ·  ${P.wrap?'WRAP ON':'EDGES BLOCKED'}`,x+s,y+s+22);
+    ctx.textAlign='left';
+  }
+  let previous=0;
+  function animate(now){
+    requestAnimationFrame(animate);
+    if(!previous)previous=now;
+    const delta=Math.min((now-previous)/1000,.08);previous=now;
+    if(state.running){
+      state.progress+=delta*P.speed*2;
+      let guard=0;while(state.progress>=1&&guard++<12){state.progress-=1;finishPhase();}
+    }
+    render();
+  }
+  function setPreset(k){
+    state.preset=k;Object.assign(P,PRESETS[k]);
+    document.querySelectorAll('[data-preset]').forEach(b=>b.classList.toggle('active',b.dataset.preset===k));
+    syncControls();randomCity(true);
+  }
+  function unsetPreset(){state.preset=null;document.querySelectorAll('[data-preset]').forEach(b=>b.classList.remove('active'));}
+  function setImmersive(v){document.body.classList.toggle('immersive',v);$('immersiveBtn').textContent=v?'✕ Exit Immersive':'⛶ Immersive View';}
+  document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>setPreset(b.dataset.preset)));
+  for(const k of ['size','density','eastShare']){
+    // Keep the currently running city intact while the slider is being dragged.
+    $(k).addEventListener('input',e=>{
+      const v=+e.target.value;
+      const label=k==='size'?'sizeVal':k==='density'?'densityVal':'eastVal';
+      $(label).textContent=k==='size'?`${v} × ${v}`:v+'%';
+    });
+    $(k).addEventListener('change',e=>{
+      P[k]=+e.target.value;unsetPreset();randomCity(true);syncControls();
+    });
+  }
+  for(const k of ['speed','carSize','zoom']){
+    $(k).addEventListener('input',e=>{P[k]=+e.target.value;syncControls();});
+  }
+  for(const k of ['showGrid','highlight','wrap']){
+    $(k).addEventListener('change',e=>{
+      P[k]=e.target.checked;
+      if(k==='wrap'){state.moving=0;state.progress=0;startPhase('east');}
+    });
+  }
+  $('playBtn').addEventListener('click',()=>{state.running=!state.running;$('playBtn').textContent=state.running?'⏸ Pause Traffic':'▶ Resume Traffic';});
+  $('stepBtn').addEventListener('click',()=>{state.running=false;$('playBtn').textContent='▶ Resume Traffic';fullTick();});
+  $('addBtn').addEventListener('click',()=>{unsetPreset();editCars(52);});
+  $('removeBtn').addEventListener('click',()=>{unsetPreset();editCars(-52);});
+  $('newCityBtn').addEventListener('click',()=>randomCity(true));
+  $('immersiveBtn').addEventListener('click',()=>setImmersive(!document.body.classList.contains('immersive')));
+  $('exitImmersive').addEventListener('click',()=>setImmersive(false));
+  window.addEventListener('keydown',e=>{
+    if(e.key==='Escape')setImmersive(false);
+    if((e.key==='i'||e.key==='I')&&!['INPUT','TEXTAREA'].includes(document.activeElement.tagName))setImmersive(!document.body.classList.contains('immersive'));
+    if(e.code==='Space'&& !['BUTTON','INPUT','TEXTAREA'].includes(document.activeElement.tagName)){
+      e.preventDefault();$('playBtn').click();
+    }
+  });
+  let drag={down:false,x:0,y:0,px:0,py:0,distance:0,shift:false};
+  canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);drag={down:true,x:e.clientX,y:e.clientY,px:state.panX,py:state.panY,distance:0,shift:e.shiftKey};});
+  canvas.addEventListener('pointermove',e=>{if(!drag.down)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+    drag.distance=Math.hypot(dx,dy);if(drag.distance>4){state.panX=drag.px+dx;state.panY=drag.py+dy;}});
+  canvas.addEventListener('pointerup',e=>{
+    if(!drag.down)return;drag.down=false;if(drag.distance>4)return;
+    const l=state.layout;if(!l)return;
+    const col=Math.floor((e.clientX-l.x)/l.cell),row=Math.floor((e.clientY-l.y)/l.cell);
+    if(col<0||col>=P.size||row<0||row>=P.size)return;
+    const id=state.grid[row*P.size+col];
+    if(id && e.shiftKey){state.cars.splice(id-1,1);rebuildGrid();state.moving=0;startPhase('east');updateDensityDisplay();unsetPreset();}
+    else if(!id){let cid=state.cars.length+1;const type=e.shiftKey?2:1;
+      state.cars.push({id:cid,x:col,y:row,type,fromX:col,fromY:row,moving:false});state.grid[row*P.size+col]=cid;
+      state.moving=0;startPhase('east');updateDensityDisplay();unsetPreset();}
+  });
+  canvas.addEventListener('pointercancel',()=>drag.down=false);
+  canvas.addEventListener('wheel',e=>{P.zoom=Math.max(.65,Math.min(1.6,P.zoom*(e.deltaY>0?.95:1.05)));
+    $('zoom').value=P.zoom;syncControls();e.preventDefault();},{passive:false});
+  canvas.addEventListener('dblclick',()=>{P.zoom=1;state.panX=0;state.panY=0;syncControls();});
+  window.addEventListener('resize',resize);
+  syncControls();resize();randomCity(false);requestAnimationFrame(animate);
+})();
+</script>
+</body>
+</html>
