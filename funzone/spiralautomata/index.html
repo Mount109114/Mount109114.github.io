@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#071225" />
+<title>Spiral Automata Lab | Muntasir's Fun Lab</title>
+<style>
+:root{--bg:#071225;--bg2:#0c1830;--text:#eef3ff;--muted:#b8c4e0;--accent:#a7c8ff;--panel:rgba(24,37,59,.88);--border:rgba(255,255,255,.13)}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text);font-family:Arial,Helvetica,sans-serif}
+#world{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:1;touch-action:none;cursor:crosshair;image-rendering:pixelated}
+.page{position:fixed;inset:0;z-index:3;pointer-events:none}.hero{position:absolute;top:50%;left:clamp(16px,3.1vw,50px);transform:translateY(-50%);width:min(366px,30vw);pointer-events:none;text-shadow:0 2px 22px #050a12;padding:20px 21px 22px;background:linear-gradient(110deg,rgba(7,18,37,.92),rgba(7,18,37,.70));border:1px solid rgba(255,255,255,.15);border-radius:22px;backdrop-filter:blur(11px);box-shadow:0 16px 48px #0611236b}
+.eyebrow{display:inline-block;padding:7px 13px;background:rgba(17,28,46,.66);border:1px solid var(--border);border-radius:99px;color:var(--accent);font-size:13px;font-weight:700;backdrop-filter:blur(10px)}
+h1{margin:18px 0 15px;font-size:clamp(41px,4.4vw,74px);letter-spacing:-.05em;line-height:1.04}h1 span{display:block}.hero p{font-size:14px;color:#e4ebfa;line-height:1.75;max-width:320px}.math{margin-top:12px;font:14px/1.7 Georgia,serif;color:#dfe8fb}
+.hero-links{display:flex;gap:9px;margin-top:17px;flex-wrap:wrap;pointer-events:auto}.hero-links a{color:var(--text);font-weight:700;text-decoration:none;font-size:12px;padding:11px 13px;border-radius:12px;background:rgba(17,28,46,.72);border:1px solid rgba(255,255,255,.17);backdrop-filter:blur(12px)}.hero-links a:hover{background:rgba(43,65,96,.8)}
+#panel{position:absolute;right:clamp(12px,2vw,30px);top:50%;transform:translateY(-50%);width:350px;max-height:calc(100vh - 38px);overflow-y:auto;overscroll-behavior:contain;pointer-events:auto;background:var(--panel);border:1px solid var(--border);border-radius:22px;padding:21px;box-shadow:0 18px 65px rgba(0,0,0,.35);backdrop-filter:blur(24px);scrollbar-color:#546987 transparent;scrollbar-width:thin}
+#panel h2{margin:0 0 7px;font-size:23px;letter-spacing:-.025em}.sub{color:var(--muted);font-size:12px;line-height:1.65;margin:0 0 12px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:3px 9px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.055);padding:10px;border-radius:13px;font:11.5px/1.75 Consolas,monospace;color:#c7d3eb}.stats strong{color:#f3d6a3;font-weight:700}
+.section{display:flex;gap:9px;align-items:center;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:#95aed7;font-weight:800;margin:16px 0 9px}.section:after{content:"";height:1px;flex:1;background:rgba(255,255,255,.105)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:7px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.btn,.preset,.brush-state{border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#f1f5ff;border-radius:10px;min-height:34px;padding:8px 7px;font:700 11.5px Arial,sans-serif;cursor:pointer;transition:background .15s,border-color .15s}.btn:hover,.preset:hover,.brush-state:hover{background:rgba(255,255,255,.14)}.btn.active,.preset.active,.brush-state.active{background:linear-gradient(115deg,#a9c9ff,#dce8ff);color:#0e1a2c;border-color:transparent}.primary{background:linear-gradient(115deg,#a2c5ff,#d9e8ff);color:#0c1930;border-color:transparent}.full{width:100%;margin-top:7px}
+.control{margin:0 0 12px}.control label{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;font-size:12px;font-weight:700}.control output{color:var(--accent);font:700 11.5px Consolas,monospace}
+input[type=range]{appearance:none;-webkit-appearance:none;width:100%;height:4px;border-radius:9px;background:rgba(255,255,255,.2);outline:none;cursor:pointer;display:block}input[type=range]::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;background:#a8c9ff;width:14px;height:14px;border-radius:50%;box-shadow:0 0 8px #a5c4ff52}
+select{width:100%;border:1px solid rgba(255,255,255,.17);border-radius:10px;padding:9px 11px;background:#34435d;color:#fff;cursor:pointer;font-size:12px}
+.switch{display:flex;align-items:center;justify-content:space-between;padding:9px 11px;margin:7px 0;border-radius:11px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.055);color:#d8e3f5;font-size:12px;cursor:pointer}.switch input{accent-color:#a8c8ff;width:15px;height:15px;cursor:pointer}
+.color-swatches{display:flex;gap:5px;margin:8px 0 12px}.color-swatches span{flex:1;height:20px;border:1px solid #ffffff45;border-radius:5px}
+#history{display:block;width:100%;height:66px;border-radius:11px;border:1px solid #ffffff18;background:#0d192c}
+.note{font-size:11px;line-height:1.7;color:#b9c9e3;margin:12px 0 0}
+#mobileButton{display:none;position:fixed;right:14px;bottom:14px;z-index:12;border:1px solid #fff4;border-radius:13px;background:#b5d0ff;color:#10203c;padding:12px 15px;font-weight:800;box-shadow:0 8px 25px #0006;cursor:pointer}
+#immersiveExit{display:none;position:fixed;right:18px;bottom:18px;z-index:20;padding:10px 16px;background:#17263ed4;border:1px solid #ffffff55;border-radius:99px;color:#f4f7ff;backdrop-filter:blur(14px);cursor:pointer;font-size:12px;font-weight:700}
+body.immersive .hero,body.immersive #panel,body.immersive #mobileButton{display:none!important}body.immersive #immersiveExit{display:block}
+#toast{position:fixed;left:50%;bottom:20px;transform:translate(-50%,10px);opacity:0;pointer-events:none;z-index:30;background:#122039e8;border:1px solid #ffffff30;padding:10px 14px;border-radius:12px;font-size:12px;color:#f0f4ff;transition:opacity .22s,transform .22s}#toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:1050px){.hero{width:265px}h1{font-size:46px}#panel{width:320px;padding:17px}}
+@media(max-width:800px){.hero{left:12px;top:14px;transform:none;width:min(246px,72vw);padding:11px 12px 13px;background:rgba(7,18,37,.80);border-radius:15px;backdrop-filter:blur(8px)}.hero h1{font-size:34px;margin:9px 0}.hero p{font-size:11px;line-height:1.5;max-width:205px}.eyebrow{font-size:10px;padding:5px 9px}.math{display:none}.hero-links{margin-top:8px;gap:5px}.hero-links a{font-size:10px;padding:8px}#panel{right:10px;top:60px;bottom:68px;max-height:none;transform:none;width:min(350px,calc(100vw - 20px));transition:opacity .22s,transform .22s}#panel.collapsed{opacity:0;pointer-events:none;transform:translateX(calc(100% + 24px))}#mobileButton{display:block}}
+@media(prefers-reduced-motion:reduce){.btn,.preset{transition:none}}
+</style>
+</head>
+<body>
+<canvas id="world" aria-label="Full-screen interactive cyclic cellular automaton"></canvas>
+<div class="page">
+<section class="hero">
+ <div class="eyebrow">Fun Zone · Emergent Patterns</div>
+ <h1><span>Spiral</span><span>Automata.</span></h1>
+ <p>Three colors. One simple rule. Random noise transforms into curls, vortices, and hypnotic spirals as neighboring cells compete in an endless Rock–Paper–Scissors cycle.</p>
+ <div class="math">Rock → Paper → Scissors → Rock<br>Switch when enough neighbors have the winning color.</div>
+ <nav class="hero-links"><a href="../../index.html">← Main Site</a><a href="../crafts/index.html">→ Handmade Works</a></nav>
+</section>
+<aside id="panel">
+ <h2>Spiral Controls</h2>
+ <p class="sub">Watch order emerge from noise. Change the rules, splash new colors into the field, and discover entirely different patterns.</p>
+ <div class="stats"><div>generation <strong id="genStat">0</strong></div><div>active <strong id="activeStat">0%</strong></div><div>grid <strong id="gridStat">—</strong></div><div>states <strong id="statesStat">3</strong></div></div>
+ <div class="section">Starting experiments</div>
+ <div class="grid2" id="presets">
+  <button class="preset active" data-preset="classic">Golden Spirals</button>
+  <button class="preset" data-preset="fresh">Noise → Spirals</button>
+  <button class="preset" data-preset="coral">Coral Bloom</button>
+  <button class="preset" data-preset="sculpture">Slow Sculpture</button>
+  <button class="preset" data-preset="four">Four-Way Dance</button>
+  <button class="preset" data-preset="six">Chromatic Chaos</button>
+  <button class="preset" data-preset="sectors">Spiral Seeds</button>
+  <button class="preset" data-preset="velvet">Velvet Garden</button>
+ </div>
+ <div class="section">Time & Rules</div>
+ <div class="grid2"><button id="pauseBtn" class="btn primary">Ⅱ Pause</button><button id="stepBtn" class="btn">→ Single Step</button></div>
+ <div class="control" style="margin-top:14px"><label>Simulation Speed <output id="speedVal">12 steps/s</output></label><input id="speed" type="range" min="1" max="32" value="12" step="1"></div>
+ <div class="control"><label>Color States <output id="statesVal">3</output></label><input id="states" type="range" min="3" max="8" value="3" step="1"></div>
+ <div class="control"><label>Neighbors Needed <output id="thresholdVal">3 / 8</output></label><input id="threshold" type="range" min="1" max="7" value="3" step="1"></div>
+ <div class="control"><label>Spontaneous Noise <output id="noiseVal">0.00%</output></label><input id="noise" type="range" min="0" max="2" value="0" step="0.05"></div>
+ <div class="control"><label>Cell Size <output id="cellVal">6 px</output></label><input id="cellSize" type="range" min="3" max="14" value="6" step="1"></div>
+ <label class="switch">Wrap edges (toroidal world)<input id="wrap" type="checkbox" checked></label>
+ <div class="section">Art Direction</div>
+ <div class="control"><label>Color Collection</label><select id="palette">
+  <option value="reel">Saffron &amp; Ink · Reel Classic</option>
+  <option value="royal">Royal Amethyst</option>
+  <option value="jade">Emerald Tides</option>
+  <option value="ember">Molten Copper</option>
+  <option value="prism">Prismatic Night</option>
+  <option value="rose">Rosewood &amp; Pearl</option>
+  <option value="aqua">Deep Ocean</option>
+  <option value="ivory">Ivory &amp; Indigo</option>
+ </select></div>
+ <div class="color-swatches" id="swatches" aria-label="Palette preview"></div>
+ <div class="control"><label>Palette Rotation <output id="shiftVal">0°</output></label><input id="shift" type="range" min="0" max="360" value="0" step="5"></div>
+ <label class="switch">Smooth color pixels<input id="smoothing" type="checkbox"></label>
+ <label class="switch">Cell boundaries<input id="lines" type="checkbox"></label>
+ <div class="section">Interactive Painting</div>
+ <div class="grid3"><button class="btn active" data-tool="paint">✎ Paint</button><button class="btn" data-tool="spray">✧ Noise Brush</button><button class="btn" data-tool="seed">↺ Spiral Seed</button></div>
+ <div class="grid3" id="stateBrush" style="margin-top:7px"></div>
+ <div class="control" style="margin-top:12px"><label>Brush Radius <output id="brushVal">5 cells</output></label><input id="brush" type="range" min="1" max="25" value="5" step="1"></div>
+ <div class="grid2"><button class="btn" id="randomBtn">✦ Reseed Noise</button><button class="btn" id="seedBtn">↺ Add Spirals</button></div>
+ <button class="btn full" id="clearBtn">⌧ Reset to Single Color</button>
+ <div class="section">Activity History</div>
+ <canvas id="history" aria-label="Last changes per step"></canvas>
+ <p class="note">Activity shows the percentage of cells that changed on the most recent step. At the same settings, different starting patterns can evolve differently.</p>
+ <div class="section">Display</div>
+ <button class="btn full" id="immersiveBtn">⛶ Immersive View</button>
+ <p class="note">Click/drag to paint · Touch to paint · Mouse wheel changes cell size · Space pause · N step · I immersive · Esc exit. Editing works even when the simulation is running.</p>
+</aside>
+</div>
+<button id="mobileButton">⚙ Controls</button>
+<button id="immersiveExit">✕ Exit Immersive (Esc)</button>
+<div id="toast" role="status" aria-live="polite"></div>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+const canvas=$('world'),ctx=canvas.getContext('2d',{alpha:false});
+const surface=document.createElement('canvas'),sctx=surface.getContext('2d',{alpha:false});
+const presets={
+ classic:{states:3,threshold:3,palette:'reel',noise:0,cellSize:6,warm:145,init:'random'},
+ fresh:{states:3,threshold:3,palette:'reel',noise:0,cellSize:6,warm:0,init:'random'},
+ coral:{states:3,threshold:2,palette:'jade',noise:0,cellSize:6,warm:95,init:'random'},
+ sculpture:{states:3,threshold:4,palette:'ember',noise:0,cellSize:6,warm:130,init:'random'},
+ four:{states:4,threshold:3,palette:'royal',noise:0,cellSize:6,warm:140,init:'random'},
+ six:{states:6,threshold:3,palette:'prism',noise:0,cellSize:6,warm:140,init:'random'},
+ sectors:{states:3,threshold:3,palette:'aqua',noise:0,cellSize:6,warm:70,init:'sectors'},
+ velvet:{states:3,threshold:3,palette:'rose',noise:0,cellSize:6,warm:160,init:'random'}
+};
+const palettes={
+ reel:['#f5f0df','#2e3536','#caa56e','#b66d56','#6d7898','#a87a9d','#688f86','#e0bb8c'],
+ royal:['#f4e4ff','#a76fe3','#331f56','#e0b27f','#6673ba','#d77fbc','#9daaf4','#54417a'],
+ jade:['#c0ffdc','#13665b','#eff8d9','#d6aa56','#7cdaba','#367c91','#89a85e','#203f55'],
+ ember:['#f4d6ad','#a75b36','#251f31','#f8a45c','#944653','#f2e4c9','#ca825d','#735c78'],
+ prism:['#fa8cbe','#3b2d86','#65e4ea','#f3d879','#a084f7','#faf3e4','#43aaae','#d65e96'],
+ rose:['#f7e4d8','#8f4d67','#302436','#d8a4a3','#bc7b65','#8e92bb','#f0bfa0','#615470'],
+ aqua:['#0e556b','#9eeadb','#08293e','#efdc9b','#4c98bc','#d39c87','#86bfcc','#245570'],
+ ivory:['#eee8da','#1d2845','#c0b7b0','#819cb4','#a27a94','#d2b380','#4a647f','#9dbcb5']
+};
+const state={states:3,threshold:3,speed:12,noise:0,cellSize:6,wrap:true,palette:'reel',shift:0,smoothing:false,lines:false,tool:'paint',brush:5,color:1,running:true,generation:0,activity:0};
+let W=0,H=0,dpr=1,C=0,R=0,front=new Uint8Array(0),back=new Uint8Array(0),img=null,history=[],tPrev=performance.now(),acc=0,paint=false,lastPaint=null,dirty=true,toastTimer=0,drawPalette=[];
+const wrapIndex=(x,n)=>(x%n+n)%n;
+const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
+function notify(t){const el=$('toast');el.textContent=t;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),1900)}
+function parseHex(hex){const n=parseInt(hex.slice(1),16);return [(n>>16)&255,(n>>8)&255,n&255]}
+function rotateColor(rgb,deg){if(!deg)return rgb;const [r,g,b]=rgb.map(v=>v/255),angle=deg*Math.PI/180,c=Math.cos(angle),s=Math.sin(angle);
+ // Standard luminance-preserving rotation in RGB space.
+ const m=[.213+c*.787-s*.213,.715-c*.715-s*.715,.072-c*.072+s*.928,
+ .213-c*.213+s*.143,.715+c*.285+s*.140,.072-c*.072-s*.283,
+ .213-c*.213-s*.787,.715-c*.715+s*.715,.072+c*.928+s*.072];
+ return [clamp(Math.round((r*m[0]+g*m[1]+b*m[2])*255),0,255),clamp(Math.round((r*m[3]+g*m[4]+b*m[5])*255),0,255),clamp(Math.round((r*m[6]+g*m[7]+b*m[8])*255),0,255)];}
+function computePalette(){drawPalette=palettes[state.palette].map(c=>rotateColor(parseHex(c),state.shift));const holder=$('swatches');holder.replaceChildren();for(let i=0;i<state.states;i++){let s=document.createElement('span');const v=drawPalette[i];s.style.background=`rgb(${v[0]},${v[1]},${v[2]})`;holder.appendChild(s)};refreshBrushButtons();dirty=true}
+function updateStats(){ $('genStat').textContent=state.generation.toLocaleString();$('activeStat').textContent=state.activity.toFixed(1)+'%';$('gridStat').textContent=C+'×'+R;$('statesStat').textContent=state.states;$('pauseBtn').textContent=state.running?'Ⅱ Pause':'▶ Resume';}
+function allocate(preserve=false){const old=front,oldC=C,oldR=R;C=Math.max(18,Math.ceil(W/state.cellSize));R=Math.max(18,Math.ceil(H/state.cellSize));const count=C*R;front=new Uint8Array(count);back=new Uint8Array(count);surface.width=C;surface.height=R;img=sctx.createImageData(C,R);if(preserve&&old.length){for(let y=0;y<R;y++)for(let x=0;x<C;x++){const ox=Math.min(oldC-1,Math.floor(x*oldC/C)),oy=Math.min(oldR-1,Math.floor(y*oldR/R));front[y*C+x]=old[oy*oldC+ox]%state.states}}else fillRandom();dirty=true;updateStats()}
+function resize(){W=window.innerWidth;H=window.innerHeight;dpr=Math.min(window.devicePixelRatio||1,2);canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);allocate(true)}
+function fillRandom(){for(let i=0;i<front.length;i++)front[i]=(Math.random()*state.states)|0;state.generation=0;state.activity=0;history=[];dirty=true}
+function fillSingle(){front.fill(0);state.generation=0;state.activity=0;history=[];dirty=true;updateStats()}
+function stampSpiral(cx,cy,r=Math.max(12,Math.floor(Math.min(C,R)*.12))){for(let y=-r;y<=r;y++)for(let x=-r;x<=r;x++){const d=Math.hypot(x,y);if(d>r)continue;const a=Math.atan2(y,x);const phase=a+1.7*Math.log(1+d);const chosen=wrapIndex(Math.floor(phase/(Math.PI*2/state.states)),state.states);const xx=wrapIndex(cx+x,C),yy=wrapIndex(cy+y,R);front[yy*C+xx]=chosen}dirty=true}
+function seedSectors(){fillRandom();for(let q=0;q<7;q++){const cx=Math.floor(Math.random()*C),cy=Math.floor(Math.random()*R);stampSpiral(cx,cy,Math.max(12,Math.floor(Math.min(C,R)*(.10+Math.random()*.08))))}}
+function evolve(mutate=true){const w=C,h=R,n=state.states,t=state.threshold,src=front,dst=back,wrapped=state.wrap;let changed=0;
+ for(let y=0;y<h;y++){
+  const yp=y===0?(wrapped?h-1:-1):y-1,yn=y===h-1?(wrapped?0:-1):y+1;
+  const py=yp*w,cy=y*w,ny=yn*w;
+  for(let x=0;x<w;x++){
+   const xp=x===0?(wrapped?w-1:-1):x-1,xn=x===w-1?(wrapped?0:-1):x+1;
+   const index=cy+x,v=src[index],winner=(v+1)%n;
+   let neighbors=0;
+   if(yp>=0){if(xp>=0&&src[py+xp]===winner)neighbors++;if(src[py+x]===winner)neighbors++;if(xn>=0&&src[py+xn]===winner)neighbors++}
+   if(xp>=0&&src[cy+xp]===winner)neighbors++;
+   if(xn>=0&&src[cy+xn]===winner)neighbors++;
+   if(yn>=0){if(xp>=0&&src[ny+xp]===winner)neighbors++;if(src[ny+x]===winner)neighbors++;if(xn>=0&&src[ny+xn]===winner)neighbors++}
+   let next=neighbors>=t?winner:v;
+   if(mutate&&state.noise>0&&Math.random()<state.noise*.01)next=(Math.random()*n)|0;
+   dst[index]=next;changed+=(next!==v);
+  }
+ }
+ front=dst;back=src;state.generation++;state.activity=100*changed/(w*h);dirty=true;
+ if(mutate){history.push(state.activity);if(history.length>135)history.shift()}
+}
+function warmUp(steps){for(let i=0;i<steps;i++)evolve(false);history=[];updateStats()}
+function syncUI(){for(const [id,v] of [['speed',state.speed],['states',state.states],['threshold',state.threshold],['noise',state.noise],['cellSize',state.cellSize],['brush',state.brush],['shift',state.shift]])$(id).value=v;$('palette').value=state.palette;$('wrap').checked=state.wrap;$('lines').checked=state.lines;$('smoothing').checked=state.smoothing;
+ $('speedVal').textContent=state.speed+' steps/s';$('statesVal').textContent=state.states;$('thresholdVal').textContent=state.threshold+' / 8';$('noiseVal').textContent=state.noise.toFixed(2)+'%';$('cellVal').textContent=state.cellSize+' px';$('brushVal').textContent=state.brush+' cells';$('shiftVal').textContent=state.shift+'°';computePalette();updateStats()}
+function loadPreset(name){const p=presets[name];Object.assign(state,{states:p.states,threshold:p.threshold,palette:p.palette,noise:p.noise,cellSize:p.cellSize,running:true,generation:0,activity:0});allocate(false);if(p.init==='sectors')seedSectors();warmUp(p.warm);syncUI();document.querySelectorAll('[data-preset]').forEach(b=>b.classList.toggle('active',b.dataset.preset===name));notify('Loaded '+document.querySelector(`[data-preset="${name}"]`).textContent)}
+function refreshBrushButtons(){const el=$('stateBrush');el.replaceChildren();state.color=clamp(state.color,0,state.states-1);for(let i=0;i<state.states;i++){let b=document.createElement('button');b.className='brush-state'+(state.color===i?' active':'');const rgb=drawPalette[i];b.style.setProperty('--chip',`rgb(${rgb.join(',')})`);b.textContent='● '+(i+1);b.style.color=state.color===i?'#132039':`rgb(${rgb.join(',')})`;b.addEventListener('click',()=>{state.color=i;refreshBrushButtons()});el.appendChild(b)}}
+function render(){if(!dirty)return;let data=img.data;for(let i=0,k=0;i<front.length;i++,k+=4){const c=drawPalette[front[i]]||[255,255,255];data[k]=c[0];data[k+1]=c[1];data[k+2]=c[2];data[k+3]=255}sctx.putImageData(img,0,0);
+ ctx.setTransform(dpr,0,0,dpr,0,0);ctx.imageSmoothingEnabled=state.smoothing;ctx.clearRect(0,0,W,H);ctx.drawImage(surface,0,0,W,H);
+ if(state.lines&&state.cellSize>=7){ctx.save();ctx.strokeStyle='rgba(8,18,33,.18)';ctx.lineWidth=.45;ctx.beginPath();for(let x=1;x<C;x++){const px=x*W/C+.5;ctx.moveTo(px,0);ctx.lineTo(px,H)}for(let y=1;y<R;y++){const py=y*H/R+.5;ctx.moveTo(0,py);ctx.lineTo(W,py)}ctx.stroke();ctx.restore()}
+ dirty=false}
+function drawHistory(){const cn=$('history'),rc=cn.getBoundingClientRect();if(!rc.width)return;const ww=Math.floor(rc.width),hh=Math.floor(rc.height);if(cn.width!==ww||cn.height!==hh){cn.width=ww;cn.height=hh}const g=cn.getContext('2d');g.clearRect(0,0,ww,hh);g.strokeStyle='rgba(255,255,255,.09)';g.beginPath();for(let j=1;j<4;j++){g.moveTo(0,j*hh/4);g.lineTo(ww,j*hh/4)}g.stroke();if(!history.length)return;let high=Math.max(5,Math.max(...history)*1.15);g.beginPath();for(let i=0;i<history.length;i++){const x=(i/(135-1))*(ww-4)+2,y=hh-4-(history[i]/high)*(hh-10);if(!i)g.moveTo(x,y);else g.lineTo(x,y)}g.strokeStyle='#f0c48d';g.lineWidth=1.6;g.stroke()}
+let lastStat=0;function frame(now){requestAnimationFrame(frame);const dt=Math.min(.09,(now-tPrev)/1000);tPrev=now;if(state.running){acc+=dt;let count=0;while(acc>=1/state.speed&&count<5){evolve();acc-=1/state.speed;count++}if(count===5)acc=0}
+ render();if(now-lastStat>120){updateStats();drawHistory();lastStat=now}}
+function pointerCell(e){return [clamp(Math.floor(e.clientX/W*C),0,C-1),clamp(Math.floor(e.clientY/H*R),0,R-1)]}
+function brush(cx,cy){const rad=state.brush-1;for(let y=-rad;y<=rad;y++)for(let x=-rad;x<=rad;x++){if(rad&&x*x+y*y>rad*rad+.5)continue;const xx=wrapIndex(cx+x,C),yy=wrapIndex(cy+y,R),k=yy*C+xx;if(state.tool==='spray')front[k]=(Math.random()*state.states)|0;else front[k]=state.color}dirty=true}
+function doPaint(x,y){if(state.tool==='seed'){stampSpiral(x,y,Math.max(7,state.brush*3));return}if(lastPaint){const dx=x-lastPaint[0],dy=y-lastPaint[1],steps=Math.max(Math.abs(dx),Math.abs(dy),1);for(let i=0;i<=steps;i++)brush(Math.round(lastPaint[0]+dx*i/steps),Math.round(lastPaint[1]+dy*i/steps))}else brush(x,y);lastPaint=[x,y]}
+canvas.addEventListener('pointerdown',e=>{if(e.button!==0)return;canvas.setPointerCapture(e.pointerId);paint=true;lastPaint=null;const [x,y]=pointerCell(e);doPaint(x,y)});
+canvas.addEventListener('pointermove',e=>{if(!paint||!(e.buttons&1)&&e.pointerType==='mouse')return;if(state.tool==='seed')return;const [x,y]=pointerCell(e);doPaint(x,y)});
+for(const event of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(event,()=>{paint=false;lastPaint=null});
+canvas.addEventListener('wheel',e=>{e.preventDefault();state.cellSize=clamp(state.cellSize+(e.deltaY>0?1:-1),3,14);allocate(true);syncUI()},{passive:false});
+$('presets').addEventListener('click',e=>{const b=e.target.closest('[data-preset]');if(b)loadPreset(b.dataset.preset)});
+function changeSlider(id,key,format,onchange){$(id).addEventListener('input',e=>{state[key]=+e.target.value;$(id+'Val').textContent=format(state[key]);if(onchange)onchange()})}
+changeSlider('speed','speed',n=>n+' steps/s');changeSlider('states','states',n=>n,()=>{for(let i=0;i<front.length;i++)front[i]%=state.states;computePalette();dirty=true;document.querySelectorAll('[data-preset]').forEach(b=>b.classList.remove('active'))});
+changeSlider('threshold','threshold',n=>n+' / 8');changeSlider('noise','noise',n=>n.toFixed(2)+'%');changeSlider('cellSize','cellSize',n=>n+' px',()=>allocate(true));changeSlider('brush','brush',n=>n+' cells');changeSlider('shift','shift',n=>n+'°',computePalette);
+$('palette').addEventListener('change',e=>{state.palette=e.target.value;computePalette()});$('wrap').addEventListener('change',e=>state.wrap=e.target.checked);$('smoothing').addEventListener('change',e=>{state.smoothing=e.target.checked;dirty=true});$('lines').addEventListener('change',e=>{state.lines=e.target.checked;dirty=true});
+document.querySelectorAll('[data-tool]').forEach(b=>b.addEventListener('click',()=>{state.tool=b.dataset.tool;document.querySelectorAll('[data-tool]').forEach(x=>x.classList.toggle('active',x===b))}));
+$('pauseBtn').addEventListener('click',()=>{state.running=!state.running;updateStats()});$('stepBtn').addEventListener('click',()=>{state.running=false;evolve();updateStats()});
+$('randomBtn').addEventListener('click',()=>{fillRandom();updateStats();notify('Fresh random noise')});$('clearBtn').addEventListener('click',()=>{fillSingle();notify('One-color field · paint to restart motion')});$('seedBtn').addEventListener('click',()=>{for(let i=0;i<5;i++)stampSpiral(Math.floor(Math.random()*C),Math.floor(Math.random()*R),Math.max(9,Math.floor(Math.min(C,R)*(.07+Math.random()*.08))));notify('Five spiral seeds added')});
+function immersive(on){document.body.classList.toggle('immersive',on);notify(on?'Immersive on · Esc exits':'Immersive off')}
+$('immersiveBtn').addEventListener('click',()=>immersive(true));$('immersiveExit').addEventListener('click',()=>immersive(false));
+$('mobileButton').addEventListener('click',()=>{let closed=$('panel').classList.toggle('collapsed');$('mobileButton').textContent=closed?'⚙ Controls':'✕ Close Panel'});
+window.addEventListener('keydown',e=>{if(e.key==='Escape'){immersive(false);if(W<=800){$('panel').classList.add('collapsed');$('mobileButton').textContent='⚙ Controls'}return}if(e.target instanceof HTMLElement&&['INPUT','SELECT','BUTTON','TEXTAREA'].includes(e.target.tagName))return;const k=e.key.toLowerCase();if(k===' '){e.preventDefault();state.running=!state.running;updateStats()}else if(k==='n'){state.running=false;evolve();updateStats()}else if(k==='i'){immersive(!document.body.classList.contains('immersive'))}else if(k==='r'){fillRandom();updateStats()}});
+window.addEventListener('resize',resize);W=window.innerWidth;H=window.innerHeight;dpr=Math.min(window.devicePixelRatio||1,2);canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);loadPreset('classic');if(window.matchMedia('(max-width:800px)').matches)$('panel').classList.add('collapsed');requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
